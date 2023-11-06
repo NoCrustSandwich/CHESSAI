@@ -54,6 +54,8 @@ while True:
     # Populates board based on discord game board
     currentBoard = chessController.populateBoard(currentBoard)
 
+    print(currentBoard)
+
     if previousBoard == currentBoard:
         continue
 
