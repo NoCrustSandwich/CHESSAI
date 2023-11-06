@@ -49,7 +49,7 @@ else:
 while True:
 
     
-    time.sleep(5)
+    time.sleep(1)
 
     # Populates board based on discord game board
     currentBoard = chessController.populateBoard(currentBoard)
@@ -61,12 +61,12 @@ while True:
 
     if playerColor == "b":
     # Loads models
-        source_predictions, target_predictions = ANNCA_Black.predict(chessAI.preprocess_input(currentBoard))
+        source_predictions, target_predictions = ANNCA_Black.predict(chessAI.preprocess_input([currentBoard]))
     else:
-        source_predictions, target_predictions = ANNCA_White.predict(chessAI.preprocess_input(currentBoard))
+        source_predictions, target_predictions = ANNCA_White.predict(chessAI.preprocess_input([currentBoard]))
     
-    best_source = int_to_position(math.ceil(source_predictions[0]))
-    best_target = int_to_position(math.ceil(target_predictions[0]))
+    best_source = int_to_position[math.ceil(source_predictions[0])]
+    best_target = int_to_position[math.ceil(target_predictions[0])]
 
 
     # Moves pieces internally on the matrix

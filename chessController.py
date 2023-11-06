@@ -109,8 +109,8 @@ def addPiece(piece, chessBoard, coords):
 
         xPositionFound = False
         yPositionFound = False
-        xPositionThreshold = 887
-        yPositionThreshold = 232
+        xPositionThreshold = 400
+        yPositionThreshold = 290
         rowIndex = 0
         colIndex = 0
 
@@ -120,7 +120,7 @@ def addPiece(piece, chessBoard, coords):
             if entry[0] <= xPositionThreshold:
                 xPositionFound = True
             else:
-                xPositionThreshold += 85
+                xPositionThreshold += 100
                 colIndex += 1
 
         # Loops until x position is found
@@ -129,7 +129,7 @@ def addPiece(piece, chessBoard, coords):
             if entry[1] <= yPositionThreshold:
                 yPositionFound = True
             else:
-                yPositionThreshold += 85
+                yPositionThreshold += 100
                 rowIndex += 1
 
         # Adds piece to the board based on the location
@@ -142,7 +142,7 @@ def addPiece(piece, chessBoard, coords):
 # Populates the game board
 def populateBoard(chessBoard):
 
-    thresh = 0.90
+    thresh = 0.99
     # Populates the chess board based on pieces present on screen
 
     #Populates Black Pawns present on the board
@@ -388,6 +388,7 @@ def movePieceExternally(startAddress, endAddress, playerColor):
     time.sleep(0.5)
     pyautogui.mouseUp()
 
+    # Moves mouse back to neutral position
+    pyautogui.moveTo(1400, 1000, 1)
 
     return
-
