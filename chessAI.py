@@ -5,7 +5,8 @@ import math
 import keras
 from keras.models import Model
 from keras.layers import Input, Conv2D, Flatten, Dense
-from keras.optimizers import Adam
+
+from keras.optimizers import Adam, SGD, RMSprop, Adagrad, Adadelta, Nadam
 
 import numpy as np
 
@@ -223,11 +224,22 @@ def preprocess_output(moves):
     'a1': 56, 'b1': 57, 'c1': 58, 'd1': 59,'e1': 60, 'f1': 61, 'g1': 62, 'h1': 63
     }
 
+    position_to_coordinates = {
+    'a8': [0, 0], 'b8': [0, 1], 'c8': [0, 2], 'd8': [0, 3],'e8': [0, 4], 'f8': [0, 5], 'g8': [0, 6], 'h8': [0, 7],
+    'a7': [1, 0], 'b7': [1, 1], 'c7': [1, 2], 'd7': [1, 3],'e7': [1, 4], 'f7': [1, 5], 'g7': [1, 6], 'h7': [1, 7],
+    'a6': [2, 0], 'b6': [2, 1], 'c6': [2, 2], 'd6': [2, 3],'e6': [2, 4], 'f6': [2, 5], 'g6': [2, 6], 'h6': [2, 7],
+    'a5': [3, 0], 'b5': [3, 1], 'c5': [3, 2], 'd5': [3, 3],'e5': [3, 4], 'f5': [3, 5], 'g5': [3, 6], 'h5': [3, 7],
+    'a4': [4, 0], 'b4': [4, 1], 'c4': [4, 2], 'd4': [4, 3],'e4': [4, 4], 'f4': [4, 5], 'g4': [4, 6], 'h4': [4, 7],
+    'a3': [5, 0], 'b3': [5, 1], 'c3': [5, 2], 'd3': [5, 3],'e3': [5, 4], 'f3': [5, 5], 'g3': [5, 6], 'h3': [5, 7],
+    'a2': [6, 0], 'b2': [6, 1], 'c2': [6, 2], 'd2': [6, 3],'e2': [6, 4], 'f2': [6, 5], 'g2': [6, 6], 'h2': [6, 7],
+    'a1': [7, 0], 'b1': [7, 1], 'c1': [7, 2], 'd1': [7, 3],'e1': [7, 4], 'f1': [7, 5], 'g1': [7, 6], 'h1': [7, 7],
+    }
+
 
     translatedMoves = []
 
     for move in moves:
-        translatedMoves.append(position_to_Int[move])
+        translatedMoves.append(position_to_coordinates[move])
 
     return translatedMoves
 
@@ -396,7 +408,9 @@ def create_chess_model():
     x = Flatten()(x)
 
     # Fully connected layers for regression
-    x = Dense(1024, activation='relu')(x)
+    #x = Dense(8096, activation='relu')(x)
+    #x = Dense(4048, activation='relu')(x)
+    #x = Dense(1024, activation='relu')(x)
     x = Dense(512, activation='relu')(x)
     x = Dense(256, activation='relu')(x)
     x = Dense(128, activation='relu')(x)
@@ -404,14 +418,16 @@ def create_chess_model():
     
 
     # Output layers for source and target squares
-    source_square = Dense(1, name='source_square', activation='linear')(x)
-    target_square = Dense(1, name='target_square', activation='linear')(x)
+    source_square = Dense(2, name='source_square', activation='linear')(x)
+    target_square = Dense(2, name='target_square', activation='linear')(x)
 
     # Create the model
     model = Model(inputs=input_layer, outputs=[source_square, target_square])
 
+   
+
     # Compile the model
-    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae', 'mse'])
+    model.compile(optimizer="adam", loss='mean_absolute_error', metrics=['accuracy'])
 
     return model
 
@@ -420,7 +436,9 @@ def create_chess_model():
 def setup_ANN(model):
 
     
-    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae', 'mse'])
+
+    
+    model.compile(optimizer="adam", loss='mean_absolute_error', metrics=['accuracy'])
 
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -436,7 +454,7 @@ def setup_ANN(model):
 def trainANN():
 
     # Input pgn file with training data
-    winner, finWhiteBoards,finBlackBoards,finWhiteSourceMoves,finWhiteTargetMoves,finBlackSourceMoves, finBlackTargetMoves = pgn_to_board('Training_Data/lichess_db_standard_rated_2013-01.pgn')
+    winner, finWhiteBoards,finBlackBoards,finWhiteSourceMoves,finWhiteTargetMoves,finBlackSourceMoves, finBlackTargetMoves = pgn_to_board('Training_Data/lichess_db_standard_rated_2014-07.pgn')
 
     # Creates models
     ANNCA_Black = create_chess_model()
@@ -447,8 +465,8 @@ def trainANN():
     #ANNCA_White = load_ANN("ANNCA_White")
 
 
-    ANNCA_White.fit(finWhiteBoards, [finWhiteSourceMoves, finWhiteTargetMoves], batch_size=32, epochs=100)
-    ANNCA_Black.fit(finBlackBoards, [finBlackSourceMoves, finBlackTargetMoves], batch_size=32, epochs=100)
+    ANNCA_White.fit(finWhiteBoards, [finWhiteSourceMoves, finWhiteTargetMoves], batch_size=100, epochs=1000)
+    ANNCA_Black.fit(finBlackBoards, [finBlackSourceMoves, finBlackTargetMoves], batch_size=100, epochs=1000)
 
     save_ANN(ANNCA_Black, 'ANNCA_Black')
     save_ANN(ANNCA_White, 'ANNCA_White')
@@ -464,8 +482,10 @@ def trainANN():
                 ["R","N","B","Q","K","B","N","R"]]
         ]))
 
-    best_source = math.ceil(source_predictions[0])
-    best_target = math.ceil(target_predictions[0])
+
+    
+    best_source = [math.ceil(source_predictions[0][0]),math.ceil(source_predictions[0][1])]
+    best_target = [math.ceil(target_predictions[0][0]),math.ceil(target_predictions[0][1])]
 
     print("Final Prediction: " + str(best_source) + ", " + str(best_target))
 
