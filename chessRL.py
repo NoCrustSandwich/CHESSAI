@@ -40,17 +40,17 @@ class ChessEnv(gym.Env):
         int_to_piece ={
             0:"_", 
             1:"p1", 2:"p2", 3:"p3", 4:"p4", 5:"p5", 6:"p6", 7:"p7", 8:"p8",
-            -1:"op1", -2:"op2", -3:"op3", -4:"op4", -5:"op5", -6:"op6", -7:"op7", -8:"op8",
+            -1:"op",
             9:"n1", 10:"n2",
-            -9:"on1", -10:"on2",
+            -3:"on",
             11:"b1", 12:"b2",
-            -11:"ob1", -12:"ob2",
+            -4:"ob",
             13:"r1", 14:"r2",
-            -13:"or1", -14:"or2",
+            -5:"or",
             15:"q",
-            -15:"oq",  
+            -9:"oq",  
             16:"k",
-            -16:"ok",
+            -10:"ok",
 
         }
 
@@ -58,23 +58,18 @@ class ChessEnv(gym.Env):
         piece_to_int = {
         "_": 0,
         "p1": 1, "p2": 2, "p3": 3, "p4": 4, "p5": 5, "p6": 6, "p7": 7, "p8": 8,
-        "op1": -1, "op2": -2, "op3": -3, "op4": -4, "op5": -5, "op6": -6, "op7": -7, "op8": -8,
+        "op": -1,
         "n1": 9, "n2": 10,
-        "on1": -9, "on2": -10,
+        "on": -3,
         "b1": 11, "b2": 12,
-        "ob1": -11, "ob2": -12,
+        "ob": -4,
         "r1": 13, "r2": 14,
-        "or1": -13, "or2": -14,
+        "or": -5,
         "q": 15,
-        "oq": -15,
+        "oq": -9,
         "k": 16,
-        "ok": -16,
+        "ok": -10,
         }
-
-
-
-           
-
 
 
         super(ChessEnv, self).__init__()
@@ -89,8 +84,8 @@ class ChessEnv(gym.Env):
                         [13,9,11,15,16,12,10,14] ]
         
         # o = opponent, ie. or1 = opponent rook 1
-        self.board = [["or1","on1","ob1","oq","ok","ob2","on2","or2"],
-                ["op1","op2","op3","op4","op5","op6","op7","op8"],
+        self.board = [["or","on","ob","oq","ok","ob","on","or"],
+                ["op","op","op","op","op","op","op","op"],
                 ["_","_","_","_","_","_","_","_"],
                 ["_","_","_","_","_","_","_","_"],
                 ["_","_","_","_","_","_","_","_"],
@@ -360,11 +355,11 @@ class ChessEnv(gym.Env):
 
     
 
-
+    # Resets back to starting position
     def reset(self):
         # Reset the board to its initial state
-        self.board = [["or1","on1","ob1","oq","ok","ob2","on2","or2"],
-                ["op1","op2","op3","op4","op5","op6","op7","op8"],
+        self.board = [["or","on","ob","oq","ok","ob","on","or"],
+                ["op","op","op","op","op","op","op","op"],
                 ["_","_","_","_","_","_","_","_"],
                 ["_","_","_","_","_","_","_","_"],
                 ["_","_","_","_","_","_","_","_"],
@@ -372,36 +367,118 @@ class ChessEnv(gym.Env):
                 ["p1","p2","p3","p4","p5","p6","p7","p8"],
                 ["r1","n1","b1","q","k","b2","n2","r2"]]
         return np.array(self.board)
-    
+
+
+    # Returns the indexes of a piece on the board
+    def find_piece_indexes(self, board, piece):
+        for i, row in enumerate(board):
+            for j, cell in enumerate(row):
+                if cell == piece:
+                    return i, j
+        return None
+
 
 
     def step(self, action):
-            
+        
+        # Flags that determine rewards
+        piecePresent = False            # reward = -1000
+        pieceTaken = False              # (value based on piece Taken)
+        opponentKingInCheck = False     # reward = 10
+        opponentKingInCheckmate = False # reward = 1000
+        playerKingInCheck = False       # reward = -1000
+        moveOutOfRange = False
 
-            # Implement the logic for executing a move based on the action
-            # Update the board and calculate the reward
-            # ...
+        # Determines the indexed location of the piece taking the action
+        for x, row in enumerate(self.board):
+            for y, cell in enumerate(row):
+                if cell == action[0]:
+                    sourceLocation = [x, y]
+                    targetLocation =  [x+action[1][0],y+action[1][0]]
+                    piecePresent = True
 
-            
 
+        # Checks if the piece being moved is present on the board
+        if not piecePresent:
 
-            # Placeholder return values
             observation = np.array(self.board)
-            reward = 0.0
+            reward = -1000.0
             done = False
-            info = {}
+            info = {"Piece is not present on the board"}
+            return observation, reward, done, info
 
+        # Checks if the move is out of range
+        if targetLocation[0]>7 or targetLocation[1]>7 or targetLocation[0]<0 or targetLocation[1]<0:
+
+            observation = np.array(self.board)
+            reward = -1000.0
+            done = False
+            info = {"Target Location is out of range"}
             return observation, reward, done, info
 
 
+        # Retrieves item present at the target tile
+        targetTilePiece = self.board[targetLocation[0]][targetLocation[1]] 
 
-    
+        # If valid move and target tile is empty
+        if targetTilePiece == "_":
 
- 
+            self.board[targetLocation[0]][targetLocation[1]] = action[0]
+            observation = np.array(self.board)
+            reward = 1.0
+            done = False
+            info = {"Valid move made onto empty tile"}
+            
+        
 
-   
+        # If valid move and target tile is an opponent pawn
+        if targetTilePiece == "op":
 
+            self.board[targetLocation[0]][targetLocation[1]] = action[0]
+            observation = np.array(self.board)
+            reward = 10.0
+            done = False
+            info = {"Valid move made, opponent pawn taken"}
+            
 
+        # If valid move and target tile is an opponent knight
+        if targetTilePiece == "on":
 
+            self.board[targetLocation[0]][targetLocation[1]] = action[0]
+            observation = np.array(self.board)
+            reward = 30.0
+            done = False
+            info = {"Valid move made, opponent knight taken"}
+            
+        
+        # If valid move and target tile is an opponent bishop
+        if targetTilePiece == "ob":
 
+            self.board[targetLocation[0]][targetLocation[1]] = action[0]
+            observation = np.array(self.board)
+            reward = 30.0
+            done = False
+            info = {"Valid move made, opponent bishop taken"}
+            
+        
+        # If valid move and target tile is an opponent rook
+        if targetTilePiece == "or":
 
+            self.board[targetLocation[0]][targetLocation[1]] = action[0]
+            observation = np.array(self.board)
+            reward = 50.0
+            done = False
+            info = {"Valid move made, opponent rook taken"}
+            
+        
+        # If valid move and target tile is an opponent queen
+        if targetTilePiece == "oq":
+
+            self.board[targetLocation[0]][targetLocation[1]] = action[0]
+            observation = np.array(self.board)
+            reward = 90.0
+            done = False
+            info = {"Valid move made, opponent queen taken"}
+            
+
+        return observation, reward, done, info

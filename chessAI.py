@@ -4,12 +4,9 @@ import math
 
 import keras
 from keras.models import Model
-from keras.layers import Input, Conv2D, Flatten, Dense
-
-from keras.optimizers import Adam, SGD, RMSprop, Adagrad, Adadelta, Nadam
+from keras.layers import Input, Flatten, Dense
 
 import numpy as np
-
 
 import chess
 import chess.pgn
@@ -212,7 +209,6 @@ def preprocess_input(boards):
 # Translates the inputted moves from algebraic coordinate notation to index notation
 def preprocess_output(moves):
 
-
     position_to_Int= {
     'a8': 0, 'b8': 1, 'c8': 2, 'd8': 3,'e8': 4, 'f8': 5, 'g8': 6, 'h8': 7,
     'a7': 8, 'b7': 9, 'c7': 10, 'd7': 11,'e7': 12, 'f7': 13, 'g7': 14, 'h7': 15,
@@ -234,7 +230,6 @@ def preprocess_output(moves):
     'a2': [6, 0], 'b2': [6, 1], 'c2': [6, 2], 'd2': [6, 3],'e2': [6, 4], 'f2': [6, 5], 'g2': [6, 6], 'h2': [6, 7],
     'a1': [7, 0], 'b1': [7, 1], 'c1': [7, 2], 'd1': [7, 3],'e1': [7, 4], 'f1': [7, 5], 'g1': [7, 6], 'h1': [7, 7],
     }
-
 
     translatedMoves = []
 
@@ -398,33 +393,22 @@ def IsValidMoveBlackPawn(source, target):
 # Create the neural network model
 def create_chess_model():
 
-    input_layer = Input(shape=(8, 8, 1))
-
-    # Convolutional layers for feature extraction
-    x = Conv2D(32, (3, 3), activation='relu')(input_layer)
-    x = Conv2D(64, (3, 3), activation='relu')(x)
+    input_layer = Input(shape=(8, 8))
 
     # Flatten the feature maps
     x = Flatten()(x)
 
     # Fully connected layers for regression
-    #x = Dense(8096, activation='relu')(x)
-    #x = Dense(4048, activation='relu')(x)
-    #x = Dense(1024, activation='relu')(x)
     x = Dense(512, activation='relu')(x)
     x = Dense(256, activation='relu')(x)
     x = Dense(128, activation='relu')(x)
     x = Dense(64, activation='relu')(x)
     
-
     # Output layers for source and target squares
-    source_square = Dense(2, name='source_square', activation='linear')(x)
-    target_square = Dense(2, name='target_square', activation='linear')(x)
-
+    Q_values = Dense(226, name='q_values', activation='linear')(x)
+    
     # Create the model
-    model = Model(inputs=input_layer, outputs=[source_square, target_square])
-
-   
+    model = Model(inputs=input_layer, outputs=Q_values)
 
     # Compile the model
     model.compile(optimizer="adam", loss='mean_absolute_error', metrics=['accuracy'])
@@ -435,9 +419,6 @@ def create_chess_model():
 # Sets up ANN
 def setup_ANN(model):
 
-    
-
-    
     model.compile(optimizer="adam", loss='mean_absolute_error', metrics=['accuracy'])
 
 
