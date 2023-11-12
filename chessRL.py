@@ -40,17 +40,17 @@ class ChessEnv(gym.Env):
         int_to_piece ={
             0:"_", 
             1:"p1", 2:"p2", 3:"p3", 4:"p4", 5:"p5", 6:"p6", 7:"p7", 8:"p8",
-            -1:"op",
+            -1:"op1", -2:"op2", -3:"op3", -4:"op4", -5:"op5", -6:"op6", -7:"op7", -8:"op8",
             9:"n1", 10:"n2",
-            -3:"on",
+            -9:"on1", -10:"on2",
             11:"b1", 12:"b2",
-            -4:"ob",
+            -11:"ob1", -12:"ob2",
             13:"r1", 14:"r2",
-            -5:"or",
+            -13:"or1", -14:"or2",
             15:"q",
-            -9:"oq",  
+            -15:"oq",  
             16:"k",
-            -10:"ok",
+            -16:"ok",
 
         }
 
@@ -58,18 +58,19 @@ class ChessEnv(gym.Env):
         piece_to_int = {
         "_": 0,
         "p1": 1, "p2": 2, "p3": 3, "p4": 4, "p5": 5, "p6": 6, "p7": 7, "p8": 8,
-        "op": -1,
+        "op1": -1, "op2": -2, "op3": -3, "op4": -4, "op5": -5, "op6": -6, "op7": -7, "op8": -8,
         "n1": 9, "n2": 10,
-        "on": -3,
+        "on1": -9, "on2": -10,
         "b1": 11, "b2": 12,
-        "ob": -4,
+        "ob1": -11, "ob2": -12,
         "r1": 13, "r2": 14,
-        "or": -5,
+        "or1": -13, "or2": -14,
         "q": 15,
-        "oq": -9,
+        "oq": -15,
         "k": 16,
-        "ok": -10,
+        "ok": -16,
         }
+
 
 
         super(ChessEnv, self).__init__()
@@ -84,8 +85,8 @@ class ChessEnv(gym.Env):
                         [13,9,11,15,16,12,10,14] ]
         
         # o = opponent, ie. or1 = opponent rook 1
-        self.board = [["or","on","ob","oq","ok","ob","on","or"],
-                ["op","op","op","op","op","op","op","op"],
+        self.board = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
+                ["op8","op7","op6","op5","op4","op3","op2","op1"],
                 ["_","_","_","_","_","_","_","_"],
                 ["_","_","_","_","_","_","_","_"],
                 ["_","_","_","_","_","_","_","_"],
@@ -353,13 +354,15 @@ class ChessEnv(gym.Env):
 
         self.observation_space = spaces.Box(low=-6, high=6, shape=(8, 8), dtype=int)
 
-    
+    def change_Player(board):
+        
+        return [row[::-1] for row in reversed(board)]
 
     # Resets back to starting position
     def reset(self):
         # Reset the board to its initial state
-        self.board = [["or","on","ob","oq","ok","ob","on","or"],
-                ["op","op","op","op","op","op","op","op"],
+        self.board = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
+                ["op8","op7","op6","op5","op4","op3","op2","op1"],
                 ["_","_","_","_","_","_","_","_"],
                 ["_","_","_","_","_","_","_","_"],
                 ["_","_","_","_","_","_","_","_"],
@@ -432,7 +435,7 @@ class ChessEnv(gym.Env):
         
 
         # If valid move and target tile is an opponent pawn
-        if targetTilePiece == "op":
+        if targetTilePiece == "op1" or targetTilePiece == "op2":
 
             self.board[targetLocation[0]][targetLocation[1]] = action[0]
             observation = np.array(self.board)
@@ -442,7 +445,7 @@ class ChessEnv(gym.Env):
             
 
         # If valid move and target tile is an opponent knight
-        if targetTilePiece == "on":
+        if targetTilePiece == "on1" or targetTilePiece == "on2":
 
             self.board[targetLocation[0]][targetLocation[1]] = action[0]
             observation = np.array(self.board)
@@ -452,7 +455,7 @@ class ChessEnv(gym.Env):
             
         
         # If valid move and target tile is an opponent bishop
-        if targetTilePiece == "ob":
+        if targetTilePiece == "ob1" or targetTilePiece == "ob2":
 
             self.board[targetLocation[0]][targetLocation[1]] = action[0]
             observation = np.array(self.board)
@@ -462,7 +465,7 @@ class ChessEnv(gym.Env):
             
         
         # If valid move and target tile is an opponent rook
-        if targetTilePiece == "or":
+        if targetTilePiece == "or1" or targetTilePiece == "or2":
 
             self.board[targetLocation[0]][targetLocation[1]] = action[0]
             observation = np.array(self.board)
@@ -482,3 +485,13 @@ class ChessEnv(gym.Env):
             
 
         return observation, reward, done, info
+    
+
+print(ChessEnv.rotate_board_180([["or2","on2","ob2","oq","ok","ob1","on1","or1"],
+                ["op8","op7","op6","op5","op4","op3","op2","op1"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["p1","p2","p3","p4","p5","p6","p7","p8"],
+                ["r1","n1","b1","q","k","b2","n2","r2"]]))
