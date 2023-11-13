@@ -411,7 +411,7 @@ def create_chess_model():
     model = Model(inputs=input_layer, outputs=Q_values)
 
     # Compile the model
-    model.compile(optimizer="adam", loss='mean_absolute_error', metrics=['accuracy'])
+    model.compile(optimizer="adam", loss='mse', metrics=['accuracy'])
 
     return model
 
@@ -419,7 +419,7 @@ def create_chess_model():
 # Sets up ANN
 def setup_ANN(model):
 
-    model.compile(optimizer="adam", loss='mean_absolute_error', metrics=['accuracy'])
+    model.compile(optimizer="adam", loss='mse', metrics=['accuracy'])
 
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

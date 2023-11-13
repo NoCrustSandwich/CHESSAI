@@ -4,6 +4,17 @@ import chess
 import chess.svg
 from PIL import Image
 import numpy as np
+import math
+import chessAI
+
+import keras
+from keras.models import Model
+from keras.layers import Input, Flatten, Dense
+
+import numpy as np
+
+import chess
+import chess.pgn
 
 
 
@@ -353,6 +364,9 @@ class ChessEnv(gym.Env):
         ]
 
         self.observation_space = spaces.Box(low=-6, high=6, shape=(8, 8), dtype=int)
+        self.modelWhite = chessAI.load_ANN("ANNCA_White")
+        self.modelBlack = chessAI.load_ANN("ANNCA_Black")
+
 
     def change_Player(board):
         
@@ -486,12 +500,25 @@ class ChessEnv(gym.Env):
 
         return observation, reward, done, info
     
+    
+env = ChessEnv()
+num_episodes = 1000
 
-print(ChessEnv.rotate_board_180([["or2","on2","ob2","oq","ok","ob1","on1","or1"],
-                ["op8","op7","op6","op5","op4","op3","op2","op1"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["p1","p2","p3","p4","p5","p6","p7","p8"],
-                ["r1","n1","b1","q","k","b2","n2","r2"]]))
+for episode in range(num_episodes):
+    state = env.reset()
+    total_reward = 0
+
+    while True:
+        # Replace the following line with your RL algorithm to choose an action
+        action = env.action_space[np.random.choice(len(env.action_space))]
+        observation, reward, done, info = env.step(action)
+
+        total_reward += reward
+
+        if done:
+            break
+
+    print(f"Episode {episode + 1}/{num_episodes}, Total Reward: {total_reward}")
+
+# Save the trained model
+env.save_model("trained_chess_model.h5")
