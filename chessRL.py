@@ -4,7 +4,7 @@ import chess
 import chess.svg
 from PIL import Image
 import numpy as np
-import cairo
+
 
 
 
