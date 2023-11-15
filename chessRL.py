@@ -65,7 +65,7 @@ class ChessEnv(gym.Env):
 
         }
 
-        #added
+        
         # Dictionary to translate board string to integer representations
         piece_to_int = {
         "_": 0,
@@ -365,8 +365,7 @@ class ChessEnv(gym.Env):
         ]
 
         self.observation_space = spaces.Box(low=-6, high=6, shape=(8, 8), dtype=int)
-        self.modelWhite = chessAI.load_ANN("ANNCA_White")
-        self.modelBlack = chessAI.load_ANN("ANNCA_Black")
+        self.model = chessAI.load_ANN("ANNCA")
 
 
     def change_Player(board):
@@ -502,24 +501,5 @@ class ChessEnv(gym.Env):
         return observation, reward, done, info
     
     
-env = ChessEnv()
-num_episodes = 1000
-
-for episode in range(num_episodes):
-    state = env.reset()
-    total_reward = 0
-
-    while True:
-        # Replace the following line with your RL algorithm to choose an action
-        action = env.action_space[np.random.choice(len(env.action_space))]
-        observation, reward, done, info = env.step(action)
-
-        total_reward += reward
-
-        if done:
-            break
-
-    print(f"Episode {episode + 1}/{num_episodes}, Total Reward: {total_reward}")
-
-# Save the trained model
-env.save_model("trained_chess_model.h5")
+Annca = chessAI.create_chess_model()
+chessAI.save_ANN(Annca, "ANNCA")
