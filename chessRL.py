@@ -65,6 +65,7 @@ class ChessEnv(gym.Env):
 
         }
 
+        #added
         # Dictionary to translate board string to integer representations
         piece_to_int = {
         "_": 0,
