@@ -355,8 +355,12 @@ class ChessRLEnv(gym.Env):
             for j in range(len(self.board[i])):
                 self.board[i][j] = self.playerChanger[self.board[i][j]]
         
-        
-    
+
+    # Renders the current board
+    def render(self):
+        for row in self.board:
+            print(" ".join("{:<3}".format(cell) for cell in row))
+            print("\n")
 
 
     # Resets back to starting position
@@ -416,7 +420,7 @@ class ChessRLEnv(gym.Env):
             observation = self.board
             reward = -1000.0
             done = False
-            info = {"Piece is not present on the board"}
+            info = {"Invalid Move, Piece is not present on the board"}
             switchPlayer = False
 
             self.trainANN(reward,qValues, actionIndex)
@@ -429,7 +433,7 @@ class ChessRLEnv(gym.Env):
             observation = self.board
             reward = -1000.0
             done = False
-            info = {"Target Location is out of range"}
+            info = {"Invalid Move, Target Location is out of range"}
             switchPlayer = False
 
             self.trainANN(reward,qValues, actionIndex)
@@ -437,21 +441,258 @@ class ChessRLEnv(gym.Env):
             return observation, reward, done, info,switchPlayer
 
 
+
+
+
+
         # Retrieves item present at the target tile
         targetTilePiece = self.board[targetLocation[0]][targetLocation[1]] 
 
+        # Prevents capture of own pieces
         if targetTilePiece in {"k", "q", "p1", "p2", "p3", "p4","p5","p6","p7","p8","r1","r2","b1","b2","n1","n2"}:
 
             observation = self.board
             reward = -1000.0
             done = False
-            info = {"Cannot capture piece that belongs to player"}
+            info = {"Invalid Move, Cannot capture piece that belongs to player"}
             switchPlayer = False
 
             self.trainANN(reward,qValues, actionIndex)
 
             return observation, reward, done, info, switchPlayer
        
+
+
+
+
+        # Pawn invalid move attempts
+        if action[0] in {"p1", "p2", "p3", "p4","p5","p6","p7","p8"}:
+
+            if action[1][1] == 2 and sourceLocation[0]!=6:
+
+                observation = self.board
+                reward = -1000.0
+                done = False
+                info = {"Invalid Move, pawn cannot move 2 spaces unless in starting position"}
+                switchPlayer = False
+
+                self.trainANN(reward,qValues, actionIndex)
+
+                return observation, reward, done, info, switchPlayer
+            
+            if action[1][0]!=0 and targetTilePiece == "_":
+
+                observation = self.board
+                reward = -1000.0
+                done = False
+                info = {"Invalid Move, pawn cannot side ways unless opossing piece is there"}
+                switchPlayer = False
+
+                self.trainANN(reward,qValues, actionIndex)
+
+                return observation, reward, done, info, switchPlayer
+            
+
+            if action[1][1] == 2 and sourceLocation[0]==6 and self.board[sourceLocation[0]-1][sourceLocation[1]] != "_":
+
+                observation = self.board
+                reward = -1000.0
+                done = False
+                info = {"Invalid Move, pawn is blocked by other piece in it's path"}
+                switchPlayer = False
+
+                self.trainANN(reward,qValues, actionIndex)
+
+                return observation, reward, done, info, switchPlayer
+
+            if action[1][1] == 1 and targetTilePiece != "_":
+
+                observation = self.board
+                reward = -1000.0
+                done = False
+                info = {"Invalid Move, pawn is blocked by other piece in it's path"}
+                switchPlayer = False
+
+                self.trainANN(reward,qValues, actionIndex)
+
+                return observation, reward, done, info, switchPlayer
+
+
+
+        # Rook and queen invalid move attempts
+        if action[0] in {"r1", "r2", "q"}:
+
+            
+            if action[1][1] > 0:
+
+                for index in range(action[1][1]):
+
+                    if index == 0:
+                        continue
+
+                    if self.board[sourceLocation[0]-index][sourceLocation[1]] !=  "_":
+
+                        observation = self.board
+                        reward = -1000.0
+                        done = False
+                        info = {"Invalid Move, rook or queen is blocked by other piece in it's path"}
+                        switchPlayer = False
+
+                        self.trainANN(reward,qValues, actionIndex)
+
+                        return observation, reward, done, info, switchPlayer
+                    
+
+
+
+            if action[1][1] < 0:
+
+                for index in range(-action[1][1]):
+
+                    if index == 0:
+                        continue
+
+                    if self.board[sourceLocation[0]+index][sourceLocation[1]] !=  "_":
+
+                        observation = self.board
+                        reward = -1000.0
+                        done = False
+                        info = {"Invalid Move, rook or queen is blocked by other piece in it's path"}
+                        switchPlayer = False
+
+                        self.trainANN(reward,qValues, actionIndex)
+
+                        return observation, reward, done, info, switchPlayer
+
+
+
+            if action[1][0] > 0:
+
+                for index in range(action[1][0]):
+
+                    if index == 0:
+                        continue
+
+                    if self.board[sourceLocation[0]][sourceLocation[1]+index] !=  "_":
+
+                        observation = self.board
+                        reward = -1000.0
+                        done = False
+                        info = {"Invalid Move, rook or queen is blocked by other piece in it's path"}
+                        switchPlayer = False
+
+                        self.trainANN(reward,qValues, actionIndex)
+
+                        return observation, reward, done, info, switchPlayer
+                    
+
+
+
+            if action[1][0] < 0:
+
+                for index in range(-action[1][0]):
+
+                    if index == 0:
+                        continue
+
+                    if self.board[sourceLocation[0]][sourceLocation[1]-index] !=  "_":
+
+                        observation = self.board
+                        reward = -1000.0
+                        done = False
+                        info = {"Invalid Move, rook or queen is blocked by other piece in it's path"}
+                        switchPlayer = False
+
+                        self.trainANN(reward,qValues, actionIndex)
+
+                        return observation, reward, done, info, switchPlayer
+
+
+        # bishop and queen invalid move attempts
+        if action[0] in {"b1", "b2", "q"}:
+
+            if action[1][0] > 0 and action[1][1] > 0:
+
+                for index in range(action[1][0]):
+
+                    if index == 0:
+                        continue
+
+                    if self.board[sourceLocation[0]-index][sourceLocation[1]+index] !=  "_":
+
+                        observation = self.board
+                        reward = -1000.0
+                        done = False
+                        info = {"Invalid Move, bishop or queen is blocked by other piece in it's path"}
+                        switchPlayer = False
+
+                        self.trainANN(reward,qValues, actionIndex)
+
+                        return observation, reward, done, info, switchPlayer
+                    
+
+
+
+
+            if action[1][0] > 0 and action[1][1] < 0:
+
+                for index in range(action[1][0]):
+
+                    if index == 0:
+                        continue
+
+                    if self.board[sourceLocation[0]+index][sourceLocation[1]+index] !=  "_":
+
+                        observation = self.board
+                        reward = -1000.0
+                        done = False
+                        info = {"Invalid Move, bishop or queen is blocked by other piece in it's path"}
+                        switchPlayer = False
+
+                        self.trainANN(reward,qValues, actionIndex)
+
+                        return observation, reward, done, info, switchPlayer
+
+            if action[1][0] < 0 and action[1][1] > 0:
+
+                for index in range(-action[1][0]):
+
+                    if index == 0:
+                        continue
+
+                    if self.board[sourceLocation[0]-index][sourceLocation[1]-index] !=  "_":
+
+                        observation = self.board
+                        reward = -1000.0
+                        done = False
+                        info = {"Invalid Move, bishop or queen is blocked by other piece in it's path"}
+                        switchPlayer = False
+
+                        self.trainANN(reward,qValues, actionIndex)
+
+                        return observation, reward, done, info, switchPlayer
+
+            if action[1][0] < 0 and action[1][1] < 0:
+
+                for index in range(-action[1][0]):
+
+                    if index == 0:
+                        continue
+
+                    if self.board[sourceLocation[0]+index][sourceLocation[1]-index] !=  "_":
+
+                        observation = self.board
+                        reward = -1000.0
+                        done = False
+                        info = {"Invalid Move, bishop or queen is blocked by other piece in it's path"}
+                        switchPlayer = False
+
+                        self.trainANN(reward,qValues, actionIndex)
+
+                        return observation, reward, done, info, switchPlayer
+
+
+
 
         # If valid move and target tile is empty
         if targetTilePiece == "_":
@@ -465,7 +706,6 @@ class ChessRLEnv(gym.Env):
             switchPlayer = True
             
             
-        
 
         # If valid move and target tile is an opponent pawn
         if targetTilePiece in {"op1", "op2", "op3", "op4","op5","op6","op7","op8"}:
@@ -531,10 +771,13 @@ class ChessRLEnv(gym.Env):
             self.board[targetLocation[0]][targetLocation[1]] = action[0]
             self.board[sourceLocation[0]][sourceLocation[1]] = "_"
             observation = self.board
-            reward = 10000.0
+            reward = 100000.0
             done = True
             info = {"Valid move made, opponent King taken"}
             switchPlayer = True
+
+
+        '''
 
         print("Board: "+str(self.board))
         print("Action: "+str(action))
@@ -542,6 +785,8 @@ class ChessRLEnv(gym.Env):
         print("Target Location: " + str(targetLocation))
         print("Source Tile: " + str(self.board[sourceLocation[0]][sourceLocation[1]]))
         print("Target Tile: " + str(self.board[targetLocation[0]][targetLocation[1]]))
+
+        '''
 
         self.trainANN( reward, qValues, actionIndex)
 
@@ -555,32 +800,34 @@ class ChessRLEnv(gym.Env):
 ###############################################################################################################################################################
 # AI Training
 ###############################################################################################################################################################
+def trainAI():
 
-env = ChessRLEnv()
-num_episodes = 1
+    env = ChessRLEnv()
+    num_episodes = 1
 
-for episode in range(num_episodes):
-    state = env.reset()
-    total_reward = 0
+    for episode in range(num_episodes):
+        state = env.reset()
+        total_reward = 0
 
-    while True:
-        # Replace the following line with your RL algorithm to choose an action
-        action = env.actionSpace[np.random.choice(len(env.actionSpace))]
-        observation, reward, done, info,switchPlayer = env.step(action)
+        while True:
+            # Replace the following line with your RL algorithm to choose an action
+            action = env.actionSpace[np.random.choice(len(env.actionSpace))]
+            observation, reward, done, info,switchPlayer = env.step(action)
 
-        if switchPlayer:
-            env.changePlayer()
+            if switchPlayer:
+                env.render()
+                env.changePlayer()
 
-        total_reward += reward
+            total_reward += reward
 
-        if done:
-            break
+            if done:
+                break
 
-    print(f"Episode {episode + 1}/{num_episodes}, Total Reward: {total_reward}")
+        print(f"Episode {episode + 1}/{num_episodes}, Total Reward: {total_reward}")
 
-# Save the trained model
-env.ANN.save_ANN("CANN")
+    # Save the trained model
+    env.ANN.save_ANN("CANN")
 
 
-
+trainAI()
 ###############################################################################################################################################################

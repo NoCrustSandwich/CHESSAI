@@ -1,10 +1,23 @@
 import requests
 import re
-import math
+
+
+
+percentToIndex = {
+    '0':0,
+    '14.29%':1,
+    '28.57%':2,
+    '42.86%':3,
+    '57.14%':4,
+    '71.43%':5,
+    '85.71%':6,
+    '100%':7
+
+}
 
 
 # Returns the popluated piece locations of a chess.com game
-def getCurrentBoard(game_url):
+def getCurrentBoard(game_url, playerColor):
 
     response = requests.get(game_url)
 
@@ -14,6 +27,7 @@ def getCurrentBoard(game_url):
     else:
         print("Failed to retrieve the game page.")
 
+    
     # Finds the occurences of the pieces present
     def find_all_occurrences(text, search_substring):
         occurrences = []
@@ -28,9 +42,8 @@ def getCurrentBoard(game_url):
     # Seaches for this string which refers to populated pieces on the board
     search_substring = "var(--theme-piece-set-"
 
-    index = html_content.find(search_substring)
-
     all_occurrences = find_all_occurrences(html_content, search_substring)
+    
 
 
     # Processes the html content and returns it as a tuple of pieces and repective index postions on an 8x8 board
@@ -42,19 +55,62 @@ def getCurrentBoard(game_url):
 
         preprocessedLocation = html_content[pieceIndex+112:pieceIndex+140]
 
-        pattern = r"(\d+(\.\d+)?)(% )?(\d+) / (\d+(\.\d+)?)%"
+        splitStrings =  re.split(' ', preprocessedLocation)
 
-        match = re.match(pattern, preprocessedLocation)
+        first_number = splitStrings[0]
+        second_number = splitStrings[1]
 
-        if match:
-            first_number = float(match.group(1))
-            second_number = float(match.group(4))
-            third_number = float(match.group(5))
-
-            pieceLocations.append((pieceType,(math.ceil(first_number/third_number),math.ceil(second_number/third_number))))
+        pieceLocations.append((pieceType,(percentToIndex[first_number],percentToIndex[second_number])))
             
-    return pieceLocations
+
+    currentBoard = [["_","_","_","_","_","_","_","_"],
+               ["_","_","_","_","_","_","_","_"],
+               ["_","_","_","_","_","_","_","_"],
+               ["_","_","_","_","_","_","_","_"],
+               ["_","_","_","_","_","_","_","_"],
+               ["_","_","_","_","_","_","_","_"],
+               ["_","_","_","_","_","_","_","_"],
+               ["_","_","_","_","_","_","_","_"]]
+
+    if playerColor == "w":
+        for piece in pieceLocations:
+
+            color = piece[0][0]
+
+            if color == "w":
+                pre = ""
+            else:
+                pre = "o"
+            
+            newPiece = pre + piece[0][1]
+
+            currentBoard[piece[1][0]][piece[1][1]]  = newPiece
+
+
+    else:
+
+        for piece in pieceLocations:
+
+            color = piece[0].pop(0)
+
+            if color == "b":
+                pre = ""
+            else:
+                pre = "o"
+            
+            newPiece = pre + piece
+
+            currentBoard[piece[1][0]][piece[1][1]]  = newPiece
+
+
+    return currentBoard
 
 
 
-print(getCurrentBoard("https://www.chess.com/game/daily/583143785"))
+
+
+
+
+
+
+print(getCurrentBoard("https://www.chess.com/game/82182499198","w"))
