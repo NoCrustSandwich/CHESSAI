@@ -1,54 +1,45 @@
+# Library Imports
 import gym
 from gym import spaces
-import chess
-import chess.svg
-from PIL import Image
 import numpy as np
-import math
-import chessAI
-
-import keras
-from keras.models import Model
-from keras.layers import Input, Flatten, Dense
-
-import numpy as np
-
-import chess
-import chess.pgn
+import copy
+import chessANN
 
 
-
-
+###############################################################################################################################################################
+# Reinforcment Learning Enviorment
+###############################################################################################################################################################
 
 # Class for the chess board enviorment for the RL
-class ChessEnv(gym.Env):
+class ChessRLEnv(gym.Env):
+
     def __init__(self):
+        
 
 
-        # Scroing will be rounded up in the end
 
-        # Player / Opponent board weightings
-        # _ = 0, 
-        # p1 = 1,   |     op1 = -1, 
-        # p2 = 2,   |     op2 = -2, 
-        # p3 = 3,   |     op3 = -3, 
-        # p4 = 4,   |     op4 = -4, 
-        # p5 = 5,   |     op5 = -5, 
-        # p6 = 6,   |     op6 = -6, 
-        # p7 = 7,   |     op7 = -7, 
-        # p8 = 8,   |     op8 = -8,
-        # n1 = 9,   |     on1 = -9,
-        # n2 = 10,  |     on2 = -10,
-        # b1 = 11,  |     ob1 = -11,
-        # b2 = 12,  |     ob2 = -12,
-        # r1 = 13,  |     or1 = -13,
-        # r2 = 14,  |     or2 = -14,
-        # q = 15,   |     oq = -15,
-        # k = 16,   |     ok = -16,
+        
+        # Dictionary to translate board to opposing players perspective
+        self.playerChanger = {
 
+            "_":"_",
+            "p1": "op1", "p2": "op2", "p3": "op3", "p4": "op4", "p5": "op5", "p6": "op6", "p7": "op7", "p8": "op8",
+            "op1": "p1", "op2": "p2", "op3": "p3", "op4": "p4", "op5": "p5", "op6": "p6", "op7": "p7", "op8": "p8",
+            "n1": "on1", "n2": "on2",
+            "on1": "n1", "on2": "n2",
+            "b1": "ob1", "b2": "ob2",
+            "ob1": "b1", "ob2": "b2",
+            "r1": "or1", "r2": "or2",
+            "or1": "r1", "or2": "r2",
+            "q": "oq",
+            "oq": "q",
+            "k": "ok",
+            "ok": "k",
+
+        }
 
         # Dictionary to translate board ints to string representations
-        int_to_piece ={
+        self.intToPiece ={
             0:"_", 
             1:"p1", 2:"p2", 3:"p3", 4:"p4", 5:"p5", 6:"p6", 7:"p7", 8:"p8",
             -1:"op1", -2:"op2", -3:"op3", -4:"op4", -5:"op5", -6:"op6", -7:"op7", -8:"op8",
@@ -67,7 +58,7 @@ class ChessEnv(gym.Env):
 
         
         # Dictionary to translate board string to integer representations
-        piece_to_int = {
+        self.pieceToInt = {
         "_": 0,
         "p1": 1, "p2": 2, "p3": 3, "p4": 4, "p5": 5, "p6": 6, "p7": 7, "p8": 8,
         "op1": -1, "op2": -2, "op3": -3, "op4": -4, "op5": -5, "op6": -6, "op7": -7, "op8": -8,
@@ -83,18 +74,6 @@ class ChessEnv(gym.Env):
         "ok": -16,
         }
 
-
-
-        super(ChessEnv, self).__init__()
-
-        self.board = [  [-13,-9,-11,-15,-16,-12,-10,-14],
-                        [-1,-2,-3,-4,-5,-6,-7,-8],
-                        [0,0,0,0,0,0,0,0],
-                        [0,0,0,0,0,0,0,0],
-                        [0,0,0,0,0,0,0,0],
-                        [0,0,0,0,0,0,0,0],
-                        [1,2,3,4,5,6,7,8],
-                        [13,9,11,15,16,12,10,14] ]
         
         # o = opponent, ie. or1 = opponent rook 1
         self.board = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
@@ -107,7 +86,7 @@ class ChessEnv(gym.Env):
                 ["r1","n1","b1","q","k","b2","n2","r2"]]
         
         # Tuple of 226 possible actions to be taken: ("piece", (Horizontal index change, Vertical index change))
-        self.action_space    =   [   
+        self.actionSpace    =   [   
 
                 ("p1", (0, 1)),
                 ("p1", (-1, 1)),
@@ -364,16 +343,24 @@ class ChessEnv(gym.Env):
                 ("q", (-7, 0)),
         ]
 
-        self.observation_space = spaces.Box(low=-6, high=6, shape=(8, 8), dtype=int)
-        self.model = chessAI.load_ANN("ANNCA")
+        self.observationSpace = spaces.Box(low=-6, high=6, shape=(8, 8), dtype=int)
+        self.ANN = chessANN.ANN()
 
-
-    def change_Player(board):
+    # Reverses the board side to play from the oppostive perspective
+    def changePlayer(self):
         
-        return [row[::-1] for row in reversed(board)]
+        self.board = [row[::-1] for row in self.board[::-1]]
+
+        for i in range(len(self.board)):
+            for j in range(len(self.board[i])):
+                self.board[i][j] = self.playerChanger[self.board[i][j]]
+        
+        
+    
+
 
     # Resets back to starting position
-    def reset(self):
+    def resetBoard(self):
         # Reset the board to its initial state
         self.board = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
                 ["op8","op7","op6","op5","op4","op3","op2","op1"],
@@ -383,123 +370,217 @@ class ChessEnv(gym.Env):
                 ["_","_","_","_","_","_","_","_"],
                 ["p1","p2","p3","p4","p5","p6","p7","p8"],
                 ["r1","n1","b1","q","k","b2","n2","r2"]]
-        return np.array(self.board)
 
 
-    # Returns the indexes of a piece on the board
-    def find_piece_indexes(self, board, piece):
-        for i, row in enumerate(board):
-            for j, cell in enumerate(row):
-                if cell == piece:
-                    return i, j
-        return None
+    
+
+    # Returns translated board in numpy array format for ANN input
+    def preprosessANNInput(self):
+        translatedBoard = [[self.pieceToInt[piece] for piece in row] for row in self.board]
+        return np.array([translatedBoard])
+
+    # Trains ANN based on reward
+    def trainANN(self, reward, qValues, actionIndex):
+
+        qValues[0, actionIndex] = reward
+        self.ANN.model.fit(self.preprosessANNInput(), qValues, epochs=1, verbose=0)
 
 
+        
 
+    # Runs through an action for the RL
     def step(self, action):
         
-        # Flags that determine rewards
-        piecePresent = False            # reward = -1000
-        pieceTaken = False              # (value based on piece Taken)
-        opponentKingInCheck = False     # reward = 10
-        opponentKingInCheckmate = False # reward = 1000
-        playerKingInCheck = False       # reward = -1000
-        moveOutOfRange = False
+        # Retrieves Qvalues from ANN and action index of the action being trained
+        qValues = self.ANN.model.predict(self.preprosessANNInput())
+        actionIndex = self.actionSpace.index(action)
+        
+       
+       
 
-        # Determines the indexed location of the piece taking the action
-        for x, row in enumerate(self.board):
-            for y, cell in enumerate(row):
-                if cell == action[0]:
-                    sourceLocation = [x, y]
-                    targetLocation =  [x+action[1][0],y+action[1][0]]
+        # Determines the index location of the piece taking the action
+        piecePresent = False
+
+        for x in range(len(self.board)):
+            for y in range(len(self.board[x])):
+                if self.board[x][y] == action[0]:
+                    sourceLocation = [x,y]
+                    targetLocation =  [x-action[1][1],y+action[1][0]]
                     piecePresent = True
 
+        
 
         # Checks if the piece being moved is present on the board
         if not piecePresent:
 
-            observation = np.array(self.board)
+            observation = self.board
             reward = -1000.0
             done = False
             info = {"Piece is not present on the board"}
-            return observation, reward, done, info
+            switchPlayer = False
+
+            self.trainANN(reward,qValues, actionIndex)
+
+            return observation, reward, done, info,switchPlayer
 
         # Checks if the move is out of range
         if targetLocation[0]>7 or targetLocation[1]>7 or targetLocation[0]<0 or targetLocation[1]<0:
 
-            observation = np.array(self.board)
+            observation = self.board
             reward = -1000.0
             done = False
             info = {"Target Location is out of range"}
-            return observation, reward, done, info
+            switchPlayer = False
+
+            self.trainANN(reward,qValues, actionIndex)
+
+            return observation, reward, done, info,switchPlayer
 
 
         # Retrieves item present at the target tile
         targetTilePiece = self.board[targetLocation[0]][targetLocation[1]] 
 
+        if targetTilePiece in {"k", "q", "p1", "p2", "p3", "p4","p5","p6","p7","p8","r1","r2","b1","b2","n1","n2"}:
+
+            observation = self.board
+            reward = -1000.0
+            done = False
+            info = {"Cannot capture piece that belongs to player"}
+            switchPlayer = False
+
+            self.trainANN(reward,qValues, actionIndex)
+
+            return observation, reward, done, info, switchPlayer
+       
+
         # If valid move and target tile is empty
         if targetTilePiece == "_":
 
             self.board[targetLocation[0]][targetLocation[1]] = action[0]
-            observation = np.array(self.board)
-            reward = 1.0
+            self.board[sourceLocation[0]][sourceLocation[1]] = "_"
+            observation = self.board
+            reward = -1.0
             done = False
             info = {"Valid move made onto empty tile"}
+            switchPlayer = True
+            
             
         
 
         # If valid move and target tile is an opponent pawn
-        if targetTilePiece == "op1" or targetTilePiece == "op2":
+        if targetTilePiece in {"op1", "op2", "op3", "op4","op5","op6","op7","op8"}:
 
             self.board[targetLocation[0]][targetLocation[1]] = action[0]
-            observation = np.array(self.board)
+            self.board[sourceLocation[0]][sourceLocation[1]] = "_"
+            observation = self.board
             reward = 10.0
             done = False
             info = {"Valid move made, opponent pawn taken"}
+            switchPlayer = True
             
 
         # If valid move and target tile is an opponent knight
         if targetTilePiece == "on1" or targetTilePiece == "on2":
 
             self.board[targetLocation[0]][targetLocation[1]] = action[0]
-            observation = np.array(self.board)
+            self.board[sourceLocation[0]][sourceLocation[1]] = "_"
+            observation = self.board
             reward = 30.0
             done = False
             info = {"Valid move made, opponent knight taken"}
+            switchPlayer = True
             
         
         # If valid move and target tile is an opponent bishop
         if targetTilePiece == "ob1" or targetTilePiece == "ob2":
 
             self.board[targetLocation[0]][targetLocation[1]] = action[0]
-            observation = np.array(self.board)
+            self.board[sourceLocation[0]][sourceLocation[1]] = "_"
+            observation = self.board
             reward = 30.0
             done = False
             info = {"Valid move made, opponent bishop taken"}
+            switchPlayer = True
             
         
         # If valid move and target tile is an opponent rook
         if targetTilePiece == "or1" or targetTilePiece == "or2":
 
             self.board[targetLocation[0]][targetLocation[1]] = action[0]
-            observation = np.array(self.board)
+            self.board[sourceLocation[0]][sourceLocation[1]] = "_"
+            observation = self.board
             reward = 50.0
             done = False
             info = {"Valid move made, opponent rook taken"}
+            switchPlayer = True
             
         
         # If valid move and target tile is an opponent queen
         if targetTilePiece == "oq":
 
             self.board[targetLocation[0]][targetLocation[1]] = action[0]
-            observation = np.array(self.board)
+            self.board[sourceLocation[0]][sourceLocation[1]] = "_"
+            observation = self.board
             reward = 90.0
             done = False
             info = {"Valid move made, opponent queen taken"}
-            
+            switchPlayer = True
 
-        return observation, reward, done, info
+        if targetTilePiece == "ok":
+
+            self.board[targetLocation[0]][targetLocation[1]] = action[0]
+            self.board[sourceLocation[0]][sourceLocation[1]] = "_"
+            observation = self.board
+            reward = 10000.0
+            done = True
+            info = {"Valid move made, opponent King taken"}
+            switchPlayer = True
+
+        print("Board: "+str(self.board))
+        print("Action: "+str(action))
+        print("Source Location: " + str(sourceLocation))
+        print("Target Location: " + str(targetLocation))
+        print("Source Tile: " + str(self.board[sourceLocation[0]][sourceLocation[1]]))
+        print("Target Tile: " + str(self.board[targetLocation[0]][targetLocation[1]]))
+
+        self.trainANN( reward, qValues, actionIndex)
+
+        return observation, reward, done, info,switchPlayer
     
-    
-Annca = chessAI.create_chess_model()
-chessAI.save_ANN(Annca, "ANNCA")
+###############################################################################################################################################################
+
+
+
+
+###############################################################################################################################################################
+# AI Training
+###############################################################################################################################################################
+
+env = ChessRLEnv()
+num_episodes = 1
+
+for episode in range(num_episodes):
+    state = env.reset()
+    total_reward = 0
+
+    while True:
+        # Replace the following line with your RL algorithm to choose an action
+        action = env.actionSpace[np.random.choice(len(env.actionSpace))]
+        observation, reward, done, info,switchPlayer = env.step(action)
+
+        if switchPlayer:
+            env.changePlayer()
+
+        total_reward += reward
+
+        if done:
+            break
+
+    print(f"Episode {episode + 1}/{num_episodes}, Total Reward: {total_reward}")
+
+# Save the trained model
+env.ANN.save_ANN("CANN")
+
+
+
+###############################################################################################################################################################
