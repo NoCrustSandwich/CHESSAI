@@ -5,27 +5,39 @@ import chessController
 import numpy as np
 import keyboard
 import time
-import os
+
 
 
 ###############################################################################################################################################################
 #ANNCAV2 - Artificial Neural Network Chess Agent Version 2
 ###############################################################################################################################################################
 
-class ANNCAv2:
+class ANNCA:
 
-    def __init__(self):
+    def __init__(self, state):
 
         # Initializes instances of the classes necessary for the agent
         self.chessWebScraper = chessWS.webScraper()
         self.chessLogic = chessRL.ChessRLEnv()
         self.chessController = chessController.controller()
+        self.state = state
 
-        # Automatically enter IDLE state by default
-        self.IDLEState()
+        # Enter IDLE state when you want ANNCA to play
+        if self.state == "run":
+            self.runState()
 
-     # IDLE state for Agent waiting for instruction
-    def IDLEState(self):
+        if self.state == "dataTrain":
+            pass
+
+        if self.state == "activeTrain":
+            pass
+
+    # Returns the state ANNCA is in currently
+    def getState(self):
+        return self.state
+
+     # IDLE run state for Agent waiting for instruction
+    def runState(self):
 
         # Input the gameURL
         gameURL = input("Input gameURL:")
@@ -60,33 +72,6 @@ class ANNCAv2:
                 self.chessLogic.ANN.save_ANN("CANN")
                 exit()
 
-            
-
-    # Trains the logic of the agent to be more accurate by playing against itself
-    def trainLogic(self, numOfEpisodes):
-
-        for episode in range(numOfEpisodes):
-            self.chessLogic.reset()
-            total_reward = 0
-
-            while True:
-                
-                action = self.chessLogic.actionSpace[np.random.choice(len(self.chessLogic.actionSpace))]
-                observation, reward, done, info, switchPlayer, startLocation, endLocation = self.chessLogic.step(action)
-
-                if switchPlayer:
-                    self.chessLogic.render()
-                    self.chessLogic.changePlayer()
-
-                total_reward += reward
-
-                if done:
-                    break
-
-            print(f"Episode {episode + 1}/{numOfEpisodes}, Total Reward: {total_reward}")
-
-        # Saves trained model
-        self.chessLogic.ANN.save_ANN("CANN")
 
 
 #ANNCA = ANNCAv2()
