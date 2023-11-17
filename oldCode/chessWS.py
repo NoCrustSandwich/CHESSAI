@@ -1,21 +1,19 @@
 # Library Imports
-from selenium import webdriver
-import time
+import requests
 import re
 
 
 
 ###############################################################################################################################################################
-# Webscraper
+# Chess.com chessboard webscraper
 ###############################################################################################################################################################
 
-class webScraper:
+class webscaper:
 
     def __init__(self):
 
         self.playerColor = ""
         self.gameURL = ""
-        self.webPage = None
 
         self.currentBoard = [["_","_","_","_","_","_","_","_"],
                 ["_","_","_","_","_","_","_","_"],
@@ -26,28 +24,17 @@ class webScraper:
                 ["_","_","_","_","_","_","_","_"],
                 ["_","_","_","_","_","_","_","_"]]
 
-        
+        self.percentToIndex = {
+            '0':0,
+            '14.29%':1,
+            '28.57%':2,
+            '42.86%':3,
+            '57.14%':4,
+            '71.43%':5,
+            '85.71%':6,
+            '100%':7
 
-    # Opens a chrome web page instance of the game
-    def openWebPage(self):
-
-        # Create ChromeOptions to prevent it from displaying the webpage GUI
-        chromeOptions = webdriver.ChromeOptions()
-        chromeOptions.add_argument("--headless")
-
-        # Create a new instance of the Chrome browser
-        self.webPage = webdriver.Chrome(options=chromeOptions)
-
-        # Navigate to a website
-        self.webPage.get(self.gameURL)
-
-        # Wait 3 seconds for page to load and retrieve most recent data
-        time.sleep(5)
-
-    # Returns the webpage html content
-    def getWebPageContent(self):
-        return self.webPage.page_source
-    
+        }
 
     # Updates the player color
     def updatePlayerColor(self, color):
@@ -61,43 +48,53 @@ class webScraper:
     def getPlayerColor(self):
         return self.playerColor
 
-    # Finds the occurences of the pieces present
-    def findAllOccurrences(self, text, searchSubstring):
-        occurrences = []
-        index = text.find(searchSubstring)
-
-        while index != -1:
-            occurrences.append(index)
-            index = text.find(searchSubstring, index + 1)
-
-        return occurrences
-
-
     # Returns the popluated piece locations of a chess.com game
     def updateCurrentBoard(self):
 
-        # Retrives the webpage content
-        htmlContent = self.getWebPageContent()
-        
-        # Seaches for this string which refers to populated pieces on the board
-        searchSubstring = '<div class="piece '
+        response = requests.get(self.gameURL)
 
-        allOccurrences = self.findAllOccurrences(htmlContent, searchSubstring)
+        # http request to chess.com
+        if response.status_code == 200:
+            htmlContent = response.text
+        else:
+            print("Failed to retrieve the game page.")
+
+        
+        # Finds the occurences of the pieces present
+        def findAllOccurrences(text, searchSubstring):
+            occurrences = []
+            index = text.find(searchSubstring)
+
+            while index != -1:
+                occurrences.append(index)
+                index = text.find(searchSubstring, index + 1)
+
+            return occurrences
+
+
+        # Seaches for this string which refers to populated pieces on the board
+        searchSubstring = 'var(--theme-piece-set-'
+
+        allOccurrences = findAllOccurrences(htmlContent, searchSubstring)
+        
+        
+
 
         # Processes the html content and returns it as a tuple of pieces and repective index postions on an 8x8 board
         pieceLocations = []
 
         for pieceIndex in allOccurrences:
 
-            pieceType = htmlContent[pieceIndex+18:pieceIndex+20]
-            
-            preprocessedLocation = htmlContent[pieceIndex+28:pieceIndex+30]
-            
+            pieceType = htmlContent[pieceIndex+22:pieceIndex+24]
 
-            firstNumber = int(preprocessedLocation[0])-1
-            secondNumber = int(preprocessedLocation[1])-1
+            preprocessedLocation = htmlContent[pieceIndex+112:pieceIndex+140]
 
-            pieceLocations.append((pieceType,(firstNumber,secondNumber)))
+            splitStrings =  re.split(' ', preprocessedLocation)
+
+            firstNumber = splitStrings[0]
+            secondNumber = splitStrings[1]
+
+            pieceLocations.append((pieceType,(self.percentToIndex[firstNumber],self.percentToIndex[secondNumber])))
                 
         
         # adds rendered pieces
@@ -114,8 +111,6 @@ class webScraper:
                 newPiece = pre + piece[0][1]
 
                 self.currentBoard[piece[1][1]][piece[1][0]]  = newPiece
-
-            self.currentBoard = [row[::-1] for row in self.currentBoard[::-1]]
 
 
         else:
@@ -184,15 +179,10 @@ class webScraper:
     def getCurrentBoard(self):
         return self.currentBoard
 
-        
 ###############################################################################################################################################################
 
-"""
-new = webScraper()
-
+new = webscaper()
 new.updateGameURL("https://www.chess.com/game/daily/585819547")
-new.updatePlayerColor("w")
-new.openWebPage()
+new.updatePlayerColor("b")
 new.updateCurrentBoard()
 print(new.getCurrentBoard())
-"""

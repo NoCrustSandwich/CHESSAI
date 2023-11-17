@@ -2,7 +2,6 @@
 import gym
 from gym import spaces
 import numpy as np
-import copy
 import chessANN
 
 
@@ -16,9 +15,6 @@ class ChessRLEnv(gym.Env):
     def __init__(self):
         
 
-
-
-        
         # Dictionary to translate board to opposing players perspective
         self.playerChanger = {
 
@@ -363,6 +359,30 @@ class ChessRLEnv(gym.Env):
             print("\n")
 
 
+    # Updates the current board
+    def updateBoard(self, newBoard):
+        self.board = newBoard
+
+    # Returns the move prediction made by ANN as source and target location arrays
+    def getMovePrediction(self):
+
+
+        switchPlayer = False
+
+        # Repeat unitl valid move is made and instruction is given to switchplayer
+        while not switchPlayer:
+
+            # Retrieves predicted Qvalues from ANN and determines the predicted action based on the highest qvalue
+            qValues = self.ANN.model.predict(self.preprosessANNInput())
+            action = self.actionSpace[np.argmax(qValues)]
+
+            observation, reward, done, info, switchPlayer, startLocation, endLocation = self.step(action)
+            print(action)
+            print(info)
+            print(observation)
+
+        return startLocation, endLocation
+
     # Resets back to starting position
     def resetBoard(self):
         # Reset the board to its initial state
@@ -376,10 +396,9 @@ class ChessRLEnv(gym.Env):
                 ["r1","n1","b1","q","k","b2","n2","r2"]]
 
 
-    
-
     # Returns translated board in numpy array format for ANN input
     def preprosessANNInput(self):
+
         translatedBoard = [[self.pieceToInt[piece] for piece in row] for row in self.board]
         return np.array([translatedBoard])
 
@@ -422,10 +441,12 @@ class ChessRLEnv(gym.Env):
             done = False
             info = {"Invalid Move, Piece is not present on the board"}
             switchPlayer = False
+            startLocation = None
+            endLocation = None
 
             self.trainANN(reward,qValues, actionIndex)
 
-            return observation, reward, done, info,switchPlayer
+            return observation, reward, done, info, switchPlayer, startLocation, endLocation
 
         # Checks if the move is out of range
         if targetLocation[0]>7 or targetLocation[1]>7 or targetLocation[0]<0 or targetLocation[1]<0:
@@ -435,10 +456,12 @@ class ChessRLEnv(gym.Env):
             done = False
             info = {"Invalid Move, Target Location is out of range"}
             switchPlayer = False
+            startLocation = None
+            endLocation = None
 
             self.trainANN(reward,qValues, actionIndex)
 
-            return observation, reward, done, info,switchPlayer
+            return observation, reward, done, info, switchPlayer, startLocation, endLocation
 
 
 
@@ -456,10 +479,12 @@ class ChessRLEnv(gym.Env):
             done = False
             info = {"Invalid Move, Cannot capture piece that belongs to player"}
             switchPlayer = False
+            startLocation = None
+            endLocation = None
 
             self.trainANN(reward,qValues, actionIndex)
 
-            return observation, reward, done, info, switchPlayer
+            return observation, reward, done, info, switchPlayer, startLocation, endLocation
        
 
 
@@ -475,10 +500,12 @@ class ChessRLEnv(gym.Env):
                 done = False
                 info = {"Invalid Move, pawn cannot move 2 spaces unless in starting position"}
                 switchPlayer = False
+                startLocation = None
+                endLocation = None
 
                 self.trainANN(reward,qValues, actionIndex)
 
-                return observation, reward, done, info, switchPlayer
+                return observation, reward, done, info, switchPlayer, startLocation, endLocation
             
             if action[1][0]!=0 and targetTilePiece == "_":
 
@@ -487,10 +514,12 @@ class ChessRLEnv(gym.Env):
                 done = False
                 info = {"Invalid Move, pawn cannot side ways unless opossing piece is there"}
                 switchPlayer = False
+                startLocation = None
+                endLocation = None
 
                 self.trainANN(reward,qValues, actionIndex)
 
-                return observation, reward, done, info, switchPlayer
+                return observation, reward, done, info, switchPlayer, startLocation, endLocation
             
 
             if action[1][1] == 2 and sourceLocation[0]==6 and self.board[sourceLocation[0]-1][sourceLocation[1]] != "_":
@@ -500,10 +529,12 @@ class ChessRLEnv(gym.Env):
                 done = False
                 info = {"Invalid Move, pawn is blocked by other piece in it's path"}
                 switchPlayer = False
+                startLocation = None
+                endLocation = None
 
                 self.trainANN(reward,qValues, actionIndex)
 
-                return observation, reward, done, info, switchPlayer
+                return observation, reward, done, info, switchPlayer, startLocation, endLocation
 
             if action[1][1] == 1 and targetTilePiece != "_":
 
@@ -512,10 +543,12 @@ class ChessRLEnv(gym.Env):
                 done = False
                 info = {"Invalid Move, pawn is blocked by other piece in it's path"}
                 switchPlayer = False
+                startLocation = None
+                endLocation = None
 
                 self.trainANN(reward,qValues, actionIndex)
 
-                return observation, reward, done, info, switchPlayer
+                return observation, reward, done, info, switchPlayer, startLocation, endLocation
 
 
 
@@ -537,10 +570,12 @@ class ChessRLEnv(gym.Env):
                         done = False
                         info = {"Invalid Move, rook or queen is blocked by other piece in it's path"}
                         switchPlayer = False
+                        startLocation = None
+                        endLocation = None
 
                         self.trainANN(reward,qValues, actionIndex)
 
-                        return observation, reward, done, info, switchPlayer
+                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
                     
 
 
@@ -559,10 +594,12 @@ class ChessRLEnv(gym.Env):
                         done = False
                         info = {"Invalid Move, rook or queen is blocked by other piece in it's path"}
                         switchPlayer = False
+                        startLocation = None
+                        endLocation = None
 
                         self.trainANN(reward,qValues, actionIndex)
 
-                        return observation, reward, done, info, switchPlayer
+                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
 
 
 
@@ -580,10 +617,12 @@ class ChessRLEnv(gym.Env):
                         done = False
                         info = {"Invalid Move, rook or queen is blocked by other piece in it's path"}
                         switchPlayer = False
+                        startLocation = None
+                        endLocation = None
 
                         self.trainANN(reward,qValues, actionIndex)
 
-                        return observation, reward, done, info, switchPlayer
+                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
                     
 
 
@@ -602,10 +641,12 @@ class ChessRLEnv(gym.Env):
                         done = False
                         info = {"Invalid Move, rook or queen is blocked by other piece in it's path"}
                         switchPlayer = False
+                        startLocation = None
+                        endLocation = None
 
                         self.trainANN(reward,qValues, actionIndex)
 
-                        return observation, reward, done, info, switchPlayer
+                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
 
 
         # bishop and queen invalid move attempts
@@ -625,10 +666,12 @@ class ChessRLEnv(gym.Env):
                         done = False
                         info = {"Invalid Move, bishop or queen is blocked by other piece in it's path"}
                         switchPlayer = False
+                        startLocation = None
+                        endLocation = None
 
                         self.trainANN(reward,qValues, actionIndex)
 
-                        return observation, reward, done, info, switchPlayer
+                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
                     
 
 
@@ -648,10 +691,12 @@ class ChessRLEnv(gym.Env):
                         done = False
                         info = {"Invalid Move, bishop or queen is blocked by other piece in it's path"}
                         switchPlayer = False
+                        startLocation = None
+                        endLocation = None
 
                         self.trainANN(reward,qValues, actionIndex)
 
-                        return observation, reward, done, info, switchPlayer
+                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
 
             if action[1][0] < 0 and action[1][1] > 0:
 
@@ -667,10 +712,12 @@ class ChessRLEnv(gym.Env):
                         done = False
                         info = {"Invalid Move, bishop or queen is blocked by other piece in it's path"}
                         switchPlayer = False
+                        startLocation = None
+                        endLocation = None
 
                         self.trainANN(reward,qValues, actionIndex)
 
-                        return observation, reward, done, info, switchPlayer
+                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
 
             if action[1][0] < 0 and action[1][1] < 0:
 
@@ -686,10 +733,12 @@ class ChessRLEnv(gym.Env):
                         done = False
                         info = {"Invalid Move, bishop or queen is blocked by other piece in it's path"}
                         switchPlayer = False
+                        startLocation = None
+                        endLocation = None
 
                         self.trainANN(reward,qValues, actionIndex)
 
-                        return observation, reward, done, info, switchPlayer
+                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
 
 
 
@@ -704,6 +753,8 @@ class ChessRLEnv(gym.Env):
             done = False
             info = {"Valid move made onto empty tile"}
             switchPlayer = True
+            startLocation = sourceLocation
+            endLocation = targetLocation
             
             
 
@@ -717,6 +768,8 @@ class ChessRLEnv(gym.Env):
             done = False
             info = {"Valid move made, opponent pawn taken"}
             switchPlayer = True
+            startLocation = sourceLocation
+            endLocation = targetLocation
             
 
         # If valid move and target tile is an opponent knight
@@ -729,6 +782,8 @@ class ChessRLEnv(gym.Env):
             done = False
             info = {"Valid move made, opponent knight taken"}
             switchPlayer = True
+            startLocation = sourceLocation
+            endLocation = targetLocation
             
         
         # If valid move and target tile is an opponent bishop
@@ -741,6 +796,8 @@ class ChessRLEnv(gym.Env):
             done = False
             info = {"Valid move made, opponent bishop taken"}
             switchPlayer = True
+            startLocation = sourceLocation
+            endLocation = targetLocation
             
         
         # If valid move and target tile is an opponent rook
@@ -753,6 +810,8 @@ class ChessRLEnv(gym.Env):
             done = False
             info = {"Valid move made, opponent rook taken"}
             switchPlayer = True
+            startLocation = sourceLocation
+            endLocation = targetLocation
             
         
         # If valid move and target tile is an opponent queen
@@ -765,6 +824,8 @@ class ChessRLEnv(gym.Env):
             done = False
             info = {"Valid move made, opponent queen taken"}
             switchPlayer = True
+            startLocation = sourceLocation
+            endLocation = targetLocation
 
         if targetTilePiece == "ok":
 
@@ -775,9 +836,11 @@ class ChessRLEnv(gym.Env):
             done = True
             info = {"Valid move made, opponent King taken"}
             switchPlayer = True
+            startLocation = sourceLocation
+            endLocation = targetLocation
 
 
-        '''
+       
 
         print("Board: "+str(self.board))
         print("Action: "+str(action))
@@ -786,48 +849,16 @@ class ChessRLEnv(gym.Env):
         print("Source Tile: " + str(self.board[sourceLocation[0]][sourceLocation[1]]))
         print("Target Tile: " + str(self.board[targetLocation[0]][targetLocation[1]]))
 
-        '''
+        
 
         self.trainANN( reward, qValues, actionIndex)
 
-        return observation, reward, done, info,switchPlayer
+        return observation, reward, done, info, switchPlayer, startLocation, endLocation
     
 ###############################################################################################################################################################
 
 
 
 
-###############################################################################################################################################################
-# AI Training
-###############################################################################################################################################################
-def trainAI():
-
-    env = ChessRLEnv()
-    num_episodes = 1
-
-    for episode in range(num_episodes):
-        state = env.reset()
-        total_reward = 0
-
-        while True:
-            # Replace the following line with your RL algorithm to choose an action
-            action = env.actionSpace[np.random.choice(len(env.actionSpace))]
-            observation, reward, done, info,switchPlayer = env.step(action)
-
-            if switchPlayer:
-                env.render()
-                env.changePlayer()
-
-            total_reward += reward
-
-            if done:
-                break
-
-        print(f"Episode {episode + 1}/{num_episodes}, Total Reward: {total_reward}")
-
-    # Save the trained model
-    env.ANN.save_ANN("CANN")
 
 
-trainAI()
-###############################################################################################################################################################

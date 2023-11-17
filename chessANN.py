@@ -22,7 +22,7 @@ class ANN:
         x = Dense(64, activation='relu')(x)
         Q_values = Dense(226, name='q_values', activation='linear')(x)
         model = Model(inputs=input_layer, outputs=Q_values)
-        model.compile(optimizer="adam", loss='mse', metrics=['accuracy'])
+        model.compile(optimizer="adam", loss='mae', metrics=['accuracy'])
         return model
 
     # Loads ANN from a .JSON file
@@ -43,7 +43,7 @@ class ANN:
         model.load_weights(h5_filename)
 
         # Sets up ANN optimizers and loss on load
-        model.compile(optimizer="adam", loss='mse', metrics=['accuracy'])
+        model.compile(optimizer="adam", loss='mae', metrics=['accuracy'])
 
         return model
 
