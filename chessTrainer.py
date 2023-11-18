@@ -9,9 +9,7 @@ import re
 # ANN Trainer
 ###############################################################################################################################################################
 
-
 class trainer:
-
 
     def __init__(self, state):
 
@@ -42,7 +40,7 @@ class trainer:
 
 
         # Construct the path to the PGN file in the F:\LichlessData directory
-        self.PGNFilePath = r'F:\LichlessData\lichess_db_standard_rated_2013-01.pgn'
+        self.PGNFilePath = r'F:\LichlessData\lichess_db_standard_rated_2014-07.pgn'
 
         self.ANNCAv2 = ANNCAv2.ANNCA(state)
 
@@ -69,7 +67,7 @@ class trainer:
 
         return custom_board
 
-     # Trains the logic of the agent to be more accurate by playing against itself
+    # Trains the logic of the agent to be more accurate by playing against itself
     def activeTrain(self, numOfEpisodes):
 
         for episode in range(numOfEpisodes):
@@ -130,7 +128,6 @@ class trainer:
     # Converts PGN file to a board input 2D list
     def dataTrain(self):
 
-        board = chess.Board()
         whiteTurn = True
         
         # Open the PGN file for reading
@@ -146,17 +143,17 @@ class trainer:
             elif result == '1/2-1/2':
                 winner = 'D'
 
-            print(game.mainline_moves())
-
             if game:
-                board = game.board()
-                inputBoard = self.preprocessInput(self.convertBoardToANNFormat(board), winner)
+                self.ANNCAv2.chessLogic.reset()
 
                 for move in game.mainline_moves():
+                    print("Move: "+ str(move))
                     
                     if(whiteTurn):
 
-                        print("Before Move: "+str(inputBoard))
+                        print("White")
+
+                        print("Before Move: "+str(self.ANNCAv2.chessLogic.getCurrentBoard()))
 
                         pattern = r'\b[A-Za-z]\d+\b'
                         result = re.sub(pattern, '', str(move))
@@ -167,13 +164,11 @@ class trainer:
                             sourceMove = str(result)[0:2]
                             targetMove = str(result)[2:4]
 
-                            action = self.preprocessOutput(sourceMove,targetMove,inputBoard,winner)
+                            action = self.preprocessOutput(sourceMove,targetMove,self.ANNCAv2.chessLogic.getCurrentBoard(),"W")
 
                             # Very high reward to incentivise this move over any others
                             reward = 100000.0
                             
-                            self.ANNCAv2.chessLogic.updateBoard(inputBoard)
-
                             # Retrieves Qvalues from ANN and action index of the action being trained
                             qValues = self.ANNCAv2.chessLogic.ANN.model.predict(self.ANNCAv2.chessLogic.preprosessANNInput())
                             actionIndex = self.ANNCAv2.chessLogic.actionSpace.index(action)
@@ -184,15 +179,16 @@ class trainer:
 
                             self.ANNCAv2.chessLogic.updateBoardWithMove(self.positionToCoordinatesWhite[sourceMove], self.positionToCoordinatesWhite[targetMove])
                             self.ANNCAv2.chessLogic.changePlayer()
-                            inputBoard = self.ANNCAv2.chessLogic.getCurrentBoard()
-
-                        print("After Move: "+str(inputBoard))
+    
 
                         whiteTurn = False
 
                     else:
                         
-                        print("Before Move: "+str(inputBoard))
+                        print("Black")
+
+                        print("Before Move: "+str(self.ANNCAv2.chessLogic.getCurrentBoard()))
+                        
                         
                         pattern = r'\b[A-Za-z]\d+\b'
                         result = re.sub(pattern, '', str(move))
@@ -200,15 +196,16 @@ class trainer:
                         print(result)
 
                         if len(result) == 4:
+
                             sourceMove = str(result)[0:2]
                             targetMove = str(result)[2:4]
 
-                            action = self.preprocessOutput(sourceMove,targetMove,inputBoard,winner)
+                            action = self.preprocessOutput(sourceMove,targetMove,self.ANNCAv2.chessLogic.getCurrentBoard(),"B")
+
+                            print(action)
 
                             # Very high reward to incentivise this move over any others
                             reward = 100000.0
-                            
-                            self.ANNCAv2.chessLogic.updateBoard(inputBoard)
 
                             # Retrieves Qvalues from ANN and action index of the action being trained
                             qValues = self.ANNCAv2.chessLogic.ANN.model.predict(self.ANNCAv2.chessLogic.preprosessANNInput())
@@ -220,11 +217,13 @@ class trainer:
 
                             self.ANNCAv2.chessLogic.updateBoardWithMove(self.positionToCoordinatesBlack[sourceMove], self.positionToCoordinatesBlack[targetMove])
                             self.ANNCAv2.chessLogic.changePlayer()
-                            inputBoard = self.ANNCAv2.chessLogic.getCurrentBoard()
+                            
 
-                        print("After Move: "+str(inputBoard))
+                        
                         whiteTurn = True
-                
+
+                    print("After Move: "+str(self.ANNCAv2.chessLogic.getCurrentBoard()))
+
         # Saves trained model
         self.ANNCAv2.chessLogic.ANN.save_ANN("CANN")
 
@@ -353,19 +352,23 @@ class trainer:
     # Translates the inputted moves from algebraic coordinate notation to index notation
     def preprocessOutput(self,sourceMove,targetMove,inputBoard, playerColor):
 
+
         # Preprocesses the format to be like the action format for the ANN
         if playerColor == "W":
             sourceCoords = self.positionToCoordinatesWhite[sourceMove]
             targetCoords = self.positionToCoordinatesWhite[targetMove]
             piece = inputBoard[sourceCoords[0]][sourceCoords[1]]
 
-            action = (piece,(targetCoords[1]-sourceCoords[1],sourceCoords[0]-targetCoords[0]))
+            action = (piece,(targetCoords[0]-sourceCoords[0],targetCoords[1]-sourceCoords[1]))
         else:
+
+            
+
             sourceCoords = self.positionToCoordinatesBlack[sourceMove]
             targetCoords = self.positionToCoordinatesBlack[targetMove]
             piece = inputBoard[sourceCoords[0]][sourceCoords[1]]
 
-            action = (piece,(targetCoords[1]-sourceCoords[1],sourceCoords[0]-targetCoords[0]))
+            action = (piece,(targetCoords[0]-sourceCoords[0],targetCoords[1]-sourceCoords[1]))
 
         return action
 
