@@ -408,8 +408,16 @@ class ChessRLEnv(gym.Env):
         qValues[0, actionIndex] = reward
         self.ANN.model.fit(self.preprosessANNInput(), qValues, epochs=1, verbose=0)
 
+    # Updates the board with the input moves
+    def updateBoardWithMove(self, sourceMove, targetMove):
 
-        
+        piece = self.board[sourceMove[0]][sourceMove[1]]
+        self.board[sourceMove[0]][sourceMove[1]] = "_"
+        self.board[targetMove[0]][targetMove[1]] = piece
+                
+    # Returns the current board
+    def getCurrentBoard(self):
+        return self.board
 
     # Runs through an action for the RL
     def step(self, action):
