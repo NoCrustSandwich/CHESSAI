@@ -1,7 +1,7 @@
 # Class and Library Imports
 import chessWS
-import chessRL
-import chessController
+import chessRLE
+import chessIC
 import numpy as np
 import keyboard
 import time
@@ -18,18 +18,15 @@ class ANNCA:
 
         # Initializes instances of the classes necessary for the agent
         self.chessWebScraper = chessWS.webScraper()
-        self.chessLogic = chessRL.ChessRLEnv()
-        self.chessController = chessController.controller()
+        self.chessLogic = chessRLE.RLE()
+        self.chessController = chessIC.controller()
         self.state = state
 
         # Enter IDLE state when you want ANNCA to play
-        if self.state == "run":
+        if self.state == "RUN":
             self.runState()
 
-        if self.state == "dataTrain":
-            pass
-
-        if self.state == "activeTrain":
+        if self.state == "UT":
             pass
 
     # Returns the state ANNCA is in currently
@@ -71,10 +68,6 @@ class ANNCA:
                 # Saves trained model
                 self.chessLogic.ANN.save_ANN("CANN")
                 exit()
-
-
-
-#ANNCA = ANNCAv2()
 
 ###############################################################################################################################################################
 

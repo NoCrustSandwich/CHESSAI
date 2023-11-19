@@ -1,6 +1,7 @@
 # Library Imports
 import pyautogui
 import time
+import screeninfo
 
 
 ###############################################################################################################################################################
@@ -11,6 +12,9 @@ class controller:
 
     def __init__(self):
         
+
+        self.primaryMonitirResolution = self.get_Screen_Resolution()
+
         self.chessBoardCoordinates1920x1080 = [
             [[350, 230], [450, 230], [550, 230], [650, 230], [750, 230], [850, 230], [950, 230], [1050, 230]],
             [[350, 330], [450, 330], [550, 330], [650, 330], [750, 330], [850, 330], [950, 330], [1050, 330]],
@@ -65,16 +69,36 @@ class controller:
     def getBlackCoords(self, index):
         return self.chessBoardTranslatedBlackCoordinates[index[0]][index[1]]
 
+    # Returns the screeen resolution as a string
+    def get_Screen_Resolution():
+        screen_info = screeninfo.get_monitors()
+        primary_screen = screen_info[0]
+        
+        width, height = primary_screen.width, primary_screen.height
+        res = str(width)+"x"+str(height)
+
+        return res
+
+    def boardToDisplayCoordinates(self, boardX, boardY):
+
+        if self.primaryMonitirResolution == "1980x1080":
+            x,y = self.chessBoardCoordinates1920x1080[boardX][boardY]
+
+        return x,y
+
     # Moves piece from initial location to the end location on the chess.com gamerBoard
     def movePieceExternally(self, startAddressIndex, endAddressIndex):
 
-        x, y = self.chessBoardCoordinates1920x1080[startAddressIndex[0]][startAddressIndex[1]]
+        x, y = self.boardToDisplayCoordinates(startAddressIndex[0],startAddressIndex[1])
+
         pyautogui.moveTo(x, y, 1)
         pyautogui.mouseDown()
         time.sleep(0.5)
         pyautogui.mouseUp()
         time.sleep(1)
-        x, y = self.chessBoardCoordinates1920x1080[endAddressIndex[0]][endAddressIndex[1]]
+
+        x, y = self.boardToDisplayCoordinates(endAddressIndex[0],endAddressIndex[1])
+
         pyautogui.moveTo(x, y, 1)
         pyautogui.mouseDown()
         time.sleep(0.5)
@@ -86,3 +110,4 @@ class controller:
     
 
 ###############################################################################################################################################################
+

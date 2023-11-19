@@ -10,11 +10,10 @@ import chessANN
 ###############################################################################################################################################################
 
 # Class for the chess board enviorment for the RL
-class ChessRLEnv(gym.Env):
+class RLE(gym.Env):
 
     def __init__(self):
         
-
         # Dictionary to translate board to opposing players perspective
         self.playerChanger = {
 
@@ -137,8 +136,6 @@ class ChessRLEnv(gym.Env):
                 ("k", (1, -1)),
                 ("k", (1, 1)),
                 
-
-
 
                 ("b1", (-1, 1)),
                 ("b1", (-2, 2)),
@@ -343,13 +340,13 @@ class ChessRLEnv(gym.Env):
                 ("q", (0, -6)),
                 ("q", (0, -7)),
 
-
         ]
 
         self.observationSpace = spaces.Box(low=-6, high=6, shape=(8, 8), dtype=int)
         self.ANN = chessANN.ANN()
 
-    # Reverses the board side to play from the oppostive perspective
+
+    # Reverses the board to play from the oppostive perspective
     def changePlayer(self):
         
         self.board = [row[::-1] for row in self.board[::-1]]
@@ -359,36 +356,39 @@ class ChessRLEnv(gym.Env):
                 self.board[i][j] = self.playerChanger[self.board[i][j]]
         
 
-    # Renders the current board
+    # Renders the current board on the console
     def render(self):
         for row in self.board:
             print(" ".join("{:<3}".format(cell) for cell in row))
             print("\n")
 
 
-    # Updates the current board
+    # Updates the current board with input board
     def updateBoard(self, newBoard):
         self.board = newBoard
 
     # Returns the move prediction made by ANN as source and target location arrays
     def getMovePrediction(self):
 
-
         switchPlayer = False
 
         # Repeat unitl valid move is made and instruction is given to switchplayer
         while not switchPlayer:
+
+            print("Board Before Move"+str(self.board))
 
             # Retrieves predicted Qvalues from ANN and determines the predicted action based on the highest qvalue
             qValues = self.ANN.model.predict(self.preprosessANNInput())
             action = self.actionSpace[np.argmax(qValues)]
 
             observation, reward, done, info, switchPlayer, startLocation, endLocation = self.step(action)
+
             print(action)
             print(info)
-            print(observation)
+            print("Board After Move"+str(observation))
 
         return startLocation, endLocation
+
 
     # Resets back to starting position
     def resetBoard(self):
@@ -408,6 +408,7 @@ class ChessRLEnv(gym.Env):
 
         translatedBoard = [[self.pieceToInt[piece] for piece in row] for row in self.board]
         return np.array([translatedBoard])
+
 
     # Trains ANN based on reward
     def trainANN(self, reward, qValues, actionIndex):
@@ -433,9 +434,6 @@ class ChessRLEnv(gym.Env):
         qValues = self.ANN.model.predict(self.preprosessANNInput())
         actionIndex = self.actionSpace.index(action)
         
-       
-       
-
         # Determines the index location of the piece taking the action
         piecePresent = False
 
@@ -446,7 +444,6 @@ class ChessRLEnv(gym.Env):
                     targetLocation =  [x+action[1][0],y+action[1][1]]
                     piecePresent = True
 
-        
 
         # Checks if the piece being moved is present on the board
         if not piecePresent:
@@ -479,10 +476,6 @@ class ChessRLEnv(gym.Env):
             return observation, reward, done, info, switchPlayer, startLocation, endLocation
 
 
-
-
-
-
         # Retrieves item present at the target tile
         targetTilePiece = self.board[targetLocation[0]][targetLocation[1]] 
 
@@ -501,10 +494,6 @@ class ChessRLEnv(gym.Env):
 
             return observation, reward, done, info, switchPlayer, startLocation, endLocation
        
-
-
-
-
         # Pawn invalid move attempts
         if action[0] in {"p1", "p2", "p3", "p4","p5","p6","p7","p8"}:
 
@@ -565,8 +554,6 @@ class ChessRLEnv(gym.Env):
 
                 return observation, reward, done, info, switchPlayer, startLocation, endLocation
 
-
-
         # Rook and queen invalid move attempts
         if action[0] in {"r1", "r2", "q"}:
 
@@ -592,9 +579,6 @@ class ChessRLEnv(gym.Env):
 
                         return observation, reward, done, info, switchPlayer, startLocation, endLocation
                     
-
-
-
             if action[1][1] < 0:
 
                 for index in range(-action[1][1]):
@@ -615,8 +599,6 @@ class ChessRLEnv(gym.Env):
                         self.trainANN(reward,qValues, actionIndex)
 
                         return observation, reward, done, info, switchPlayer, startLocation, endLocation
-
-
 
             if action[1][0] > 0:
 
@@ -639,9 +621,6 @@ class ChessRLEnv(gym.Env):
 
                         return observation, reward, done, info, switchPlayer, startLocation, endLocation
                     
-
-
-
             if action[1][0] < 0:
 
                 for index in range(-action[1][0]):
@@ -688,9 +667,6 @@ class ChessRLEnv(gym.Env):
 
                         return observation, reward, done, info, switchPlayer, startLocation, endLocation
                     
-
-
-
 
             if action[1][0] > 0 and action[1][1] < 0:
 
@@ -756,8 +732,6 @@ class ChessRLEnv(gym.Env):
                         return observation, reward, done, info, switchPlayer, startLocation, endLocation
 
 
-
-
         # If valid move and target tile is empty
         if targetTilePiece == "_":
 
@@ -771,8 +745,6 @@ class ChessRLEnv(gym.Env):
             startLocation = sourceLocation
             endLocation = targetLocation
             
-            
-
         # If valid move and target tile is an opponent pawn
         if targetTilePiece in {"op1", "op2", "op3", "op4","op5","op6","op7","op8"}:
 
@@ -854,17 +826,13 @@ class ChessRLEnv(gym.Env):
             startLocation = sourceLocation
             endLocation = targetLocation
 
-
-       
-
+        # Shows status of successful move attempts being trained into ANN
         print("Board: "+str(self.board))
         print("Action: "+str(action))
         print("Source Location: " + str(sourceLocation))
         print("Target Location: " + str(targetLocation))
         print("Source Tile: " + str(self.board[sourceLocation[0]][sourceLocation[1]]))
         print("Target Tile: " + str(self.board[targetLocation[0]][targetLocation[1]]))
-
-        
 
         self.trainANN( reward, qValues, actionIndex)
 

@@ -13,22 +13,30 @@ class webScraper:
 
     def __init__(self):
 
-        self.playerColor = ""
         self.gameURL = ""
         self.webPage = None
 
-        self.currentBoard = [["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"]]
+        # Dictionary to translate board to opposing players perspective
+        self.playerChanger = {
 
-        
+            "_":"_",
+            "p1": "op1", "p2": "op2", "p3": "op3", "p4": "op4", "p5": "op5", "p6": "op6", "p7": "op7", "p8": "op8",
+            "op1": "p1", "op2": "p2", "op3": "p3", "op4": "p4", "op5": "p5", "op6": "p6", "op7": "p7", "op8": "p8",
+            "n1": "on1", "n2": "on2",
+            "on1": "n1", "on2": "n2",
+            "b1": "ob1", "b2": "ob2",
+            "ob1": "b1", "ob2": "b2",
+            "r1": "or1", "r2": "or2",
+            "or1": "r1", "or2": "r2",
+            "q": "oq",
+            "oq": "q",
+            "k": "ok",
+            "ok": "k",
 
-    # Opens a chrome web page instance of the game
+        }
+
+
+    # Opens a chrome web page instance of the game in the background
     def openWebPage(self):
 
         # Create ChromeOptions to prevent it from displaying the webpage GUI
@@ -44,22 +52,15 @@ class webScraper:
         # Wait 3 seconds for page to load and retrieve most recent data
         time.sleep(5)
 
-    # Returns the webpage html content
-    def getWebPageContent(self):
-        return self.webPage.page_source
-    
-
-    # Updates the player color
-    def updatePlayerColor(self, color):
-        self.playerColor = color
 
     # Updates the game URL
     def updateGameURL(self, url):
         self.gameURL = url
 
-    # Returns the player color
-    def getPlayerColor(self):
-        return self.playerColor
+    # Returns the webpage html content
+    def getWebPageContent(self):
+        return self.webPage.page_source
+    
 
     # Finds the occurences of the pieces present
     def findAllOccurrences(self, text, searchSubstring):
@@ -73,8 +74,22 @@ class webScraper:
         return occurrences
 
 
-    # Returns the popluated piece locations of a chess.com game
-    def updateCurrentBoard(self):
+    # Returns a reversed board side to play from the oppostive perspective
+    def switchPlayer(self, board):
+        
+        # Rotates board 180 degrees
+        board = [row[::-1] for row in board[::-1]]
+
+        # Changes piece labels
+        for i in range(len(board)):
+            for j in range(len(board[i])):
+                board[i][j] = self.playerChanger[board[i][j]]
+        
+        return board
+
+
+    # Returns the piece locations of the current chess.com game page
+    def getPieceLocations(self):
 
         # Retrives the webpage content
         htmlContent = self.getWebPageContent()
@@ -94,44 +109,41 @@ class webScraper:
             preprocessedLocation = htmlContent[pieceIndex+28:pieceIndex+30]
             
 
-            firstNumber = int(preprocessedLocation[0])-1
-            secondNumber = int(preprocessedLocation[1])-1
+            col = int(preprocessedLocation[0])-1
+            row = abs(int(preprocessedLocation[1])-8)
 
-            pieceLocations.append((pieceType,(firstNumber,secondNumber)))
+            pieceLocations.append((pieceType,(row,col)))
+
+        return pieceLocations
                 
-        
-        # adds rendered pieces
-        if self.playerColor == "w":
-            for piece in pieceLocations:
 
-                color = piece[0][0]
+    # Renders the pieces stored in currentPieceLocations from whites persepctive and returns it as a 2d array
+    def renderBoardWhite(self, pieceLocations):
 
-                if color == "w":
-                    pre = ""
-                else:
-                    pre = "o"
-                
-                newPiece = pre + piece[0][1]
-
-                self.currentBoard[piece[1][1]][piece[1][0]]  = newPiece
-
-            self.currentBoard = [row[::-1] for row in self.currentBoard[::-1]]
+        # Initializes board as empty before rendering
+        currentBoard = [["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"]]
 
 
-        else:
+         # Renders pieces from white's perscpective
+        for piece in pieceLocations:
 
-            for piece in pieceLocations:
+            color = piece[0][0]
 
-                color = piece[0][0]
+            if color == "w":
+                pre = ""
+            else:
+                pre = "o"
+            
+            newPiece = pre + piece[0][1]
 
-                if color == "b":
-                    pre = ""
-                else:
-                    pre = "o"
-                
-                newPiece = pre + piece[0][1]
-
-                self.currentBoard[piece[1][1]][piece[1][0]]  = newPiece
+            currentBoard[piece[1][0]][piece[1][1]]  = newPiece
 
 
         # To maintain similar numbering between sides, numbered backwards for opponennt side because their side is mirrored
@@ -144,55 +156,52 @@ class webScraper:
         nCounter = 1
         onCounter = 2
 
-        # Adds Numbers to rendered pieces on currentboard
-        for i in range(len(self.currentBoard)):
-            for j in range(len(self.currentBoard[i])):
+        # Numbers rendered pieces on currentboard
+        for i in range(len(currentBoard)):
+            for j in range(len(currentBoard[i])):
 
-                if self.currentBoard[i][j] == "op":
-                    self.currentBoard[i][j] =  self.currentBoard[i][j]+str(opCounter)
+                if currentBoard[i][j] == "op":
+                    currentBoard[i][j] =  currentBoard[i][j]+str(opCounter)
                     opCounter-=1
                 
-                if self.currentBoard[i][j] == "ob":
-                    self.currentBoard[i][j] = self.currentBoard[i][j]+str(obCounter)
+                if currentBoard[i][j] == "ob":
+                    currentBoard[i][j] = currentBoard[i][j]+str(obCounter)
                     obCounter-=1
                 
-                if self.currentBoard[i][j] == "on":
-                    self.currentBoard[i][j] = self.currentBoard[i][j]+str(onCounter)
+                if currentBoard[i][j] == "on":
+                    currentBoard[i][j] = currentBoard[i][j]+str(onCounter)
                     onCounter-=1
 
-                if self.currentBoard[i][j] == "or":
-                    self.currentBoard[i][j] = self.currentBoard[i][j]+str(orCounter)
+                if currentBoard[i][j] == "or":
+                    currentBoard[i][j] = currentBoard[i][j]+str(orCounter)
                     orCounter-=1
 
 
-                if self.currentBoard[i][j] == "p":
-                    self.currentBoard[i][j] = self.currentBoard[i][j]+str(pCounter)
+                if currentBoard[i][j] == "p":
+                    currentBoard[i][j] = currentBoard[i][j]+str(pCounter)
                     pCounter+=1
                 
-                if self.currentBoard[i][j] == "b":
-                    self.currentBoard[i][j] = self.currentBoard[i][j]+str(bCounter)
+                if currentBoard[i][j] == "b":
+                    currentBoard[i][j] = currentBoard[i][j]+str(bCounter)
                     bCounter+=1
                 
-                if self.currentBoard[i][j] == "n":
-                    self.currentBoard[i][j] = self.currentBoard[i][j]+str(nCounter)
+                if currentBoard[i][j] == "n":
+                    currentBoard[i][j] = currentBoard[i][j]+str(nCounter)
                     nCounter+=1
 
-                if self.currentBoard[i][j] == "r":
-                    self.currentBoard[i][j] = self.currentBoard[i][j]+str(rCounter)
+                if currentBoard[i][j] == "r":
+                    currentBoard[i][j] = currentBoard[i][j]+str(rCounter)
                     rCounter+=1
 
-    def getCurrentBoard(self):
-        return self.currentBoard
+        return currentBoard
+    
+
+    # Renders the pieces stored in currentPieceLocations from whites persepctive and returns it as a 2d array
+    def renderBoardBlack(self, pieceLocations):
+
+        # Renders pieces from white's perspective and then switches player perspective
+        return self.switchPlayer(self.renderBoardWhite(pieceLocations))
+
 
         
 ###############################################################################################################################################################
-
-"""
-new = webScraper()
-
-new.updateGameURL("https://www.chess.com/game/daily/585819547")
-new.updatePlayerColor("w")
-new.openWebPage()
-new.updateCurrentBoard()
-print(new.getCurrentBoard())
-"""

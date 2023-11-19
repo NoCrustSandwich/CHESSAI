@@ -10,10 +10,10 @@ from keras.layers import Input, Flatten, Dense
 class ANN:
 
     def __init__(self):
-        self.model = self.load_ANN("CANN")
+        self.model = self.loadANN("CANN")
 
     # Creates an instance of the neural network model
-    def create_chess_model(self):
+    def createChessModel(self):
         input_layer = Input(shape=(8, 8))
         x = Flatten()(input_layer)
         x = Dense(512, activation='relu')(x)
@@ -23,10 +23,11 @@ class ANN:
         Q_values = Dense(226, name='q_values', activation='linear')(x)
         model = Model(inputs=input_layer, outputs=Q_values)
         model.compile(optimizer="adam", loss='mae', metrics=['accuracy'])
+
         return model
 
     # Loads ANN from a .JSON file
-    def load_ANN(self, filename):
+    def loadANN(self, filename):
         if filename.endswith('.json'):
             json_filename = filename
             h5_filename = filename[:-5] + '.h5'
@@ -48,12 +49,14 @@ class ANN:
         return model
 
     # Saves ANN as .JSON file
-    def save_ANN(self, filename):
+    def saveANN(self, filename):
         filename = 'ANNCAModels/' + filename
         self.model.save_weights(filename + '.h5')
         model_json = self.model.to_json()
         with open(filename + '.json', 'w') as json_file:
             json_file.write(model_json)
+        
+        return True
 
 
 ###############################################################################################################################################################
