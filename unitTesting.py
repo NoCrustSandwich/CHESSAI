@@ -182,12 +182,12 @@ if UT_For_chessWS:
 ###############################################################################################################################################################
 
 ###############################################################################################################################################################
-# Unit Testing: Reinforcment Learning Enviorment
+# Unit Testing: Reinforcment Learning Enviornment
 ###############################################################################################################################################################
 
 def UT_chessRLE():
 
-    # Reinforcment Learning Enviorment test fixture (UT Setup)
+    # Reinforcment Learning Enviornment test fixture (UT Setup)
     import numpy as np
     UT_RLE = chessRLE.RLE()
     UT_RLE.resetBoard()
@@ -211,7 +211,7 @@ def UT_chessRLE():
     
 
     print("------------------------------------------------------------------------------------------------------------------------------")
-    print("\tREINFORCMENT LEARNING ENVIORMENT UNIT TESTING")
+    print("\tREINFORCMENT LEARNING ENVIORNMENT UNIT TESTING")
     print("------------------------------------------------------------------------------------------------------------------------------\n")
 
 
