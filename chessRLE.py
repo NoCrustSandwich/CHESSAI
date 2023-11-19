@@ -565,7 +565,7 @@ class RLE(gym.Env):
                     if index == 0:
                         continue
 
-                    if self.board[sourceLocation[0]-index][sourceLocation[1]] !=  "_":
+                    if self.board[sourceLocation[0]][sourceLocation[1]+index] !=  "_":
 
                         observation = self.board
                         reward = -1000.0
@@ -586,7 +586,7 @@ class RLE(gym.Env):
                     if index == 0:
                         continue
 
-                    if self.board[sourceLocation[0]+index][sourceLocation[1]] !=  "_":
+                    if self.board[sourceLocation[0]][sourceLocation[1]-index] !=  "_":
 
                         observation = self.board
                         reward = -1000.0
@@ -607,7 +607,7 @@ class RLE(gym.Env):
                     if index == 0:
                         continue
 
-                    if self.board[sourceLocation[0]][sourceLocation[1]+index] !=  "_":
+                    if self.board[sourceLocation[0]+index][sourceLocation[1]] !=  "_":
 
                         observation = self.board
                         reward = -1000.0
@@ -628,7 +628,7 @@ class RLE(gym.Env):
                     if index == 0:
                         continue
 
-                    if self.board[sourceLocation[0]][sourceLocation[1]-index] !=  "_":
+                    if self.board[sourceLocation[0]-index][sourceLocation[1]-index] !=  "_":
 
                         observation = self.board
                         reward = -1000.0
@@ -653,7 +653,7 @@ class RLE(gym.Env):
                     if index == 0:
                         continue
 
-                    if self.board[sourceLocation[0]-index][sourceLocation[1]+index] !=  "_":
+                    if self.board[sourceLocation[0]+index][sourceLocation[1]+index] !=  "_":
 
                         observation = self.board
                         reward = -1000.0
@@ -675,7 +675,7 @@ class RLE(gym.Env):
                     if index == 0:
                         continue
 
-                    if self.board[sourceLocation[0]+index][sourceLocation[1]+index] !=  "_":
+                    if self.board[sourceLocation[0]+index][sourceLocation[1]-index] !=  "_":
 
                         observation = self.board
                         reward = -1000.0
@@ -696,7 +696,7 @@ class RLE(gym.Env):
                     if index == 0:
                         continue
 
-                    if self.board[sourceLocation[0]-index][sourceLocation[1]-index] !=  "_":
+                    if self.board[sourceLocation[0]-index][sourceLocation[1]+index] !=  "_":
 
                         observation = self.board
                         reward = -1000.0
@@ -717,7 +717,7 @@ class RLE(gym.Env):
                     if index == 0:
                         continue
 
-                    if self.board[sourceLocation[0]+index][sourceLocation[1]-index] !=  "_":
+                    if self.board[sourceLocation[0]-index][sourceLocation[1]-index] !=  "_":
 
                         observation = self.board
                         reward = -1000.0

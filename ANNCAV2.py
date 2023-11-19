@@ -2,7 +2,6 @@
 import chessWS
 import chessRLE
 import chessIC
-import numpy as np
 import keyboard
 import time
 

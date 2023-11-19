@@ -1,8 +1,6 @@
 # Library Imports
 import pyautogui
 import time
-import screeninfo
-
 
 ###############################################################################################################################################################
 # Chess.com controller for AI
@@ -12,10 +10,7 @@ class controller:
 
     def __init__(self):
         
-
-        self.primaryMonitirResolution = self.get_Screen_Resolution()
-
-        self.chessBoardCoordinates1920x1080 = [
+        self.calibrated_Board_Coordinates = [
             [[350, 230], [450, 230], [550, 230], [650, 230], [750, 230], [850, 230], [950, 230], [1050, 230]],
             [[350, 330], [450, 330], [550, 330], [650, 330], [750, 330], [850, 330], [950, 330], [1050, 330]],
             [[350, 430], [450, 430], [550, 430], [650, 430], [750, 430], [850, 430], [950, 430], [1050, 430]],
@@ -26,6 +21,7 @@ class controller:
             [[350, 930], [450, 930], [550, 930], [650, 930], [750, 930], [850, 930], [950, 930], [1050, 930]]
         ]
 
+        self.board_Calibration_Coordinates = []
 
         # Coordinates translated to chess format that will correlate with the display coordinates, if you are playing white
         self.chessBoardTranslatedWhiteCoordinates = [
@@ -52,14 +48,78 @@ class controller:
         ]
     
     # Returns the x and y coordinates on button click
-    def get_mouse_coordinates(self):
+    def get_Mouse_Coordinates(self):
         # Wait for a mouse click
         click_point = pyautogui.position()
 
         # Get the coordinates where the click occurred
         x, y = click_point
 
-        return x, y
+        return [x, y]
+
+    # Calibrates board coordinates
+    def calibrate_Board(self):
+
+        print("------------------------------------------------------------------------------------------")
+        print("\n")
+        print("Imagine the chess board tiles are numbered as shown here:")
+        print("\n")
+        print("| 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  |")
+        print("| 9  | 10 | 11 | 12 | 13 | 14 | 15 | 16 |")
+        print("| 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 |")
+        print("| 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 |")
+        print("| 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 |")
+        print("| 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 |")
+        print("| 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 |")
+        print("| 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 |")
+        print("\n")
+        print("For calibration leave your mouse pointer in the CENTER of \nTILE 1, then TILE 2 and then TILE 9\n\n*IN THAT ORDER*")
+        print("\n")
+        print("You will be given 5 seconds each time to get your mouse into postion")
+        print("\n")
+        print("------------------------------------------------------------------------------------------")
+        print("\n")
+        input("PRESS ENTER TO BEGIN BOARD CALIBRATION")
+        print("\n")
+
+        # Resets the board calibration points
+        self.board_Calibration_Coordinates = []
+
+        # Gets the 3 board coordinate locations for calibration, in 5 second intervals
+        for i in range(3):
+
+            for j in range(5):
+                time.sleep(1)
+                print(str(5-j) +"...")
+
+            self.board_Calibration_Coordinates.append(self.get_Mouse_Coordinates())
+
+            if i<2:
+                print("Tile "+str(i+1)+" Coordinates captured at: "+ str(self.get_Mouse_Coordinates()))
+            else:
+                print("Tile "+str(9)+" Coordinates captured at: "+ str(self.get_Mouse_Coordinates()))
+
+        # Calculates block lengths
+        column_Length = self.board_Calibration_Coordinates[1][0] - self.board_Calibration_Coordinates[0][0]
+        row_Length = self.board_Calibration_Coordinates[2][1] - self.board_Calibration_Coordinates[0][1]
+
+        current_Coordinates = self.board_Calibration_Coordinates[0].copy()
+
+        # Populates the calibrated coordinates
+        for x in range(8):
+
+            for y in range(8):    
+                self.calibrated_Board_Coordinates[x][y] = current_Coordinates.copy()
+                current_Coordinates[0] += column_Length
+
+            current_Coordinates[0] = self.board_Calibration_Coordinates[0][0]
+            current_Coordinates[1] += row_Length
+        
+        return True
+
+    # Returns the current calibrated Coords
+    def get_Current_Calibrated_Coords(self):
+        return self.calibrated_Board_Coordinates
 
     # Returns the board coordinates if player color is white
     def getWhiteCoords(self, index):
@@ -69,27 +129,10 @@ class controller:
     def getBlackCoords(self, index):
         return self.chessBoardTranslatedBlackCoordinates[index[0]][index[1]]
 
-    # Returns the screeen resolution as a string
-    def get_Screen_Resolution():
-        screen_info = screeninfo.get_monitors()
-        primary_screen = screen_info[0]
-        
-        width, height = primary_screen.width, primary_screen.height
-        res = str(width)+"x"+str(height)
-
-        return res
-
-    def boardToDisplayCoordinates(self, boardX, boardY):
-
-        if self.primaryMonitirResolution == "1980x1080":
-            x,y = self.chessBoardCoordinates1920x1080[boardX][boardY]
-
-        return x,y
-
     # Moves piece from initial location to the end location on the chess.com gamerBoard
     def movePieceExternally(self, startAddressIndex, endAddressIndex):
 
-        x, y = self.boardToDisplayCoordinates(startAddressIndex[0],startAddressIndex[1])
+        x, y = self.calibrated_Board_Coordinates(startAddressIndex[0],startAddressIndex[1])
 
         pyautogui.moveTo(x, y, 1)
         pyautogui.mouseDown()
@@ -97,7 +140,7 @@ class controller:
         pyautogui.mouseUp()
         time.sleep(1)
 
-        x, y = self.boardToDisplayCoordinates(endAddressIndex[0],endAddressIndex[1])
+        x, y = self.calibrated_Board_Coordinates(endAddressIndex[0],endAddressIndex[1])
 
         pyautogui.moveTo(x, y, 1)
         pyautogui.mouseDown()
@@ -107,7 +150,4 @@ class controller:
         # Moves mouse back to neutral position
         pyautogui.moveTo(1300, 1000, 1)
 
-    
-
 ###############################################################################################################################################################
-
