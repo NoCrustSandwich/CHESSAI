@@ -1,7 +1,7 @@
 # Library Imports
 from selenium import webdriver
 import time
-from typing import List
+from typing import List, Dict
 
 
 
@@ -70,10 +70,10 @@ class webScraper:
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--headless")
 
-        self.webPage = webdriver.Chrome(options=chrome_options)
+        self.web_page = webdriver.Chrome(options=chrome_options)
 
         # Navigates to game url webpage
-        self.webPage.get(self.game_url)
+        self.web_page.get(self.game_url)
 
         # Wait 5 seconds for page to load and retrieve most recent data
         time.sleep(5)
@@ -237,14 +237,9 @@ class webScraper:
 
         
 ###############################################################################################################################################################
-print(type({
 
-            "_":"_",
-            "p1": "op1", "p2": "op2", "p3": "op3", "p4": "op4", "p5": "op5", "p6": "op6", "p7": "op7", "p8": "op8",
-            "n1": "on1", "n2": "on2", "n3": "on3", "n4": "on4", "n5": "on5", "n6": "on6", "n7": "on7", "n8": "on8", "n9": "on9", "n10": "on10",
-            "b1": "ob1", "b2": "ob2", "b3": "ob3", "b4": "ob4", "b5": "ob5", "b6": "ob6", "b7": "ob7", "b8": "ob8", "b9": "ob9", "b10": "ob10",
-            "r1": "or1", "r2": "or2", "r3": "or3", "r4": "or4", "r5": "or5", "r6": "or6", "r7": "or7", "r8": "or8", "r9": "or9", "r10": "or10",
-            "q1": "oq1", "q2": "oq2", "q3": "oq3", "q4": "oq4", "q5": "oq5", "q6": "oq6", "q7": "oq7", "q8": "oq8", "q9": "oq9",
-            "k": "ok",
 
-        }))
+new = webScraper()
+new.update_game_url("https://www.chess.com/game/daily/583143785")
+new.initialize_web_page()
+print(new.get_web_page_content())
