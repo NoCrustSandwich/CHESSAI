@@ -361,8 +361,140 @@ def UT_chessRLE():
         print("\n")
 
 
-    # -----------------------------------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # Unit Test 3.4: Illegal Move Validation - Pawn Blocked Path
+    testMoveValidationBoard = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
+                ["op8","op7","op6","op5","op4","op3","op2","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","op1","_","_","_","_","_","_"],
+                ["p1","p2","p3","p4","p5","p6","p7","p8"],
+                ["r1","on1","ob1","oq","ok","ob2","on2","r2"]]
+    
+    testIllegalMoveValidationAction = ("p2",(-2,0))
+    UT_RLE.updateBoard(testMoveValidationBoard)
+    observation, reward, done, info, switchPlayer, startLocation, endLocation = UT_RLE.step(testIllegalMoveValidationAction)
 
+    if info ==  {"Invalid Move, pawn is blocked by other piece in it's path"}:
+        print("chessWS Unit Test 3.4: Illegal Move Validation - pawn is blocked \n\t"+GREEN+"SUCCESS"+RESET+"\n")
+    else:
+        print("chessWS Unit Test 3.4: Illegal Move Validation - pawn is blocked \n\t"+RED+"FAILED"+RESET+"")
+        print(info)
+        print("\n")
+
+    
+
+    # ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # Unit Test 3.5: Illegal Move Validation - Pawn diagonal empty space move
+    testMoveValidationBoard = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
+                ["op8","op7","op6","op5","op4","op3","op2","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","op1","_","_","_","_","_","_"],
+                ["p1","p2","p3","p4","p5","p6","p7","p8"],
+                ["r1","on1","ob1","oq","ok","ob2","on2","r2"]]
+    
+    testIllegalMoveValidationAction = ("p2",(-1,1))
+    UT_RLE.updateBoard(testMoveValidationBoard)
+    observation, reward, done, info, switchPlayer, startLocation, endLocation = UT_RLE.step(testIllegalMoveValidationAction)
+
+    if info ==  {"Invalid Move, pawn cannot side ways unless opossing piece is there"}:
+        print("chessWS Unit Test 3.5: Illegal Move Validation - Pawn diagonal empty space move \n\t"+GREEN+"SUCCESS"+RESET+"\n")
+    else:
+        print("chessWS Unit Test 3.5: Illegal Move Validation - Pawn diagonal empty space move \n\t"+RED+"FAILED"+RESET+"")
+        print(info)
+        print("\n")
+
+    # ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # Unit Test 3.6: Illegal Move Validation - pawn cannot move 2 spaces unless in starting position
+    testMoveValidationBoard = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
+                ["op8","op7","op6","op5","op4","op3","op2","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","p2","_","_","_","_","_","_"],
+                ["p1","_","p3","p4","p5","p6","p7","p8"],
+                ["r1","on1","ob1","oq","ok","ob2","on2","r2"]]
+    
+    testIllegalMoveValidationAction = ("p2",(-2,0))
+    UT_RLE.updateBoard(testMoveValidationBoard)
+    observation, reward, done, info, switchPlayer, startLocation, endLocation = UT_RLE.step(testIllegalMoveValidationAction)
+
+    if info ==  {"Invalid Move, pawn cannot move 2 spaces unless in starting position"}:
+        print("chessWS Unit Test 3.6: Illegal Move Validation - pawn cannot move 2 spaces unless in starting position \n\t"+GREEN+"SUCCESS"+RESET+"\n")
+    else:
+        print("chessWS Unit Test 3.6: Illegal Move Validation - pawn cannot move 2 spaces unless in starting position \n\t"+RED+"FAILED"+RESET+"")
+        print(info)
+        print("\n")
+
+
+    # ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # Unit Test 3.7: Illegal Move Validation - king castling outside of starting conditions for rook and king
+
+    # Unit Test 3.7.1: Starting Position Right Castle
+    testMoveValidationBoard = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
+                ["op8","op7","op6","op5","op4","op3","op2","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","r2"],
+                ["_","_","_","_","_","_","_","_"],
+                ["p1","p2","p3","p4","p5","p6","p7","p8"],
+                ["r1","_","_","_","k","_","_","_"]]
+    
+    testIllegalMoveValidationAction = ("k",(0,2))
+    UT_RLE.updateBoard(testMoveValidationBoard)
+    observation, reward, done, info, switchPlayer, startLocation, endLocation = UT_RLE.step(testIllegalMoveValidationAction)
+
+    if info ==  {"Invalid Move, king cannot castle unless King and rook are in starting position"}:
+        print("chessWS Unit Test 3.7.1: Illegal Move Validation, king cannot castle unless King and rook are in starting position - Starting Position Right Castle \n\t"+GREEN+"SUCCESS"+RESET+"\n")
+    else:
+        print("chessWS Unit Test 3.7.1: Illegal Move Validation, king cannot castle unless King and rook are in starting position - Starting Position Right Castle \n\t"+RED+"FAILED"+RESET+"")
+        print(info)
+        print("\n")
+
+    # Unit Test 3.7.2: Starting Position Left Castle
+    testMoveValidationBoard = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
+                ["op8","op7","op6","op5","op4","op3","op2","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["r1","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["p1","p2","p3","p4","p5","p6","p7","p8"],
+                ["_","_","_","_","k","_","_","r1"]]
+    
+    testIllegalMoveValidationAction = ("k",(0,-2))
+    UT_RLE.updateBoard(testMoveValidationBoard)
+    observation, reward, done, info, switchPlayer, startLocation, endLocation = UT_RLE.step(testIllegalMoveValidationAction)
+
+    if info ==  {"Invalid Move, king cannot castle unless King and rook are in starting position"}:
+        print("chessWS Unit Test 3.7.2: Illegal Move Validation, king cannot castle unless King and rook are in starting position - Starting Position Left Castle \n\t"+GREEN+"SUCCESS"+RESET+"\n")
+    else:
+        print("chessWS Unit Test 3.7.2: Illegal Move Validation, king cannot castle unless King and rook are in starting position - Starting Position Left Castle \n\t"+RED+"FAILED"+RESET+"")
+        print(info)
+        print("\n")
+
+    # Unit Test 3.7.3: Outside of Starting Position Castle
+    testMoveValidationBoard = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
+                ["op8","op7","op6","op5","op4","op3","op2","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","k","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["p1","p2","p3","p4","p5","p6","p7","p8"],
+                ["r1","_","_","_","_","_","_","r2"]]
+    
+    testIllegalMoveValidationAction = ("k",(0,-2))
+    UT_RLE.updateBoard(testMoveValidationBoard)
+    observation, reward, done, info, switchPlayer, startLocation, endLocation = UT_RLE.step(testIllegalMoveValidationAction)
+
+    if info ==  {"Invalid Move, king cannot castle unless King and rook are in starting position"}:
+        print("chessWS Unit Test 3.7.3: Illegal Move Validation, king cannot castle unless King and rook are in starting position - Outside Starting Position Castle \n\t"+GREEN+"SUCCESS"+RESET+"\n")
+    else:
+        print("chessWS Unit Test 3.7.3: Illegal Move Validation, king cannot castle unless King and rook are in starting position - Outside Starting Position Castle \n\t"+RED+"FAILED"+RESET+"")
+        print(info)
+        print("\n")
 
     print("------------------------------------------------------------------------------------------------------------------------------")
 

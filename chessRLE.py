@@ -494,6 +494,37 @@ class RLE(gym.Env):
 
             return observation, reward, done, info, switchPlayer, startLocation, endLocation
        
+        # Prevents castleing outside of king and rook in starting conditions
+        if action[0] == "k" and (action[1][1] == 2 or action[1][1] == -2) :
+
+            if not (self.board[7][7] == "r1" or self.board[7][7] == "r2") or sourceLocation != [7,4]:
+
+                observation = self.board
+                reward = -1000.0
+                done = False
+                info = {"Invalid Move, king cannot castle unless King and rook are in starting position"}
+                switchPlayer = False
+                startLocation = None
+                endLocation = None
+
+                self.trainANN(reward,qValues, actionIndex)
+
+                return observation, reward, done, info, switchPlayer, startLocation, endLocation
+
+            if not (self.board[7][0] == "r1" or self.board[7][0] == "r2") or sourceLocation != [7,4]:
+
+                observation = self.board
+                reward = -1000.0
+                done = False
+                info = {"Invalid Move, king cannot castle unless King and rook are in starting position"}
+                switchPlayer = False
+                startLocation = None
+                endLocation = None
+
+                self.trainANN(reward,qValues, actionIndex)
+
+                return observation, reward, done, info, switchPlayer, startLocation, endLocation
+
         # Pawn invalid move attempts
         if action[0] in {"p1", "p2", "p3", "p4","p5","p6","p7","p8"}:
 
@@ -731,6 +762,78 @@ class RLE(gym.Env):
 
                         return observation, reward, done, info, switchPlayer, startLocation, endLocation
 
+
+        # Valid Castling Condition
+        if action[0] == "k":
+
+            if action[1][1] == 2:
+
+                castled_Rook = self.board[7][7]
+
+                self.board[targetLocation[0]][targetLocation[1]] = action[0]
+                self.board[sourceLocation[0]][sourceLocation[1]] = "_"
+                self.board[7][7] = "_"
+                self.board[7][5] = castled_Rook
+
+                observation = self.board
+                reward = 100.0
+                done = False
+                info = {"Valid move, castling with right rook"}
+                switchPlayer = True
+                startLocation = sourceLocation
+                endLocation = targetLocation
+
+                # Shows status of successful move attempts being trained into ANN
+                print("Board: "+str(self.board))
+                print("Action: "+str(action))
+                print("Source Location: " + str(sourceLocation))
+                print("Target Location: " + str(targetLocation))
+                print("Source Tile: " + str(self.board[sourceLocation[0]][sourceLocation[1]]))
+                print("Target Tile: " + str(self.board[targetLocation[0]][targetLocation[1]]))
+
+                self.trainANN( reward, qValues, actionIndex)
+
+                return observation, reward, done, info, switchPlayer, startLocation, endLocation
+
+            if action[1][1] == -2:
+
+                castled_Rook = self.board[7][0]
+
+                self.board[targetLocation[0]][targetLocation[1]] = action[0]
+                self.board[sourceLocation[0]][sourceLocation[1]] = "_"
+                self.board[7][0] = "_"
+                self.board[7][3] = castled_Rook
+
+                observation = self.board
+                reward = 100.0
+                done = False
+                info = {"Valid move, castling with left rook"}
+                switchPlayer = True
+                startLocation = sourceLocation
+                endLocation = targetLocation
+
+                # Shows status of successful move attempts being trained into ANN
+                print("Board: "+str(self.board))
+                print("Action: "+str(action))
+                print("Source Location: " + str(sourceLocation))
+                print("Target Location: " + str(targetLocation))
+                print("Source Tile: " + str(self.board[sourceLocation[0]][sourceLocation[1]]))
+                print("Target Tile: " + str(self.board[targetLocation[0]][targetLocation[1]]))
+
+                self.trainANN( reward, qValues, actionIndex)
+
+                return observation, reward, done, info, switchPlayer, startLocation, endLocation
+
+
+        # Valid En passant pawn Condition
+        if action[0] in {"p1", "p2", "p3", "p4","p5","p6","p7","p8"}:
+            pass
+
+        # Valid Pawn promotion
+        if action[0] in {"p1", "p2", "p3", "p4","p5","p6","p7","p8"}:
+            pass
+
+        
 
         # If valid move and target tile is empty
         if targetTilePiece == "_":
