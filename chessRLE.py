@@ -51,7 +51,10 @@ class RLE(gym.Env):
 
         }
 
-        
+        self.en_Passant_Available = False
+        self.en_Passant_Location = None
+
+
         # Dictionary to translate board string to integer representations
         self.pieceToInt = {
         "_": 0,
@@ -455,6 +458,7 @@ class RLE(gym.Env):
             switchPlayer = False
             startLocation = None
             endLocation = None
+            
 
             self.trainANN(reward,qValues, actionIndex)
 
@@ -542,19 +546,20 @@ class RLE(gym.Env):
 
                 return observation, reward, done, info, switchPlayer, startLocation, endLocation
             
-            if action[1][1]!=0 and targetTilePiece == "_":
+            if action[1][1]!=0 and targetTilePiece == "_" and ( not self.en_Passant_Available or self.en_Passant_Location != targetLocation):
 
-                observation = self.board
-                reward = -1000.0
-                done = False
-                info = {"Invalid Move, pawn cannot side ways unless opossing piece is there"}
-                switchPlayer = False
-                startLocation = None
-                endLocation = None
+                if self.en_Passant_Location != targetLocation:
+                    observation = self.board
+                    reward = -1000.0
+                    done = False
+                    info = {"Invalid Move, pawn cannot side ways unless opossing piece is there or enpassant condition is met"}
+                    switchPlayer = False
+                    startLocation = None
+                    endLocation = None
 
-                self.trainANN(reward,qValues, actionIndex)
+                    self.trainANN(reward,qValues, actionIndex)
 
-                return observation, reward, done, info, switchPlayer, startLocation, endLocation
+                    return observation, reward, done, info, switchPlayer, startLocation, endLocation
             
 
             if action[1][0] == -2 and sourceLocation[0]==6 and self.board[sourceLocation[0]-1][sourceLocation[1]] != "_":
@@ -783,6 +788,9 @@ class RLE(gym.Env):
                 startLocation = sourceLocation
                 endLocation = targetLocation
 
+                self.en_Passant_Available = False
+                self.en_Passant_Location = None
+
                 # Shows status of successful move attempts being trained into ANN
                 print("Board: "+str(self.board))
                 print("Action: "+str(action))
@@ -812,6 +820,9 @@ class RLE(gym.Env):
                 startLocation = sourceLocation
                 endLocation = targetLocation
 
+                self.en_Passant_Available = False
+                self.en_Passant_Location = None
+
                 # Shows status of successful move attempts being trained into ANN
                 print("Board: "+str(self.board))
                 print("Action: "+str(action))
@@ -825,13 +836,68 @@ class RLE(gym.Env):
                 return observation, reward, done, info, switchPlayer, startLocation, endLocation
 
 
-        # Valid En passant pawn Condition
-        if action[0] in {"p1", "p2", "p3", "p4","p5","p6","p7","p8"}:
-            pass
+        # Valid pawn starting move 2 spaces activating en passant conditional
+        if action[0] in {"p1", "p2", "p3", "p4","p5","p6","p7","p8"} and action[1][0] == -2:
+
+            self.board[targetLocation[0]][targetLocation[1]] = action[0]
+            self.board[sourceLocation[0]][sourceLocation[1]] = "_"
+            observation = self.board
+            reward = -1.0
+            done = False
+            info = {"Valid move made, pawn moved two spaces from starting position, activating En Passant condition"}
+            switchPlayer = True
+            startLocation = sourceLocation
+            endLocation = targetLocation
+
+            self.en_Passant_Available = True
+            # This will be there target location for the opponent player
+            self.en_Passant_Location = [2,abs(7-targetLocation[1])]
+
+
+            # Shows status of successful move attempts being trained into ANN
+            print("Board: "+str(self.board))
+            print("Action: "+str(action))
+            print("Source Location: " + str(sourceLocation))
+            print("Target Location: " + str(targetLocation))
+            print("Source Tile: " + str(self.board[sourceLocation[0]][sourceLocation[1]]))
+            print("Target Tile: " + str(self.board[targetLocation[0]][targetLocation[1]]))
+
+            self.trainANN( reward, qValues, actionIndex)
+
+            return observation, reward, done, info, switchPlayer, startLocation, endLocation
+
+
+
 
         # Valid Pawn promotion
-        if action[0] in {"p1", "p2", "p3", "p4","p5","p6","p7","p8"}:
-            pass
+        if action[0] in {"p1", "p2", "p3", "p4","p5","p6","p7","p8"} and targetLocation[0] == 0:
+            
+            self.board[targetLocation[0]][targetLocation[1]] = action[0]
+            self.board[sourceLocation[0]][sourceLocation[1]] = "_"
+            observation = self.board
+            reward = -1.0
+            done = False
+            info = {"Valid move made, pawn moved two spaces from starting position, activating En Passant condition"}
+            switchPlayer = True
+            startLocation = sourceLocation
+            endLocation = targetLocation
+
+            self.en_Passant_Available = True
+            # This will be there target location for the opponent player
+            self.en_Passant_Location = [2,abs(7-targetLocation[1])]
+
+
+            # Shows status of successful move attempts being trained into ANN
+            print("Board: "+str(self.board))
+            print("Action: "+str(action))
+            print("Source Location: " + str(sourceLocation))
+            print("Target Location: " + str(targetLocation))
+            print("Source Tile: " + str(self.board[sourceLocation[0]][sourceLocation[1]]))
+            print("Target Tile: " + str(self.board[targetLocation[0]][targetLocation[1]]))
+
+            self.trainANN( reward, qValues, actionIndex)
+
+            return observation, reward, done, info, switchPlayer, startLocation, endLocation
 
         
 
@@ -928,6 +994,9 @@ class RLE(gym.Env):
             switchPlayer = True
             startLocation = sourceLocation
             endLocation = targetLocation
+
+        self.en_Passant_Available = False
+        self.en_Passant_Location = None
 
         # Shows status of successful move attempts being trained into ANN
         print("Board: "+str(self.board))
