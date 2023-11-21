@@ -1,16 +1,19 @@
 # Library and Class Imports
 import chessWS
-import chessANN
-import chessRLE
 import chessIC
 import chessAT
+import chessANN
+import chessRLE
+import chessGUI
 
 # Flags to run unit testing on the classes you want to
 ut_for_chessWS = False
-ut_for_chessANN = True
+ut_for_chessANN = False
 ut_for_chessRLE = False
 ut_for_chessIC = False
 ut_for_chessANNT = False
+ut_for_chessGUI = False
+
 
 # ANSI escape codes to print text in green and red:
 GREEN = '\033[92m'
@@ -36,10 +39,7 @@ def ut_chessWS():
     Results of each unit test are printed, indicating success or failure.
 
     Usage:
-        ut_chessWS()
-
-    Returns:
-        None
+        - ut_chessWS()
     """
     webScraper = chessWS.webScraper()
     ut_game_url = input("WEB SCRAPER UNIT TESTING - Input chess.com game session URL:")
@@ -82,8 +82,8 @@ def ut_chessANN():
 
     Results of each unit test are printed, indicating success or failure.
 
-    Usage Example:
-        ut_chessANN()
+    Usage:
+        - ut_chessANN()
     """
     neuralNetwork = chessANN.neuralNetwork()
     model_name = "Unit Test Model"
@@ -437,13 +437,20 @@ if ut_for_chessRLE:
 
 
 ###############################################################################################################################################################
-# Unit Testing: Interface Controller
+# Unit Testing: Interface Controller - Version 1.1 (21/11/2023) 
 ###############################################################################################################################################################
 
 def ut_chessIC():
+    """
+    Perform unit tests for the Chess,com Interface Controller (chessIC) module.
 
-    # Interface Controller test fixture (UT Setup)
-    UT_IC = chessIC.controller()
+    
+    Results of each unit test are printed, indicating success or failure.
+
+    Usage:
+        - ut_chessIC()
+    """
+    controller = chessIC.controller()
 
     print("------------------------------------------------------------------------------------------------------------------------------")
     print("\tINTERFACE CONTROLLER UNIT TESTING")
@@ -518,5 +525,33 @@ def ut_chessANNT():
 if ut_for_chessANNT:
     ut_chessANNT()
 
+
+###############################################################################################################################################################
+
+
+###############################################################################################################################################################
+# Unit Testing: Graphical User Interface - Version 1.0 (21/11/2023)
+###############################################################################################################################################################
+
+def ut_chessGUI():
+    """
+    Perform unit tests for the ANNCA Graphical User Interface (chessGUI) module.
+
+
+    Results of each unit test are printed, indicating success or failure.
+
+    Usage:
+        - ut_chessGUI()
+    """
+    interface = chessGUI.interface()
+
+    print("------------------------------------------------------------------------------------------------------------------------------")
+    print("\tGRAPHICAL USER INTERFACE UNIT TESTING")
+    print("------------------------------------------------------------------------------------------------------------------------------\n")
+
+    print("------------------------------------------------------------------------------------------------------------------------------")
+
+if ut_for_chessGUI:
+    ut_chessGUI()
 
 ###############################################################################################################################################################
