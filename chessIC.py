@@ -1,8 +1,5 @@
-# Library Imports
-import time
 import time
 import pyautogui
-from typing import List
 from typing import List
 
 ###############################################################################################################################################################
@@ -134,66 +131,6 @@ class controller:
         - Ensure that the chessboard is visible on the screen during calibration.
         - Adjust the sleep durations as needed based on the user's responsiveness.
         """
-
-    def get_board_tile_display_coordinates(self) -> List[List[int]] :
-        """
-        Retrieves the calibrated coordinates of each chessboard tile.
-
-        Returns:
-            - List[List[int]]: A list representing the calibrated coordinates of each chessboard tile.
-        """
-        return self.board_tile_display_coordinates
-
-
-    def tile_coordinates_to_white_board_indices(self, tile_coordinates: str) -> List[int]:
-        """
-        Converts chessboard tile coordinates to indices from the white perspective.
-
-        Parameters:
-            - tile_coordinates (str): A string representing the coordinates of a chessboard tile.
-
-        Returns:
-            - List[int]: The corresponding chessboard indices from the white perspective.
-        """
-        for x in range(8):
-            for y in range(8):
-                if tile_coordinates.upper() == self.CHESSBOARD_TILE_COORDINATES_WHITE_PERSPECTIVE[x][y]:
-                    return[x,y]
-
-
-    def tile_coordinates_to_black_board_indices(self, tile_coordinates: str) -> List[int]:
-        """
-        Converts chessboard tile coordinates to indices from the black perspective.
-
-        Parameters:
-            - tile_coordinates (str): A string representing the coordinates of a chessboard tile.
-
-        Returns:
-            - List[int]: The corresponding chessboard indices from the black perspective.
-        """
-        for x in range(8):
-            for y in range(8):
-                if tile_coordinates.upper() == self.CHESSBOARD_TILE_COORDINATES_BLACK_PERSPECTIVE[x][y]:
-                    return[x,y]
-
-
-    def calibrate_board_tile_display_coordinates(self):
-        """
-        Initiates the calibration process for obtaining the display coordinates of each chessboard tile.
-
-        During calibration, the user is prompted to place the mouse pointer in the center of TILE 1, TILE 2, and TILE 9
-        in that order. The method captures the mouse coordinates at each position and calculates the block lengths
-        to populate the calibrated coordinates for each chessboard tile.
-
-        This method guides the user through the calibration process and populates the calibrated coordinates of each chessboard tile.
-        The calibrated coordinates are stored in the `board_tile_display_coordinates` attribute.
-
-        Note:
-        - Follow the on-screen instructions during calibration.
-        - The method uses the `get_mouse_coordinates` method to capture mouse positions.
-        - Ensure that the chessboard is visible on the screen during calibration.
-        - Adjust the sleep durations as needed based on the user's responsiveness.
-        """
         print("------------------------------------------------------------------------------------------")
         print("\n")
         print("Imagine the chess board tiles are numbered as shown here:")
@@ -217,7 +154,6 @@ class controller:
         print("\n")
 
         display_calibration_points = []
-        display_calibration_points = []
 
         for i in range(3):
 
@@ -226,13 +162,10 @@ class controller:
                 print(str(5-j) +"...")
 
             display_calibration_points.append(self.get_mouse_coordinates())
-            display_calibration_points.append(self.get_mouse_coordinates())
 
             if i<2:
                 print("Tile "+str(i+1)+" Coordinates captured at: "+ str(self.get_mouse_coordinates()))
-                print("Tile "+str(i+1)+" Coordinates captured at: "+ str(self.get_mouse_coordinates()))
             else:
-                print("Tile "+str(9)+" Coordinates captured at: "+ str(self.get_mouse_coordinates()))
                 print("Tile "+str(9)+" Coordinates captured at: "+ str(self.get_mouse_coordinates()))
 
          
@@ -242,8 +175,6 @@ class controller:
         current_coordinates = display_calibration_points[0].copy()
         for x in range(8):
             for y in range(8):    
-                self.board_tile_display_coordinates[x][y] = current_coordinates.copy()
-                current_coordinates[0] += column_Length
                 self.board_tile_display_coordinates[x][y] = current_coordinates.copy()
                 current_coordinates[0] += column_Length
 
@@ -276,7 +207,6 @@ class controller:
         time.sleep(0.5)
         pyautogui.mouseUp()
 
-        pyautogui.moveTo(1, 1, 1)
         pyautogui.moveTo(1, 1, 1)
 
 ###############################################################################################################################################################
