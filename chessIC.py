@@ -3,28 +3,26 @@ import pyautogui
 import time
 
 ###############################################################################################################################################################
-# Chess.com controller for AI
+# Chess.com Interface Controller - Version 1.0 (21/11/2023)
 ###############################################################################################################################################################
 
 class controller:
 
     def __init__(self):
         
-        self.calibrated_Board_Coordinates = [
-            [[350, 230], [450, 230], [550, 230], [650, 230], [750, 230], [850, 230], [950, 230], [1050, 230]],
-            [[350, 330], [450, 330], [550, 330], [650, 330], [750, 330], [850, 330], [950, 330], [1050, 330]],
-            [[350, 430], [450, 430], [550, 430], [650, 430], [750, 430], [850, 430], [950, 430], [1050, 430]],
-            [[350, 530], [450, 530], [550, 530], [650, 530], [750, 530], [850, 530], [950, 530], [1050, 530]],
-            [[350, 630], [450, 630], [550, 630], [650, 630], [750, 630], [850, 630], [950, 630], [1050, 630]],
-            [[350, 730], [450, 730], [550, 730], [650, 730], [750, 730], [850, 730], [950, 730], [1050, 730]],
-            [[350, 830], [450, 830], [550, 830], [650, 830], [750, 830], [850, 830], [950, 830], [1050, 830]],
-            [[350, 930], [450, 930], [550, 930], [650, 930], [750, 930], [850, 930], [950, 930], [1050, 930]]
+        self.board_tile_display_coordinates = [
+            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]
         ]
 
-        self.board_Calibration_Coordinates = []
-
         # Coordinates translated to chess format that will correlate with the display coordinates, if you are playing white
-        self.chessBoardTranslatedWhiteCoordinates = [
+        self.CHESSBOARD_TILE_COORDINATES_WHITE = [
                 ["A8", "B8", "C8", "D8", "E8", "F8", "G8", "H8"],
                 ["A7", "B7", "C7", "D7", "E7", "F7", "G7", "H7"],
                 ["A6", "B6", "C6", "D6", "E6", "F6", "G6", "H6"],
@@ -36,7 +34,7 @@ class controller:
             ]
 
         # Coordinates translated to chess format that will correlate with the display coordinates, if you are playing black
-        self.chessBoardTranslatedBlackCoordinates = [
+        self.CHESSBOARD_TILE_COORDINATES_BLACK = [
             ["H1", "G1", "F1", "E1", "D1", "C1", "B1", "A1"],
             ["H2", "G2", "F2", "E2", "D2", "C2", "B2", "A2"],
             ["H3", "G3", "F3", "E3", "D3", "C3", "B3", "A3"],
@@ -48,7 +46,7 @@ class controller:
         ]
     
     # Returns the x and y coordinates on button click
-    def get_Mouse_Coordinates(self):
+    def get_mouse_coordinates(self):
         # Wait for a mouse click
         click_point = pyautogui.position()
 
@@ -58,7 +56,7 @@ class controller:
         return [x, y]
 
     # Calibrates board coordinates
-    def calibrate_Board(self):
+    def calibrate_board(self):
 
         print("------------------------------------------------------------------------------------------")
         print("\n")
@@ -118,8 +116,8 @@ class controller:
         return True
 
     # Returns the current calibrated Coords
-    def get_Current_Calibrated_Coords(self):
-        return self.calibrated_Board_Coordinates
+    def get_board_tile_display_coordinates(self):
+        return self.board_tile_display_coordinates
 
     # Returns the board coordinates if player color is white
     def getWhiteCoords(self, index):

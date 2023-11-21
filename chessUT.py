@@ -1,191 +1,122 @@
-# Library Imports
+# Library and Class Imports
 import chessWS
 import chessANN
 import chessRLE
 import chessIC
-import chessANNT
+import chessAT
 
-# Flags to run unit testing for specific files
-UT_For_chessWS = False
-UT_For_chessANN = False
-UT_For_chessRLE = True
-UT_For_chessIC = False
-UT_For_chessANNT = False
+# Flags to run unit testing on the classes you want to
+ut_for_chessWS = False
+ut_for_chessANN = True
+ut_for_chessRLE = False
+ut_for_chessIC = False
+ut_for_chessANNT = False
 
 # ANSI escape codes to print text in green and red:
 GREEN = '\033[92m'
 RED = '\033[91m'
-RESET = '\033[0m'  # Reset color to default
+RESET = '\033[0m'
 
 ###############################################################################################################################################################
 
 
-
 ###############################################################################################################################################################
-# Unit Testing: Web Scraper 
+# Unit Testing: Web Scraper  - Version 1.1 (21/11/2023)
 ###############################################################################################################################################################
 
-def UT_chessWS():
+def ut_chessWS():
+    """
+    Perform unit tests for the Chess WebScraper (chessWS) module.
 
-    # WebScraper test fixture (UT Setup)
-    UTWebScraper = chessWS.webScraper()
-    UT_gameURL = input("WEB SCRAPER UNIT TESTING - Input chess.com gameURL:")
-    UTWebScraper.updateGameURL(UT_gameURL)
-    UTWebScraper.openWebPage()
-    testPieceLocations = [('br', (0, 7)), ('bn', (0, 6)), ('bb', (0, 5)), ('bk', (0, 4)), ('bq', (0, 3)), ('bb', (0, 2)), ('bn', (0, 1)), ('br', (0, 0)), ('bp', (1, 7)), ('bp', (1, 6)), ('wp', (3, 4)), ('bp', (1, 4)), ('bp', 
-(1, 3)), ('bp', (1, 2)), ('bp', (1, 1)), ('bp', (1, 0)), ('wp', (6, 7)), ('wp', (6, 6)), ('wp', (6, 5)), ('bp', (3, 5)), ('wp', (6, 3)), ('wp', (6, 2)), ('wp', (6, 1)), ('wp', (6, 0)), ('wr', (7, 7)), ('wn', (7, 6)), ('wb', (7, 5)), ('wk', (7, 4)), ('wq', (7, 3)), ('wb', (7, 2)), ('wn', (7, 1)), ('wr', (7, 0))]
-    testWhiteBoard = [['or2', 'on2', 'ob2', 'oq', 'ok', 'ob1', 'on1', 'or1'], ['op8', 'op7', 'op6', 'op5', 'op4', '_', 'op3', 'op2'], ['_', '_', '_', '_', '_', '_', '_', '_'], ['_', '_', '_', '_', 'p1', 'op1', '_', '_'], 
-['_', '_', '_', '_', '_', '_', '_', '_'], ['_', '_', '_', '_', '_', '_', '_', '_'], ['p2', 'p3', 'p4', 'p5', '_', 'p6', 'p7', 'p8'], ['r1', 'n1', 'b1', 'q', 'k', 'b2', 'n2', 'r2']]
-    testBlackBoard = [['or2', 'on2', 'ob2', 'ok', 'oq', 'ob1', 'on1', 'or1'], ['op8', 'op7', 'op6', '_', 'op5', 'op4', 'op3', 'op2'], ['_', '_', '_', '_', '_', '_', '_', '_'], ['_', '_', '_', '_', '_', '_', '_', '_'], ['_', '_', 'p1', 'op1', '_', '_', '_', '_'], ['_', '_', '_', '_', '_', '_', '_', '_'], ['p2', 'p3', '_', 'p4', 'p5', 'p6', 'p7', 'p8'], ['r1', 'n1', 'b1', 'k', 'q', 'b2', 'n2', 'r2']]
+    This function sets up a test fixture, including creating a Chess WebScraper instance, providing a game URL,
+    and defining a test piece location configuration. It then executes the following unit tests:
+    
+    1. Unit Test 1: Retrieval of latest move history from game session
 
+    Results of each unit test are printed, indicating success or failure.
+
+    Usage:
+        ut_chessWS()
+
+    Returns:
+        None
+    """
+    webScraper = chessWS.webScraper()
+    ut_game_url = input("WEB SCRAPER UNIT TESTING - Input chess.com game session URL:")
+    webScraper.update_game_url(ut_game_url)
+    webScraper.initialize_web_page()
+    
     print("------------------------------------------------------------------------------------------------------------------------------")
     print("\tWEB SCRAPER UNIT TESTING")
     print("------------------------------------------------------------------------------------------------------------------------------\n")
 
 
-    # Unit Test 1: Retrieval of piece Locations from web Page
-    if UTWebScraper.getPieceLocations():
-        print("chessWS Unit Test 1: Retrieval of piece Locations from web Page \n\t"+GREEN+"SUCCESS"+RESET+"\n")
+    # Unit Test 1: Retrieval of latest move history from game session
+    print("chessWS Unit Test 1: Retrieval of latest move history from game session \n")
+    if webScraper.fetch_latest_move_history_san():
+        print("\t"+GREEN+"SUCCESS"+RESET+"\n")
     else:
-        print("chessWS Unit Test 1: Retrieval of piece Locations from web Page \n\t"+RED+"FAILED"+RESET+"\n")
-
-
-    # Unit Test 2: Rendering piece Locations from white perspective
-    if UTWebScraper.renderBoardWhite(testPieceLocations) ==  testWhiteBoard:
-        print("chessWS Unit Test 2: Rendering piece Locations from white perspective \n\t"+GREEN+"SUCCESS"+RESET+"\n")
-    else:
-        print("chessWS Unit Test 2: Rendering piece Locations from white perspective \n\t"+RED+"FAILED"+RESET+"\n")
-    
-
-    # Unit Test 3: Rendering piece Locations from black perspective
-    if UTWebScraper.renderBoardBlack(testPieceLocations) ==  testBlackBoard:
-        print("chessWS Unit Test 3: Rendering piece Locations from black perspective \n\t"+GREEN+"SUCCESS"+RESET+"\n")
-    else:
-        print("chessWS Unit Test 3: Rendering piece Locations from black perspective \n\t"+RED+"FAILED"+RESET+"\n")
+        print("\t"+RED+"FAILED"+RESET+"\n")
 
 
     print("------------------------------------------------------------------------------------------------------------------------------")
 
-if UT_For_chessWS:
-    UT_chessWS()
+if ut_for_chessWS:
+    ut_chessWS()
 
 ###############################################################################################################################################################
 
 
 ###############################################################################################################################################################
-# Unit Testing: Artificial Neural Network 
+# Unit Testing: Artificial Neural Network - Version 1.1 (21/11/2023)
 ###############################################################################################################################################################
 
-def UT_chessANN():
+def ut_chessANN():
+    """
+    Perform unit tests for the Artificial Neural Network (chessANN) module.
 
-    # ANN test fixture (UT Setup)
-    from keras.models import Model
-    UT_ANN = chessANN.ANN()
-    testModelName = "CANN" # CANN - Chess Artificial Neural Network
+    This function sets up a test fixture, including creating an instance of the neural network,
+    defining a model name for unit testing, and executing a unit test:
+
+    1. Unit Test 1: Creating, saving, and loading a new neural network model.
+
+    Results of each unit test are printed, indicating success or failure.
+
+    Usage Example:
+        ut_chessANN()
+    """
+    neuralNetwork = chessANN.neuralNetwork()
+    model_name = "Unit Test Model"
 
     print("------------------------------------------------------------------------------------------------------------------------------")
     print("\tARTIFICIAL NEURAL NETWORK UNIT TESTING")
     print("------------------------------------------------------------------------------------------------------------------------------\n")
 
-
-    # Unit Test 1: Creating Neural Network Model
-    if str(type(UT_ANN.createChessModel())) == "<class 'keras.src.engine.functional.Functional'>":
-        print("chessANN Unit Test 1: Creating Neural Network Model \n\t"+GREEN+"SUCCESS"+RESET+"\n")
-    else:
-        print("chessANN Unit Test 1: Creating Neural Network Model \n\t"+RED+"FAILED"+RESET+"\n")
-
-
-    # Unit Test 2: Loading Neural Network Model
-    if UT_ANN.loadANN(testModelName):
-        print("chessANN Unit Test 2: Loading Neural Network Model \n\t"+GREEN+"SUCCESS"+RESET+"\n")
-    else:
-        print("chessANN Unit Test 2: Loading Neural Network Model \n\t"+RED+"FAILED"+RESET+"\n")
-
-
-    # Unit Test 3: Saving Neural Network Model
-    if UT_ANN.saveANN(testModelName):
-        print("chessANN Unit Test 3: Saving Neural Network Model \n\t"+GREEN+"SUCCESS"+RESET+"\n")
-    else:
-        print("chessANN Unit Test 3: Saving Neural Network Model \n\t"+RED+"FAILED"+RESET+"\n")
-
-
-    print("------------------------------------------------------------------------------------------------------------------------------")
-
-if UT_For_chessANN:
-    UT_chessANN()
-
-###############################################################################################################################################################
-
-
-###############################################################################################################################################################
-# Unit Testing: Web Scraper 
-###############################################################################################################################################################
-
-def UT_chessWS():
-
-    # WebScraper test fixture (UT Setup)
-    UTWebScraper = chessWS.webScraper()
-    UT_gameURL = input("WEB SCRAPER UNIT TESTING - Input gameURL:")
-    UTWebScraper.updateGameURL(UT_gameURL)
-    UTWebScraper.openWebPage()
-    testPieceLocations = [('br', (0, 7)), ('bn', (0, 6)), ('bb', (0, 5)), ('bk', (0, 4)), ('bq', (0, 3)), ('bb', (0, 2)), ('bn', (0, 1)), ('br', (0, 0)), ('bp', (1, 7)), ('bp', (1, 6)), ('wp', (3, 4)), ('bp', (1, 4)), ('bp', 
-(1, 3)), ('bp', (1, 2)), ('bp', (1, 1)), ('bp', (1, 0)), ('wp', (6, 7)), ('wp', (6, 6)), ('wp', (6, 5)), ('bp', (3, 5)), ('wp', (6, 3)), ('wp', (6, 2)), ('wp', (6, 1)), ('wp', (6, 0)), ('wr', (7, 7)), ('wn', (7, 6)), ('wb', (7, 5)), ('wk', (7, 4)), ('wq', (7, 3)), ('wb', (7, 2)), ('wn', (7, 1)), ('wr', (7, 0))]
-    testWhiteBoard = [['or2', 'on2', 'ob2', 'oq', 'ok', 'ob1', 'on1', 'or1'], 
-                      ['op8', 'op7', 'op6', 'op5', 'op4', '_', 'op3', 'op2'], 
-                      ['_', '_', '_', '_', '_', '_', '_', '_'], 
-                      ['_', '_', '_', '_', 'p1', 'op1', '_', '_'], 
-                      ['_', '_', '_', '_', '_', '_', '_', '_'], 
-                      ['_', '_', '_', '_', '_', '_', '_', '_'], 
-                      ['p2', 'p3', 'p4', 'p5', '_', 'p6', 'p7', 'p8'], 
-                      ['r1', 'n1', 'b1', 'q', 'k', 'b2', 'n2', 'r2']]
     
-    testBlackBoard = [['or2', 'on2', 'ob2', 'ok', 'oq', 'ob1', 'on1', 'or1'], 
-                      ['op8', 'op7', 'op6', '_', 'op5', 'op4', 'op3', 'op2'], 
-                      ['_', '_', '_', '_', '_', '_', '_', '_'], 
-                      ['_', '_', '_', '_', '_', '_', '_', '_'], 
-                      ['_', '_', 'p1', 'op1', '_', '_', '_', '_'], 
-                      ['_', '_', '_', '_', '_', '_', '_', '_'], 
-                      ['p2', 'p3', '_', 'p4', 'p5', 'p6', 'p7', 'p8'], 
-                      ['r1', 'n1', 'b1', 'k', 'q', 'b2', 'n2', 'r2']]
-
-    print("------------------------------------------------------------------------------------------------------------------------------")
-    print("\tWEB SCRAPER UNIT TESTING")
-    print("------------------------------------------------------------------------------------------------------------------------------\n")
-
-
-    # Unit Test 1: Retrieval of piece Locations from web Page
-    if UTWebScraper.getPieceLocations():
-        print("chessWS Unit Test 1: Retrieval of piece Locations from web Page \n\t"+GREEN+"SUCCESS"+RESET+"\n")
+    # Unit Test 1: Creating, Saving and Loading a New Neural Network Model
+    print("chessANN Unit Test 1: Creating, Saving and Loading a New Neural Network Model \n")
+    neuralNetwork.create_new_model(model_name)
+    if neuralNetwork.load_model(model_name):
+        neuralNetwork.delete_model(model_name)
+        print("\t"+GREEN+"SUCCESS"+RESET+"\n")
     else:
-        print("chessWS Unit Test 1: Retrieval of piece Locations from web Page \n\t"+RED+"FAILED"+RESET+"\n")
-
-
-    # Unit Test 2: Rendering piece Locations from white perspective
-    if UTWebScraper.renderBoardWhite(testPieceLocations) ==  testWhiteBoard:
-        print("chessWS Unit Test 2: Rendering piece Locations from white perspective \n\t"+GREEN+"SUCCESS"+RESET+"\n")
-    else:
-        print("chessWS Unit Test 2: Rendering piece Locations from white perspective \n\t"+RED+"FAILED"+RESET+"\n")
+        print("\t"+RED+"FAILED"+RESET+"\n")
     
 
-    # Unit Test 3: Rendering piece Locations from black perspective
-    if UTWebScraper.renderBoardBlack(testPieceLocations) ==  testBlackBoard:
-        print("chessWS Unit Test 3: Rendering piece Locations from black perspective \n\t"+GREEN+"SUCCESS"+RESET+"\n")
-    else:
-        print("chessWS Unit Test 3: Rendering piece Locations from black perspective \n\t"+RED+"FAILED"+RESET+"\n")
-
 
     print("------------------------------------------------------------------------------------------------------------------------------")
 
-if UT_For_chessWS:
-    UT_chessWS()
+if ut_for_chessANN:
+    ut_chessANN()
 
 ###############################################################################################################################################################
+
 
 ###############################################################################################################################################################
 # Unit Testing: Reinforcment Learning Enviornment
 ###############################################################################################################################################################
 
-def UT_chessRLE():
+def ut_chessRLE():
 
     # Reinforcment Learning Enviornment test fixture (UT Setup)
     import numpy as np
@@ -498,8 +429,8 @@ def UT_chessRLE():
 
     print("------------------------------------------------------------------------------------------------------------------------------")
 
-if UT_For_chessRLE:
-    UT_chessRLE()
+if ut_for_chessRLE:
+    ut_chessRLE()
 
 
 ###############################################################################################################################################################
@@ -509,7 +440,7 @@ if UT_For_chessRLE:
 # Unit Testing: Interface Controller
 ###############################################################################################################################################################
 
-def UT_chessIC():
+def ut_chessIC():
 
     # Interface Controller test fixture (UT Setup)
     UT_IC = chessIC.controller()
@@ -520,16 +451,16 @@ def UT_chessIC():
 
     print("------------------------------------------------------------------------------------------------------------------------------")
 
-if UT_For_chessIC:
-    UT_chessIC()
+if ut_for_chessIC:
+    ut_chessIC()
 
 ###############################################################################################################################################################
 
 ###############################################################################################################################################################
-# Unit Testing: Artificial Neural Network Trainer
+# Unit Testing: Agent Trainer
 ###############################################################################################################################################################
 
-def UT_chessANNT():
+def ut_chessANNT():
 
     # DIRECTORIES WITH LICHLESS DATA (on host machine)
     # ---------------------------------------------------
@@ -537,7 +468,7 @@ def UT_chessANNT():
     # F:\LichlessData\lichess_db_standard_rated_2014-07.pgn
 
     # Artificial Neural Network Trainer test fixture (UT Setup)
-    UT_ANNT = chessANNT.trainer()
+    UT_ANNT = chessAT.trainer()
     testSourceTileWhite = "e2"
     testTargetTileWhite = "e4"
     testSourceTileBlack = "f7"
@@ -584,8 +515,8 @@ def UT_chessANNT():
 
     print("------------------------------------------------------------------------------------------------------------------------------")
 
-if UT_For_chessANNT:
-    UT_chessANNT()
+if ut_for_chessANNT:
+    ut_chessANNT()
 
 
 ###############################################################################################################################################################
