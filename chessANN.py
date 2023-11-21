@@ -49,12 +49,12 @@ class neuralNetwork:
         input_layer = Input(shape=(8, 8))
 
         x = Flatten()(input_layer)
-        x = Dense(512, activation='relu')(x)
-        x = Dense(256, activation='relu')(x)
-        x = Dense(128, activation='relu')(x)
-        x = Dense(64, activation='relu')(x)
+        x = Dense(9488, activation='relu')(x)
+        x = Dense(4744, activation='relu')(x)
+        x = Dense(2372, activation='relu')(x)
+        x = Dense(1186, activation='relu')(x)
 
-        q_values = Dense(226, name='q_values', activation='linear')(x)
+        q_values = Dense(1186, name='q_values', activation='linear')(x)
         self.model = Model(inputs=input_layer, outputs=q_values)
         self.model.compile(optimizer="adam", loss='mae', metrics=['accuracy'])
 
@@ -82,7 +82,7 @@ class neuralNetwork:
         if filename.endswith('.json'):
             json_filename = filename
             h5_filename = filename[:-5] + '.h5'
-        else:  # assume local filename root only
+        else:
             json_filename = 'ANNCA_Models/' + filename + '.json'
             h5_filename = 'ANNCA_Models/' + filename + '.h5'
         json_filename = json_filename.replace('\\', '/')
@@ -94,8 +94,7 @@ class neuralNetwork:
         model = keras.models.model_from_json(model_json)
         model.load_weights(h5_filename)
 
-        # Sets up ANN optimizers and loss on load
-        model.compile(optimizer="adam", loss='mae', metrics=['accuracy'])
+        model.compile(optimizer="adam", loss='mae', metrics=['accuracy'])   # Sets up ANN optimizers and loss on load
 
         return model
 
@@ -129,13 +128,11 @@ class neuralNetwork:
         """
         filename = 'ANNCA_Models/' + model_name
 
-        # Checks if the model JSON file exists before attempting to delete
         json_filepath = filename + '.json'
-        if os.path.exists(json_filepath):
+        if os.path.exists(json_filepath):   # Checks if the model JSON file exists before attempting to delete
             os.remove(json_filepath)
             print(f"Model '{model_name}' JSON file deleted.")
         else:
             print(f"Model '{model_name}' JSON file not found.")
 
 ###############################################################################################################################################################
-

@@ -1,63 +1,137 @@
 # Library Imports
-import pyautogui
 import time
+import pyautogui
+from typing import List
 
 ###############################################################################################################################################################
-# Chess.com Interface Controller - Version 1.0 (21/11/2023)
+# Chess.com Interface Controller - Version 1.2 (21/11/2023)
 ###############################################################################################################################################################
 
 class controller:
+    """
+    Controller class for automating interactions with the Chess.com interface.
+
+    Attributes:
+        - board_tile_display_coordinates: List to store the calibrated coordinates of each chessboard tile.
+        - COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE: Dictonary representing the indices for each chessboard tile coordinates from the white perspective.
+        - COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE: Dictonary representing the indices for each chessboard tile coordinates from the black perspective.
+
+    Methods:
+        - get_mouse_coordinates(): Returns the x and y coordinates of the current mouse position.
+        - get_board_tile_display_coordinates(): Returns the calibrated chessboard tile coordinates.
+        - tile_coordinates_to_white_board_indices(coordinates): Converts coordinates to chessboard indices from the white perspective.
+        - tile_coordinates_to_black_board_indices(coordinates): Converts coordinates to chessboard indices from the black perspective.
+        - calibrate_board_tile_display_coordinates(): Calibrates and stores the coordinates of each chessboard tile.
+        - move_piece_on_board(startAddressIndex, endAddressIndex): Moves a chess piece from the source to target tile on the Chess.com interface.
+
+    Usage:
+        - Create an instance of the Controller class.
+        - Calibrate the board using calibrate_board_tile_display_coordinates().
+        - Use tile_coordinates_to_white_board_indices() to translate tile coordinates to indices 
+        - Use move_piece_on_board() to automate chess piece movements.
+
+    Example:
+        
+        - chessIC = Controller()
+        - chessIC.calibrate_board_tile_display_coordinates()
+        - source_tile_indices = chessIC.tile_coordinates_to_white_board_indices("e2")
+        - target_tile_indices = chessIC.tile_coordinates_to_white_board_indices("e4")
+        - chessIC.move_piece_on_board(source_tile_indices, target_tile_indices)
+        """
 
     def __init__(self):
-        
-        self.board_tile_display_coordinates = [
-            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-            [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]
-        ]
+        """
+        Initializes the Chessboard Controller class.
+        """
+        self.board_tile_display_coordinates = None
+        self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE = {
+            "a8":[0,0], "b8":[0,1], "c8":[0,2], "d8":[0,3], "e8":[0,4], "f8":[0,5], "g8":[0,6], "h8":[0,7],
+            "a7":[1,0], "b7":[1,1], "c7":[1,2], "d7":[1,3], "e7":[1,4], "f7":[1,5], "g7":[1,6], "h7":[1,7],
+            "a6":[2,0], "b6":[2,1], "c6":[2,2], "d6":[2,3], "e6":[2,4], "f6":[2,5], "g6":[2,6], "h6":[2,7],
+            "a5":[3,0], "b5":[3,1], "c5":[3,2], "d5":[3,3], "e5":[3,4], "f5":[3,5], "g5":[3,6], "h5":[3,7],
+            "a4":[4,0], "b4":[4,1], "c4":[4,2], "d4":[4,3], "e4":[4,4], "f4":[4,5], "g4":[4,6], "h4":[4,7],
+            "a3":[5,0], "b3":[5,1], "c3":[5,2], "d3":[5,3], "e3":[5,4], "f3":[5,5], "g3":[5,6], "h3":[5,7],
+            "a2":[6,0], "b2":[6,1], "c2":[6,2], "d2":[6,3], "e2":[6,4], "f2":[6,5], "g2":[6,6], "h2":[6,7],
+            "a1":[7,0], "b1":[7,1], "c1":[7,2], "d1":[7,3], "e1":[7,4], "f1":[7,5], "g1":[7,6], "h1":[7,7],
+        }
+        self.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE = {
+            "h1":[0,0], "g1":[0,1], "f1":[0,2], "e1":[0,3], "d1":[0,4], "c1":[0,5], "b1":[0,6], "a1":[0,7],
+            "h2":[1,0], "g2":[1,1], "f2":[1,2], "e2":[1,3], "d2":[1,4], "c2":[1,5], "b2":[1,6], "a2":[1,7],
+            "h3":[2,0], "g3":[2,1], "f3":[2,2], "e3":[2,3], "d3":[2,4], "c3":[2,5], "b3":[2,6], "a3":[2,7],
+            "h4":[3,0], "g4":[3,1], "f4":[3,2], "e4":[3,3], "d4":[3,4], "c4":[3,5], "b4":[3,6], "a4":[3,7],
+            "h5":[4,0], "g5":[4,1], "f5":[4,2], "e5":[4,3], "d5":[4,4], "c5":[4,5], "b5":[4,6], "a5":[4,7],
+            "h6":[5,0], "g6":[5,1], "f6":[5,2], "e6":[5,3], "d6":[5,4], "c6":[5,5], "b6":[5,6], "a6":[5,7],
+            "h7":[6,0], "g7":[6,1], "f7":[6,2], "e7":[6,3], "d7":[6,4], "c7":[6,5], "b7":[6,6], "a7":[6,7],
+            "h8":[7,0], "g8":[7,1], "f8":[7,2], "e8":[7,3], "d8":[7,4], "c8":[7,5], "b8":[7,6], "a8":[7,7],
+        }
 
-        # Coordinates translated to chess format that will correlate with the display coordinates, if you are playing white
-        self.CHESSBOARD_TILE_COORDINATES_WHITE = [
-                ["A8", "B8", "C8", "D8", "E8", "F8", "G8", "H8"],
-                ["A7", "B7", "C7", "D7", "E7", "F7", "G7", "H7"],
-                ["A6", "B6", "C6", "D6", "E6", "F6", "G6", "H6"],
-                ["A5", "B5", "C5", "D5", "E5", "F5", "G5", "H5"],
-                ["A4", "B4", "C4", "D4", "E4", "F4", "G4", "H4"],
-                ["A3", "B3", "C3", "D3", "E3", "F3", "G3", "H4"],
-                ["A2", "B2", "C2", "D2", "E2", "F2", "G2", "H2"],
-                ["A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1"]
-            ]
-
-        # Coordinates translated to chess format that will correlate with the display coordinates, if you are playing black
-        self.CHESSBOARD_TILE_COORDINATES_BLACK = [
-            ["H1", "G1", "F1", "E1", "D1", "C1", "B1", "A1"],
-            ["H2", "G2", "F2", "E2", "D2", "C2", "B2", "A2"],
-            ["H3", "G3", "F3", "E3", "D3", "C3", "B3", "A3"],
-            ["H4", "G4", "F4", "E4", "D4", "C4", "B4", "A4"],
-            ["H5", "G5", "F5", "E5", "D5", "C5", "B5", "A5"],
-            ["H6", "G6", "F6", "E6", "D6", "C6", "B6", "A6"],
-            ["H7", "G7", "F7", "E7", "D7", "C7", "B7", "A7"],
-            ["H8", "G8", "F8", "E8", "D8", "C8", "B8", "A8"]
-        ]
     
-    # Returns the x and y coordinates on button click
-    def get_mouse_coordinates(self):
-        # Wait for a mouse click
-        click_point = pyautogui.position()
+    def get_mouse_coordinates(self) -> List[int]:
+        """
+        Retrieves the current x and y coordinates of the mouse cursor.
 
-        # Get the coordinates where the click occurred
+        Returns:
+            - List[int, int]: A list containing the x and y coordinates of the mouse cursor.
+        """
+        click_point = pyautogui.position()
         x, y = click_point
 
         return [x, y]
 
-    # Calibrates board coordinates
-    def calibrate_board(self):
 
+    def get_board_tile_display_coordinates(self) -> List[List[int]] :
+        """
+        Retrieves the calibrated coordinates of each chessboard tile.
+
+        Returns:
+            - List[List[int]]: A list representing the calibrated coordinates of each chessboard tile.
+        """
+        return self.board_tile_display_coordinates
+
+
+    def tile_coordinates_to_white_board_indices(self, tile_coordinates: str) -> List[int]:
+        """
+        Converts chessboard tile coordinates to indices from the white perspective.
+
+        Parameters:
+            - tile_coordinates (str): A string representing the coordinates of a chessboard tile.
+
+        Returns:
+            - List[int]: The corresponding chessboard indices from the white perspective.
+        """
+        return self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[tile_coordinates]
+
+
+    def tile_coordinates_to_black_board_indices(self, tile_coordinates: str) -> List[int]:
+        """
+        Converts chessboard tile coordinates to indices from the black perspective.
+
+        Parameters:
+            - tile_coordinates (str): A string representing the coordinates of a chessboard tile.
+
+        Returns:
+            - List[int]: The corresponding chessboard indices from the black perspective.
+        """
+        return self.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[tile_coordinates]
+
+
+    def calibrate_board_tile_display_coordinates(self):
+        """
+        Initiates the calibration process for obtaining the display coordinates of each chessboard tile.
+
+        During calibration, the user is prompted to place the mouse pointer in the center of TILE 1, TILE 2, and TILE 9
+        in that order. The method captures the mouse coordinates at each position and calculates the block lengths
+        to populate the calibrated coordinates for each chessboard tile.
+
+        This method guides the user through the calibration process and populates the calibrated coordinates of each chessboard tile.
+        The calibrated coordinates are stored in the `board_tile_display_coordinates` attribute.
+
+        Note:
+        - Follow the on-screen instructions during calibration.
+        - The method uses the `get_mouse_coordinates` method to capture mouse positions.
+        - Ensure that the chessboard is visible on the screen during calibration.
+        - Adjust the sleep durations as needed based on the user's responsiveness.
+        """
         print("------------------------------------------------------------------------------------------")
         print("\n")
         print("Imagine the chess board tiles are numbered as shown here:")
@@ -80,72 +154,60 @@ class controller:
         input("PRESS ENTER TO BEGIN BOARD CALIBRATION")
         print("\n")
 
-        # Resets the board calibration points
-        self.board_Calibration_Coordinates = []
+        display_calibration_points = []
 
-        # Gets the 3 board coordinate locations for calibration, in 5 second intervals
         for i in range(3):
 
             for j in range(5):
                 time.sleep(1)
                 print(str(5-j) +"...")
 
-            self.board_Calibration_Coordinates.append(self.get_Mouse_Coordinates())
+            display_calibration_points.append(self.get_mouse_coordinates())
 
             if i<2:
-                print("Tile "+str(i+1)+" Coordinates captured at: "+ str(self.get_Mouse_Coordinates()))
+                print("Tile "+str(i+1)+" Coordinates captured at: "+ str(self.get_mouse_coordinates()))
             else:
-                print("Tile "+str(9)+" Coordinates captured at: "+ str(self.get_Mouse_Coordinates()))
+                print("Tile "+str(9)+" Coordinates captured at: "+ str(self.get_mouse_coordinates()))
 
-        # Calculates block lengths
-        column_Length = self.board_Calibration_Coordinates[1][0] - self.board_Calibration_Coordinates[0][0]
-        row_Length = self.board_Calibration_Coordinates[2][1] - self.board_Calibration_Coordinates[0][1]
+         
+        column_Length = display_calibration_points[1][0] - display_calibration_points[0][0] # Calculates block lengths to interpolate the rest of the tile's coordinates
+        row_Length = display_calibration_points[2][1] - display_calibration_points[0][1]
 
-        current_Coordinates = self.board_Calibration_Coordinates[0].copy()
-
-        # Populates the calibrated coordinates
+        current_coordinates = display_calibration_points[0].copy()
         for x in range(8):
-
             for y in range(8):    
-                self.calibrated_Board_Coordinates[x][y] = current_Coordinates.copy()
-                current_Coordinates[0] += column_Length
+                self.board_tile_display_coordinates[x][y] = current_coordinates.copy()
+                current_coordinates[0] += column_Length
 
-            current_Coordinates[0] = self.board_Calibration_Coordinates[0][0]
-            current_Coordinates[1] += row_Length
+            current_coordinates[0] = self.board_tile_display_coordinates[0][0]
+            current_coordinates[1] += row_Length
         
-        return True
 
-    # Returns the current calibrated Coords
-    def get_board_tile_display_coordinates(self):
-        return self.board_tile_display_coordinates
+    def move_piece_on_board(self, source_tile_indices, target_tile_indices):
+        """
+        Moves a chess piece from the source location to the target location on the Chess.com game Board.
 
-    # Returns the board coordinates if player color is white
-    def getWhiteCoords(self, index):
-        return self.chessBoardTranslatedWhiteCoordinates[index[0]][index[1]]
+        Parameters:
+            - source_tile_indices, (List[int,int]): A list representing the row and column indices of the source chessboard tile location.
+            - target_tile_indices, (List[int,int]): A list representing the row and column indices of the target chessboard tile location.
 
-    # Returns the board coordinates if player color is white
-    def getBlackCoords(self, index):
-        return self.chessBoardTranslatedBlackCoordinates[index[0]][index[1]]
-
-    # Moves piece from initial location to the end location on the chess.com gamerBoard
-    def movePieceExternally(self, startAddressIndex, endAddressIndex):
-
-        x, y = self.calibrated_Board_Coordinates(startAddressIndex[0],startAddressIndex[1])
-
+        Note:
+            - Adjust the sleep durations as needed based on the responsiveness of the Chess.com interface.
+            - The final line moves the mouse back to a neutral position (1, 1, 1) to avoid unintended actions.
+        """
+        x, y = self.board_tile_display_coordinates[source_tile_indices[0],source_tile_indices[1]]
         pyautogui.moveTo(x, y, 1)
         pyautogui.mouseDown()
         time.sleep(0.5)
         pyautogui.mouseUp()
         time.sleep(1)
 
-        x, y = self.calibrated_Board_Coordinates(endAddressIndex[0],endAddressIndex[1])
-
+        x, y = self.board_tile_display_coordinates[target_tile_indices[0],target_tile_indices[1]]
         pyautogui.moveTo(x, y, 1)
         pyautogui.mouseDown()
         time.sleep(0.5)
         pyautogui.mouseUp()
 
-        # Moves mouse back to neutral position
-        pyautogui.moveTo(1300, 1000, 1)
+        pyautogui.moveTo(1, 1, 1)
 
 ###############################################################################################################################################################

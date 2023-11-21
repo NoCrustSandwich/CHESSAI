@@ -1,8 +1,9 @@
 # Library Imports
+import time
 from typing import Tuple
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import time
+
 
 
 ###############################################################################################################################################################
@@ -51,17 +52,15 @@ class webScraper:
         """
         Initializes the hidden Chrome web page instance for web scraping.
         """
-        # Hides the chrome web page
+        
         chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")   # Hides the chrome web page
 
         self.web_page = webdriver.Chrome(options=chrome_options)
 
-        # Navigates to game url webpage
-        self.web_page.get(self.game_url)
+        self.web_page.get(self.game_url)    # Navigates to game url webpage
 
-        # Wait 5 seconds for page to load and retrieve most recent data
-        time.sleep(5)
+        time.sleep(5)   # Wait 5 seconds for page to load and retrieve most recent data
 
     
     def fetch_latest_move_history_san(self) -> Tuple[int, str, str]:
@@ -76,9 +75,7 @@ class webScraper:
 
         latest_move_history = []
         
-        # Iterates through the list of elements
         for index, div_element in enumerate(div_elements, 1):
-            # Extracts content from each div element
             div_content = div_element.text
             seperated_moves = div_content.split("\n")
 
