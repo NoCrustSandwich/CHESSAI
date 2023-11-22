@@ -29,7 +29,10 @@ class RLE():
     def __init__(self):
         
         self.neuralNetwork = chessANN.neuralNetwork()
-
+        white_move_history_san = None
+        white_move_history_lan = None
+        black_move_history_san = None
+        black_move_history_lan = None
         self.board_white_perspective = [["or2","on2","ob2","oq1","ok","ob1","on1","or1"],
                 ["op8","op7","op6","op5","op4","op3","op2","op1"],
                 ["_","_","_","_","_","_","_","_"],
@@ -99,7 +102,7 @@ class RLE():
             "k":50,
             "ok":-50,
         }
-        self.POSSIBLE_MOVES = [   
+        self.ACTION_SPACE = [   
                 ("p1", (-1, 0)),
                 ("p1", (-1, -1)),
                 ("p1", (-1, 1)),
@@ -1339,7 +1342,37 @@ class RLE():
                 ("k", (1, 1)),
         ]
 
-        
+
+    def reset_game_state(self):
+        """
+        Reset the game state to its initial configuration.
+
+        This method resets the chess game state by reassigning the initial board configuration to both the white player's
+        board and the black player's board. It also clears the move histories.
+
+        Returns:
+            - None
+        """
+        self.move_history_san = None
+        self.move_history_lan = None
+        self.board_white_perspective = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
+                ["op8","op7","op6","op5","op4","op3","op2","op1"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["p1","p2","p3","p4","p5","p6","p7","p8"],
+                ["r1","n1","b1","q1","k","b2","n2","r2"]]
+        self.board_black_perspective = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
+                ["op8","op7","op6","op5","op4","op3","op2","op1"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["p1","p2","p3","p4","p5","p6","p7","p8"],
+                ["r1","n1","b1","q1","k","b2","n2","r2"]]
+
+
     def reverse_board_perspective(self, board: List[str]) -> List[str]:
         """
         Returns the Reversed board perspective to that of the opposite player's.
@@ -1359,212 +1392,198 @@ class RLE():
         return board
 
         
+    def preprosess_input(self, board) -> np.ndarray:
+        """
+        Translates a chessboard represented as a list of strings to a NumPy array with piece labels 
+        converted to their integer representations. The resulting array is formatted to be fed into 
+        a neural network as input.
+
+        Parameters:
+            - board (List[str]): The input chessboard with piece labels in their string representations.
+
+        Returns:
+            - np.ndarray: The chessboard with piece labels converted to their integer representations, 
+                          formatted as a NumPy array with a batch dimension.
+        """
+        translated_board = [[self.PIECE_LABELS_STRING_TO_INTEGER[piece] for piece in row] for row in board]
+        return np.array([translated_board])
+    
+
+    def train_neural_network(self, board, reward, q_values, action_index):
+        """
+        Trains the artificial neural network (ANN) based on the provided reward, updating the Q-values 
+        for the specified action index in the output layer.
+
+        Parameters:
+            - board (List[str]): The current state of the chessboard with piece labels in string representations.
+            - reward (float): The reward signal indicating the success or failure of the taken action.
+            - q_values (np.ndarray): The current Q-values predicted by the neural network for the given state.
+            - action_index (int): The index of the action taken in the Q-values array.
+
+        Returns:
+            None
+
+        Note:
+            This method modifies the Q-values in-place based on the observed reward and updates the neural network's weights accordingly.      
+        """
+        q_values[0, action_index] = reward
+        self.neuralNetwork.model.fit(self.preprosess_input(board), q_values, epochs=1, verbose=0)
 
 
+    def get_action_piece_tiles(self, board, action):
+        """
+        Retrieves information about the tiles involved in a specific action on the chessboard.
 
+        Parameters:
+            - board (List[List[str]]): The current state of the chessboard with piece labels in string representations.
+            - action (Tuple[str, Tuple[int, int]]): A tuple representing the action to be performed on the board.
+                - The first element of the tuple (`action[0]`) is the piece label to be moved.
+                - The second element of the tuple (`action[1]`) is a tuple representing the direction of the move as (dx, dy).
 
+        Returns:
+            - Tuple[str, str, Tuple[int, int], Tuple[int, int]]: A tuple containing information about the tiles involved in the action.
+                - The first element is the piece label to be moved.
+                - The second element is the piece label on the destination tile after the move.
+                - The third element is a tuple representing the coordinates of the source tile.
+                - The fourth element is a tuple representing the coordinates of the destination tile.
 
-    # Renders the current board on the console
-    def render(self):
-        for row in self.board:
-            print(" ".join("{:<3}".format(cell) for cell in row))
-            print("\n")
-
-
-    # Updates the current board with input board
-    def updateBoard(self, newBoard):
-        self.board = newBoard
-
-    # Returns the move prediction made by ANN as source and target location arrays
-    def getMovePrediction(self):
-
-        switchPlayer = False
-
-        # Repeat unitl valid move is made and instruction is given to switchplayer
-        while not switchPlayer:
-
-            print("Board Before Move"+str(self.board))
-
-            # Retrieves predicted Qvalues from ANN and determines the predicted action based on the highest qvalue
-            qValues = self.ANN.model.predict(self.preprosessANNInput())
-            action = self.actionSpace[np.argmax(qValues)]
-
-            observation, reward, done, info, switchPlayer, startLocation, endLocation = self.step(action)
-
-            print(action)
-            print(info)
-            print("Board After Move"+str(observation))
-
-        return startLocation, endLocation
-
-
-    # Resets back to starting position
-    def resetBoard(self):
-        # Reset the board to its initial state
-        self.board = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
-                ["op8","op7","op6","op5","op4","op3","op2","op1"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["p1","p2","p3","p4","p5","p6","p7","p8"],
-                ["r1","n1","b1","q2","k","b2","n2","r2"]]
-
-
-    # Returns translated board in numpy array format for ANN input
-    def preprosessANNInput(self):
-
-        translatedBoard = [[self.pieceToInt[piece] for piece in row] for row in self.board]
-        return np.array([translatedBoard])
-
-
-    # Trains ANN based on reward
-    def trainANN(self, reward, qValues, actionIndex):
-
-        qValues[0, actionIndex] = reward
-        self.ANN.model.fit(self.preprosessANNInput(), qValues, epochs=1, verbose=0)
-
-    # Updates the board with the input moves
-    def updateBoardWithMove(self, sourceMove, targetMove):
-
-        piece = self.board[sourceMove[0]][sourceMove[1]]
-        self.board[sourceMove[0]][sourceMove[1]] = "_"
-        self.board[targetMove[0]][targetMove[1]] = piece
-                
-    # Returns the current board
-    def getCurrentBoard(self):
-        return self.board
+        Note:
+            - If the specified piece label is not found on the board, the method returns (None, None, None, None).   
+        """
+        for x in range(len(board)):
+            for y in range(len(board[x])):
+                if board[x][y] == action[0]:
+                    return board[x][y], board[x+action[1][0]][y+action[1][1]], [x,y], [x+action[1][0],y+action[1][1]]
+        return None, None, None, None
+    
 
     # Runs through an action for the RL
-    def step(self, action):
+    def step(self, action, move_san_index, perspective):
         
-        # Retrieves Qvalues from ANN and action index of the action being trained
-        qValues = self.ANN.model.predict(self.preprosessANNInput())
-        actionIndex = self.actionSpace.index(action)
-        
-        # Determines the index location of the piece taking the action
-        piecePresent = False
+        if perspective == "w":
+            board = self.board_white_perspective
+        else:
+            board = self.board_black_perspective
 
-        for x in range(len(self.board)):
-            for y in range(len(self.board[x])):
-                if self.board[x][y] == action[0]:
-                    sourceLocation = [x,y]
-                    targetLocation =  [x+action[1][0],y+action[1][1]]
-                    piecePresent = True
+
+        q_values = self.neuralNetwork.model.predict(self.preprosess_input(board))
+        action_index = self.ACTION_SPACE.index(action)
+        
+        action_piece, target_tile_piece, source_tile_indices, target_tile_indices, = self.get_action_piece_tiles(board, action)
 
 
         # Checks if the piece being moved is present on the board
-        if not piecePresent:
+        if action_piece:
 
-            observation = self.board
+
+            observation = board
             reward = -1000.0
             done = False
-            info = {"Invalid Move, Piece is not present on the board"}
-            switchPlayer = False
-            startLocation = None
-            endLocation = None
-            
+            info = {"Invalid Move, Piece Not Present on Board"}
+            switch_player = False
+            source_tile_location = None
+            target_tile_location = None
 
-            self.trainANN(reward,qValues, actionIndex)
+            self.train_neural_network(observation, reward, q_values, action_index)
 
-            return observation, reward, done, info, switchPlayer, startLocation, endLocation
+            return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
+
 
         # Checks if the move is out of range
-        if targetLocation[0]>7 or targetLocation[1]>7 or targetLocation[0]<0 or targetLocation[1]<0:
+        if target_tile_indices[0]>7 or target_tile_indices[1]>7 or target_tile_indices[0]<0 or target_tile_indices[1]<0:
 
-            observation = self.board
+            observation = board
             reward = -1000.0
             done = False
-            info = {"Invalid Move, Target Location is out of range"}
-            switchPlayer = False
-            startLocation = None
-            endLocation = None
+            info = {"Invalid Move, Target Tile Location Out of Range"}
+            switch_player = False
+            source_tile_location = None
+            target_tile_location = None
 
-            self.trainANN(reward,qValues, actionIndex)
+            self.train_neural_network(observation, reward, q_values, action_index)
 
-            return observation, reward, done, info, switchPlayer, startLocation, endLocation
+            return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
 
-
-        # Retrieves item present at the target tile
-        targetTilePiece = self.board[targetLocation[0]][targetLocation[1]] 
 
         # Prevents capture of own pieces
-        if targetTilePiece in {"k", "q2", "p1", "p2", "p3", "p4","p5","p6","p7","p8","r1","r2","b1","b2","n1","n2"}:
+        if target_tile_piece[0] != "o" and target_tile_piece[0] != "_":
 
-            observation = self.board
+            
+            observation = board
             reward = -1000.0
             done = False
-            info = {"Invalid Move, Cannot capture piece that belongs to player"}
-            switchPlayer = False
-            startLocation = None
-            endLocation = None
+            info = {"Invalid Move, Cannot Capture Piece that Belongs to Agent"}
+            switch_player = False
+            source_tile_location = None
+            target_tile_location = None
 
-            self.trainANN(reward,qValues, actionIndex)
+            self.train_neural_network(observation, reward, q_values, action_index)
 
-            return observation, reward, done, info, switchPlayer, startLocation, endLocation
+            return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
        
+
         # Prevents castleing outside of king and rook in starting conditions
-        if action[0] == "k" and (action[1][1] == 2 or action[1][1] == -2) :
+        if action[0] == "k" and (action[1][1] == 2 or action[1][1] == -2):
 
-            if not (self.board[7][7] == "r1" or self.board[7][7] == "r2") or sourceLocation != [7,4]:
+            if not (board[7][7] == "r1" or board[7][7] == "r2") or source_tile_indices != [7,4]:
 
-                observation = self.board
+                observation = board
                 reward = -1000.0
                 done = False
                 info = {"Invalid Move, king cannot castle unless King and rook are in starting position"}
-                switchPlayer = False
-                startLocation = None
-                endLocation = None
+                switch_player = False
+                source_tile_location = None
+                target_tile_location = None
 
-                self.trainANN(reward,qValues, actionIndex)
+                self.train_neural_network(observation, reward, q_values, action_index)
 
-                return observation, reward, done, info, switchPlayer, startLocation, endLocation
+                return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
 
-            if not (self.board[7][0] == "r1" or self.board[7][0] == "r2") or sourceLocation != [7,4]:
+            if not (board[7][0] == "r1" or board[7][0] == "r2") or source_tile_indices != [7,4]:
 
-                observation = self.board
+                observation = board
                 reward = -1000.0
                 done = False
                 info = {"Invalid Move, king cannot castle unless King and rook are in starting position"}
-                switchPlayer = False
-                startLocation = None
-                endLocation = None
+                switch_player = False
+                source_tile_location = None
+                target_tile_location = None
 
-                self.trainANN(reward,qValues, actionIndex)
+                self.train_neural_network(observation, reward, q_values, action_index)
 
-                return observation, reward, done, info, switchPlayer, startLocation, endLocation
+                return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
 
         # Pawn invalid move attempts
         if action[0] in {"p1", "p2", "p3", "p4","p5","p6","p7","p8"}:
 
-            if action[1][0] == -2 and sourceLocation[0]!=6:
+            if action[1][0] == -2 and source_tile_indices[0]!=6:
 
-                observation = self.board
+                observation = board
                 reward = -1000.0
                 done = False
                 info = {"Invalid Move, pawn cannot move 2 spaces unless in starting position"}
-                switchPlayer = False
-                startLocation = None
-                endLocation = None
+                switch_player = False
+                source_tile_location = None
+                target_tile_location = None
 
-                self.trainANN(reward,qValues, actionIndex)
+                self.train_neural_network(observation, reward, q_values, action_index)
 
-                return observation, reward, done, info, switchPlayer, startLocation, endLocation
+                return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
             
-            if action[1][1]!=0 and targetTilePiece == "_" and ( not self.en_Passant_Available or self.en_Passant_Location != targetLocation):
+            if action[1][1]!=0 and target_tile_piece == "_" and ( not self.en_passant_available or self.en_passant_location != targetLocation):
 
                 if self.en_Passant_Location != targetLocation:
                     observation = self.board
                     reward = -1000.0
                     done = False
                     info = {"Invalid Move, pawn cannot side ways unless opossing piece is there or enpassant condition is met"}
-                    switchPlayer = False
-                    startLocation = None
-                    endLocation = None
+                    switch_player = False
+                    source_tile_location = None
+                    target_tile_location = None
 
-                    self.trainANN(reward,qValues, actionIndex)
+                    self.train_neural_network(observation, reward, q_values, action_index)
 
-                    return observation, reward, done, info, switchPlayer, startLocation, endLocation
+                    return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
             
 
             if action[1][0] == -2 and sourceLocation[0]==6 and self.board[sourceLocation[0]-1][sourceLocation[1]] != "_":
@@ -1573,30 +1592,30 @@ class RLE():
                 reward = -1000.0
                 done = False
                 info = {"Invalid Move, pawn is blocked by other piece in it's path"}
-                switchPlayer = False
-                startLocation = None
-                endLocation = None
+                switch_player = False
+                source_tile_location = None
+                target_tile_location = None
 
-                self.trainANN(reward,qValues, actionIndex)
+                self.train_neural_network(observation, reward, q_values, action_index)
 
-                return observation, reward, done, info, switchPlayer, startLocation, endLocation
+                return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
 
             if action[1][0] == -1 and targetTilePiece != "_":
 
-                observation = self.board
+                observation = board
                 reward = -1000.0
                 done = False
                 info = {"Invalid Move, pawn is blocked by other piece in it's path"}
-                switchPlayer = False
-                startLocation = None
-                endLocation = None
+                switch_player = False
+                source_tile_location = None
+                target_tile_location = None
 
-                self.trainANN(reward,qValues, actionIndex)
+                self.train_neural_network(observation, reward, q_values, action_index)
 
-                return observation, reward, done, info, switchPlayer, startLocation, endLocation
+                return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
 
         # Rook and queen invalid move attempts
-        if action[0] in {"r1", "r2", "q2"}:
+        if action[0][0] == "r" or action[0][0] == "q":
 
             
             if action[1][1] > 0:
@@ -1606,19 +1625,19 @@ class RLE():
                     if index == 0:
                         continue
 
-                    if self.board[sourceLocation[0]][sourceLocation[1]+index] !=  "_":
+                    if board[source_tile_indices[0]][source_tile_indices[1]+index] !=  "_":
 
-                        observation = self.board
+                        observation = board
                         reward = -1000.0
                         done = False
                         info = {"Invalid Move, rook or queen is blocked by other piece in it's path"}
-                        switchPlayer = False
-                        startLocation = None
-                        endLocation = None
+                        switch_player = False
+                        source_tile_location = None
+                        target_tile_location = None
 
-                        self.trainANN(reward,qValues, actionIndex)
+                        self.train_neural_network(observation, reward, q_values, action_index)
 
-                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
+                        return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
                     
             if action[1][1] < 0:
 
@@ -1627,19 +1646,19 @@ class RLE():
                     if index == 0:
                         continue
 
-                    if self.board[sourceLocation[0]][sourceLocation[1]-index] !=  "_":
+                    if self.board[source_tile_indices[0]][source_tile_indices[1]-index] !=  "_":
 
-                        observation = self.board
+                        observation = board
                         reward = -1000.0
                         done = False
                         info = {"Invalid Move, rook or queen is blocked by other piece in it's path"}
-                        switchPlayer = False
-                        startLocation = None
-                        endLocation = None
+                        switch_player = False
+                        source_tile_location = None
+                        target_tile_location = None
 
-                        self.trainANN(reward,qValues, actionIndex)
+                        self.train_neural_network(observation, reward, q_values, action_index)
 
-                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
+                        return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
 
             if action[1][0] > 0:
 
@@ -1648,19 +1667,19 @@ class RLE():
                     if index == 0:
                         continue
 
-                    if self.board[sourceLocation[0]+index][sourceLocation[1]] !=  "_":
+                    if self.board[source_tile_indices[0]+index][source_tile_indices[1]] !=  "_":
 
-                        observation = self.board
+                        observation = board
                         reward = -1000.0
                         done = False
                         info = {"Invalid Move, rook or queen is blocked by other piece in it's path"}
-                        switchPlayer = False
-                        startLocation = None
-                        endLocation = None
+                        switch_player = False
+                        source_tile_location = None
+                        target_tile_location = None
 
-                        self.trainANN(reward,qValues, actionIndex)
+                        self.train_neural_network(observation, reward, q_values, action_index)
 
-                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
+                        return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
                     
             if action[1][0] < 0:
 
@@ -1669,19 +1688,19 @@ class RLE():
                     if index == 0:
                         continue
 
-                    if self.board[sourceLocation[0]-index][sourceLocation[1]-index] !=  "_":
+                    if self.board[source_tile_indices[0]-index][sourceLocation[1]-index] !=  "_":
 
                         observation = self.board
                         reward = -1000.0
                         done = False
                         info = {"Invalid Move, rook or queen is blocked by other piece in it's path"}
-                        switchPlayer = False
-                        startLocation = None
-                        endLocation = None
+                        switch_player = False
+                        source_tile_location = None
+                        target_tile_location = None
 
-                        self.trainANN(reward,qValues, actionIndex)
+                        self.train_neural_network(observation, reward, q_values, action_index)
 
-                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
+                        return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
 
 
         # bishop and queen invalid move attempts
@@ -1700,13 +1719,13 @@ class RLE():
                         reward = -1000.0
                         done = False
                         info = {"Invalid Move, bishop or queen is blocked by other piece in it's path"}
-                        switchPlayer = False
-                        startLocation = None
-                        endLocation = None
+                        switch_player = False
+                        source_tile_location = None
+                        target_tile_location = None
 
-                        self.trainANN(reward,qValues, actionIndex)
+                        self.train_neural_network(observation, reward, q_values, action_index)
 
-                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
+                        return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
                     
 
             if action[1][0] > 0 and action[1][1] < 0:
@@ -1722,13 +1741,13 @@ class RLE():
                         reward = -1000.0
                         done = False
                         info = {"Invalid Move, bishop or queen is blocked by other piece in it's path"}
-                        switchPlayer = False
-                        startLocation = None
-                        endLocation = None
+                        switch_player = False
+                        source_tile_location = None
+                        target_tile_location = None
 
-                        self.trainANN(reward,qValues, actionIndex)
+                        self.train_neural_network(observation, reward, q_values, action_index)
 
-                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
+                        return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
 
             if action[1][0] < 0 and action[1][1] > 0:
 
@@ -1743,13 +1762,13 @@ class RLE():
                         reward = -1000.0
                         done = False
                         info = {"Invalid Move, bishop or queen is blocked by other piece in it's path"}
-                        switchPlayer = False
-                        startLocation = None
-                        endLocation = None
+                        switch_player = False
+                        source_tile_location = None
+                        target_tile_location = None
 
-                        self.trainANN(reward,qValues, actionIndex)
+                        self.train_neural_network(observation, reward, q_values, action_index)
 
-                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
+                        return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
 
             if action[1][0] < 0 and action[1][1] < 0:
 
@@ -1764,13 +1783,13 @@ class RLE():
                         reward = -1000.0
                         done = False
                         info = {"Invalid Move, bishop or queen is blocked by other piece in it's path"}
-                        switchPlayer = False
-                        startLocation = None
-                        endLocation = None
+                        switch_player = False
+                        source_tile_location = None
+                        target_tile_location = None
 
-                        self.trainANN(reward,qValues, actionIndex)
+                        self.train_neural_network(observation, reward, q_values, action_index)
 
-                        return observation, reward, done, info, switchPlayer, startLocation, endLocation
+                        return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
 
 
         # Valid Castling Condition
@@ -2011,8 +2030,9 @@ class RLE():
         print("Source Tile: " + str(self.board[sourceLocation[0]][sourceLocation[1]]))
         print("Target Tile: " + str(self.board[targetLocation[0]][targetLocation[1]]))
 
-        self.trainANN( reward, qValues, actionIndex)
+        self.train_neural_network(observation, reward, q_values, action_index)
 
-        return observation, reward, done, info, switchPlayer, startLocation, endLocation
+        return observation, reward, done, info, switch_player, source_tile_location, target_tile_location
+
     
 ###############################################################################################################################################################

@@ -4,33 +4,7 @@ self.move_history_san = []
         
 
 
-def reset_game_state(self):
-        """
-        Reset the game state to its initial configuration.
 
-        This method resets the chess game state by reassigning the initial board configuration to both the white player's
-        board and the black player's board. It also clears the move history.
-
-        Returns:
-            None
-        """
-        self.move_history_san = []
-        self.white_board = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
-                ["op8","op7","op6","op5","op4","op3","op2","op1"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["p1","p2","p3","p4","p5","p6","p7","p8"],
-                ["r1","n1","b1","q1","k","b2","n2","r2"]]
-        self.white_board = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
-                ["op8","op7","op6","op5","op4","op3","op2","op1"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["p1","p2","p3","p4","p5","p6","p7","p8"],
-                ["r1","n1","b1","q1","k","b2","n2","r2"]]
         
     def get_white_board(self) -> List[List[str]]:
         """
@@ -76,3 +50,31 @@ def reset_game_state(self):
             return
         else:
             latest_move_index = len(self.move_history_san)
+
+            
+ # Returns the move prediction made by ANN as source and target location arrays
+    def get_move_prediction(self, perspective):
+
+        if perspective == "w":
+            board = self.board_white_perspective
+        else:
+            board = self.board_black_perspective
+
+        switch_player = False
+
+        # Repeat unitl valid move is made and instruction is given to switchplayer
+        while not switch_player:
+
+            print("Board Before Move"+str(board))
+
+            # Retrieves predicted Qvalues from ANN and determines the predicted action based on the highest qvalue
+            q_values = self.neuralNetwork.model.predict(self.preprosess_input(board))
+            action = self.ACTION_SPACE[np.argmax(q_values)]
+
+            observation, reward, done, info, switch_player, source_tile_location, target_tile_location = self.step(action, move_san_index, perspective)
+
+            print(action)
+            print(info)
+            print("Board After Move"+str(observation))
+
+        return startLocation, endLocation
