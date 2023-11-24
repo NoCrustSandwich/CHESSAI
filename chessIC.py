@@ -16,6 +16,7 @@ class controller:
         - COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE: Dictonary representing the indices for each chessboard tile coordinates from the black perspective.
 
     Methods:
+        - __init__(self): Initializes the Chessboard Controller class.
         - get_mouse_coordinates(): Returns the x and y coordinates of the current mouse position.
         - get_board_tile_display_coordinates(): Returns the calibrated chessboard tile coordinates.
         - tile_coordinates_to_white_board_indices(coordinates): Converts coordinates to chessboard indices from the white perspective.
@@ -30,7 +31,6 @@ class controller:
         - Use move_piece_on_board() to automate chess piece movements.
 
     Example:
-        
         - chessIC = Controller()
         - chessIC.calibrate_board_tile_display_coordinates()
         - source_tile_indices = chessIC.tile_coordinates_to_white_board_indices("e2")
