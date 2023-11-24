@@ -1,4 +1,5 @@
 # Library Imports
+import os
 import chess.pgn
 import numpy as np
 import chessRLE
@@ -6,355 +7,128 @@ import random
 import re
 
 ###############################################################################################################################################################
-# ANN Trainer
+# Agent Trainer - Version 2.0 (24/11/2023)
 ###############################################################################################################################################################
 
 class trainer:
 
-    def __init__(self, state):
-
-        # Dictionary used to translate PGN board to ANN format if player is white
-        self.PGN_To_ANN_White_Player = {
-
-            "_": "_",
-
-            "p": "op",
-            "k": "ok",
-            "q": "oq",
-            "b": "ob",
-            "r": "or",
-            "n": "on",
-
-            "P": "p",
-            "K": "k",
-            "Q": "q",
-            "B": "b",
-            "R": "r",
-            "N": "n",
- 
-        }
-
-        # Dictionary used to translate PGN board to ANN format if player is black
-        self.PGN_To_ANN_Black_Player = {
-
-            "_": "_",
-
-            "p": "p",
-            "k": "k",
-            "q": "q",
-            "b": "b",
-            "r": "r",
-            "n": "n",
-
-            "P": "op",
-            "K": "ok",
-            "Q": "oq",
-            "B": "ob",
-            "R": "or",
-            "N": "on",
-        }
-
-        # Coordinates from white players perspective
-        self.positionToCoordinatesWhite = {
-        'a8': (0, 0), 'b8': (0, 1), 'c8': (0, 2), 'd8': (0, 3),'e8': (0, 4), 'f8': (0, 5), 'g8': (0, 6), 'h8': (0, 7),
-        'a7': (1, 0), 'b7': (1, 1), 'c7': (1, 2), 'd7': (1, 3),'e7': (1, 4), 'f7': (1, 5), 'g7': (1, 6), 'h7': (1, 7),
-        'a6': (2, 0), 'b6': (2, 1), 'c6': (2, 2), 'd6': (2, 3),'e6': (2, 4), 'f6': (2, 5), 'g6': (2, 6), 'h6': (2, 7),
-        'a5': (3, 0), 'b5': (3, 1), 'c5': (3, 2), 'd5': (3, 3),'e5': (3, 4), 'f5': (3, 5), 'g5': (3, 6), 'h5': (3, 7),
-        'a4': (4, 0), 'b4': (4, 1), 'c4': (4, 2), 'd4': (4, 3),'e4': (4, 4), 'f4': (4, 5), 'g4': (4, 6), 'h4': (4, 7),
-        'a3': (5, 0), 'b3': (5, 1), 'c3': (5, 2), 'd3': (5, 3),'e3': (5, 4), 'f3': (5, 5), 'g3': (5, 6), 'h3': (5, 7),
-        'a2': (6, 0), 'b2': (6, 1), 'c2': (6, 2), 'd2': (6, 3),'e2': (6, 4), 'f2': (6, 5), 'g2': (6, 6), 'h2': (6, 7),
-        'a1': (7, 0), 'b1': (7, 1), 'c1': (7, 2), 'd1': (7, 3),'e1': (7, 4), 'f1': (7, 5), 'g1': (7, 6), 'h1': (7, 7),
-        }
-
-        # Coordinates from black players perspective
-        self.positionToCoordinatesBlack = {
-        'h1': (0, 0), 'g1': (0, 1), 'f1': (0, 2), 'e1': (0, 3),'d1': (0, 4), 'c1': (0, 5), 'b1': (0, 6), 'a1': (0, 7),
-        'h2': (1, 0), 'g2': (1, 1), 'f2': (1, 2), 'e2': (1, 3),'d2': (1, 4), 'c2': (1, 5), 'b2': (1, 6), 'a2': (1, 7),
-        'h3': (2, 0), 'g3': (2, 1), 'f3': (2, 2), 'e3': (2, 3),'d3': (2, 4), 'c3': (2, 5), 'b3': (2, 6), 'a3': (2, 7),
-        'h4': (3, 0), 'g4': (3, 1), 'f4': (3, 2), 'e4': (3, 3),'d4': (3, 4), 'c4': (3, 5), 'b4': (3, 6), 'a4': (3, 7),
-        'h5': (4, 0), 'g5': (4, 1), 'f5': (4, 2), 'e5': (4, 3),'d5': (4, 4), 'c5': (4, 5), 'b5': (4, 6), 'a5': (4, 7),
-        'h6': (5, 0), 'g6': (5, 1), 'f6': (5, 2), 'e6': (5, 3),'d6': (5, 4), 'c6': (5, 5), 'b6': (5, 6), 'a6': (5, 7),
-        'h7': (6, 0), 'g7': (6, 1), 'f7': (6, 2), 'e7': (6, 3),'d7': (6, 4), 'c7': (6, 5), 'b7': (6, 6), 'a7': (6, 7),
-        'h8': (7, 0), 'g8': (7, 1), 'f8': (7, 2), 'e8': (7, 3),'d8': (7, 4), 'c8': (7, 5), 'b8': (7, 6), 'a8': (7, 7),
-        }
-
-        # Loads the Reinforcment Learning Enviorment
+    def __init__(self, training_data_directory='Documents/ANNCA/training_data'):
+        """
+        Initializes an instance of the trainer class, and checks if the training data folder exists on device and if not creates it.
+        """
         self.RLE = chessRLE.RLE()
-    
+        self.training_data_directory = training_data_directory
 
-    # Converts Board to custom format for ANN
-    def convertBoardToANNFormat(self,board):
-        custom_board = []
+        home_directory = os.path.expanduser("~")
+        full_model_directory = os.path.join(home_directory, self.training_data_directory)
+        if not os.path.exists(full_model_directory):
+            os.makedirs(full_model_directory)
 
-        for rank in range(8):
-            custom_rank = []
-            for file in range(8):
-                piece = board.piece_at(chess.square(file, 7 - rank))
-                if piece is None:
-                    custom_rank.append("_")
-                else:
-                    custom_rank.append(piece.symbol())
-            custom_board.append(custom_rank)
+        
+    def active_train(self, number_of_games): # Trains Agent by Playing Against Itself
 
-        return custom_board
+        for game in range(number_of_games):
 
-
-    # Trains the logic of the agent to be more accurate by playing against itself
-    def activeTrain(self, numOfEpisodes):
-
-        for episode in range(numOfEpisodes):
-
-            self.RLE.resetBoard()
+            self.RLE.reset_game_state()
             total_reward = 0
+            perspective = "w"
 
             while True:
                 
-                # Randomlly picks 1 of top 10 moves with decreasing likelihood
-                qValues = self.RLE.ANN.model.predict(self.RLE.preprosessANNInput())
+                qValues = self.RLE.neuralNetwork.model.predict(self.RLE.preprosess_input())
+                best_actions = np.argsort(qValues)[-10:][::-1]
+                random_integer = random.randint(1, 1023)
 
-                topIndices = np.argsort(qValues)[-10:][::-1]
-
-                randomInteger = random.randint(1, 1023)
-
-                if randomInteger > 511:
-                    action = self.RLE.actionSpace[topIndices[0]]
-                elif randomInteger > 255:
-                    action = self.RLE.actionSpace[topIndices[1]]
-                elif randomInteger > 127:
-                    action = self.RLE.actionSpace[topIndices[2]]
-                elif randomInteger > 63:
-                    action = self.RLE.actionSpace[topIndices[3]]
-                elif randomInteger > 31:
-                    action = self.RLE.actionSpace[topIndices[4]]
-                elif randomInteger > 15:
-                    action = self.RLE.actionSpace[topIndices[5]]
-                elif randomInteger > 7:
-                    action = self.RLE.actionSpace[topIndices[6]]
-                elif randomInteger > 3:
-                    action = self.RLE.actionSpace[topIndices[7]]
-                elif randomInteger > 1:
-                    action = self.RLE.actionSpace[topIndices[8]]
-                elif randomInteger == 1:
-                    action = self.RLE.actionSpace[topIndices[9]]
+                if random_integer > 511:                            # Randomly picks 1 of the current top 10 moves with decreasing likelihood
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[0]]
+                elif random_integer > 255:
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[1]]
+                elif random_integer > 127:
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[2]]
+                elif random_integer > 63:
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[3]]
+                elif random_integer > 31:
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[4]]
+                elif random_integer > 15:
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[5]]
+                elif random_integer > 7:
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[6]]
+                elif random_integer > 3:
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[7]]
+                elif random_integer > 1:
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[8]]
+                elif random_integer == 1:
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[9]]
       
-                observation, reward, done, info, switchPlayer, startLocation, endLocation = self.RLE.step(action)
+                action_info, final_board_state, action_reward, valid_move, game_end = self.RLE.attempt_action(action,perspective)
 
-                if switchPlayer:
-                    self.RLE.render()
-                    self.RLE.changePlayer()
+                if valid_move:              # Switches player turn on successful move being made 
+                    if perspective == "w":
+                        perspective = "b"
+                    else:
+                        perspective = "w"
 
-                total_reward += reward
+                total_reward += action_reward
 
-                if done:
+                if game_end:
                     break
 
-            print(f"Episode {episode + 1}/{numOfEpisodes}, Total Reward: {total_reward}")
+            print(f"Game {game + 1}/{number_of_games}, Game's Total Reward: {total_reward}")
 
-            # Saves trained model after each simulated round
-            self.RLE.ANN.saveANN("CANN")
-
-        # Saves trained model
-        self.RLE.ANN.saveANN("CANN")
-
-        # Used for unit testing
-        return True
+            self.RLE.neuralNetwork.save_model("ANNCA")
 
 
-    # Converts PGN file to a board input 2D list
-    def dataTrain(self, PGNFilePath):
-
-        whiteTurn = True
+    def preprocess_board(self,board): # preprocesses board for input to the neural network
         
-        # Open the PGN file for reading
-        with open(PGNFilePath, 'r') as pgn:
-            game = chess.pgn.read_game(pgn)
-            
-            # Extract the winner from the game's result
-            result = game.headers.get('Result')
-            if result == '1-0':
-                winner = 'w'
-            elif result == '0-1':
-                winner = 'b'
-            elif result == '1/2-1/2':
-                winner = 'd'
+        preprocessed_board = []
 
-            if game:
-                self.RLE.resetBoard()
+        for rank in range(8):
+            rank = []
+            for file in range(8):
+                piece = board.piece_at(chess.square(file, 7 - rank))
+                if piece is None:
+                    rank.append("_")
+                else:
+                    rank.append(piece.symbol())
+            preprocessed_board.append(rank)
 
-                for move in game.mainline_moves():
-                    print("Move: "+ str(move))
+        return preprocessed_board
+    
+
+    def data_train(self): # Trains Agent by Reinforcing Winning Player's Game Moves in PGN Files 
+
+        home_directory = os.path.expanduser("~")
+        full_model_directory = os.path.join(home_directory, self.training_data_directory)
+        for filename in os.listdir(full_model_directory):
+
+            if filename.endswith(".pgn"):
+
+                pgn_file_path = os.path.join(full_model_directory, filename)
+                with open(pgn_file_path, 'r') as pgn:
+
+                    game = chess.pgn.read_game(pgn)
                     
-                    if(whiteTurn):
-
-                        print("White")
-
-                        print("Before Move: "+str(self.RLE.getCurrentBoard()))
-
-                        pattern = r'\b[A-Za-z]\d+\b'
-                        result = re.sub(pattern, '', str(move))
-
-                        print(result)
-
-                        if len(result) == 4:
-                            sourceMove = str(result)[0:2]
-                            targetMove = str(result)[2:4]
-
-                            action = self.preprocessOutput(sourceMove,targetMove,self.RLE.getCurrentBoard(),"w")
-
-                            # Very high reward to incentivise this move over any others
-                            reward = 100000.0
-                            
-                            # Retrieves Qvalues from ANN and action index of the action being trained
-                            qValues = self.RLE.ANN.model.predict(self.RLE.preprosessANNInput())
-                            actionIndex = self.RLE.actionSpace.index(action)
-
-                            # Only consider winning player's moves
-                            if winner == "W":
-                                self.RLE.trainANN(reward, qValues, actionIndex)
-
-                            self.RLE.updateBoardWithMove(self.positionToCoordinatesWhite[sourceMove], self.positionToCoordinatesWhite[targetMove])
-                            self.RLE.changePlayer()
-    
-                        whiteTurn = False
-
+                    result = game.headers.get('Result')
+                    if result == '1-0':
+                        winner = 'w'
+                    elif result == '0-1':
+                        winner = 'b'
                     else:
-                        
-                        print("Black")
+                        winner = 'NA'
 
-                        print("Before Move: "+str(self.RLE.getCurrentBoard()))
-                                         
-                        pattern = r'\b[A-Za-z]\d+\b'
-                        result = re.sub(pattern, '', str(move))
+                    if game:
 
-                        print(result)
+                        self.RLE.reset_game_state()
 
-                        if len(result) == 4:
+                        print(game.mainline_moves())
 
-                            sourceMove = str(result)[0:2]
-                            targetMove = str(result)[2:4]
+                        for move in game.mainline_moves():
+                            #print(move)
+                            pass
 
-                            action = self.preprocessOutput(sourceMove,targetMove,self.RLE.getCurrentBoard(),"b")
+                self.RLE.neuralNetwork.save_model("ANNCA") 
 
-                            print(action)
-
-                            # Very high reward to incentivise this move over any others
-                            reward = 100000.0
-
-                            # Retrieves Qvalues from ANN and action index of the action being trained
-                            qValues = self.RLE.ANN.model.predict(self.RLE.preprosessANNInput())
-                            actionIndex = self.RLE.actionSpace.index(action)
-
-                            # Only consider winning player's moves
-                            if winner == "B":
-                                self.RLE.trainANN(reward, qValues, actionIndex)
-
-                            self.RLE.updateBoardWithMove(self.positionToCoordinatesBlack[sourceMove], self.positionToCoordinatesBlack[targetMove])
-                            self.RLE.changePlayer()
-                            
-                        whiteTurn = True
-
-                    print("After Move: "+str(self.RLE.getCurrentBoard()))
-
-        # Saves trained model
-        self.RLE.ANN.saveANN("CANN")
-
-        # Used for unit testing
-        return True
-
-
-    # Translates board from chars to integer representations (Changes board to numerical values)
-    def preprocessInput(self, board, playerColor):
-
-        # Initilizes input board as empty to be populated by translated board elements
-        inputBoard = [["_","_","_","_","_","_","_","_"],
-            ["_","_","_","_","_","_","_","_"],
-            ["_","_","_","_","_","_","_","_"],
-            ["_","_","_","_","_","_","_","_"],
-            ["_","_","_","_","_","_","_","_"],
-            ["_","_","_","_","_","_","_","_"],
-            ["_","_","_","_","_","_","_","_"],
-            ["_","_","_","_","_","_","_","_"]]
-
-        # Populates the board based on player color
-        if playerColor =="w":
-            for row in range(8):
-                for col in range(8):
-                    inputBoard[row][col] = self.PGN_To_ANN_White_Player[board[row][col]]
-        else:
-            for row in range(8):
-                for col in range(8):
-                    inputBoard[row][col] = self.PGN_To_ANN_Black_Player[board[row][col]]
-
-            # Reverses board to be from black players perspective
-            inputBoard = [row[::-1] for row in inputBoard[::-1]]
-
-        # To maintain similar numbering between sides, numbered backwards for opponennt side because their side is mirrored
-        opCounter = 8
-        pCounter = 1
-        bCounter = 1
-        obCounter = 2
-        rCounter = 1
-        orCounter = 2
-        nCounter = 1
-        onCounter = 2
-
-        # Adds Numbers to rendered pieces on inputBoard
-        for i in range(len(inputBoard)):
-            for j in range(len(inputBoard)):
-
-                if inputBoard[i][j] == "op":
-                    inputBoard[i][j] =  inputBoard[i][j]+str(opCounter)
-                    opCounter-=1
-                
-                if inputBoard[i][j] == "ob":
-                    inputBoard[i][j] = inputBoard[i][j]+str(obCounter)
-                    obCounter-=1
-                
-                if inputBoard[i][j] == "on":
-                    inputBoard[i][j] = inputBoard[i][j]+str(onCounter)
-                    onCounter-=1
-
-                if inputBoard[i][j] == "or":
-                    inputBoard[i][j] = inputBoard[i][j]+str(orCounter)
-                    orCounter-=1
-
-
-                if inputBoard[i][j] == "p":
-                    inputBoard[i][j] = inputBoard[i][j]+str(pCounter)
-                    pCounter+=1
-                
-                if inputBoard[i][j] == "b":
-                    inputBoard[i][j] = inputBoard[i][j]+str(bCounter)
-                    bCounter+=1
-                
-                if inputBoard[i][j] == "n":
-                    inputBoard[i][j] = inputBoard[i][j]+str(nCounter)
-                    nCounter+=1
-
-                if inputBoard[i][j] == "r":
-                    inputBoard[i][j] = inputBoard[i][j]+str(rCounter)
-                    rCounter+=1
-
-        return inputBoard
-
-    
-    # Translates the inputted moves from algebraic coordinate notation to index notation
-    def preprocessOutput(self,sourceMove,targetMove,inputBoard, playerColor):
-
-        # Preprocesses the format to be like the action format for the ANN
-        if playerColor == "w":
-            sourceCoords = self.positionToCoordinatesWhite[sourceMove]
-            targetCoords = self.positionToCoordinatesWhite[targetMove]
-            piece = inputBoard[sourceCoords[0]][sourceCoords[1]]
-
-            action = (piece,(targetCoords[0]-sourceCoords[0],targetCoords[1]-sourceCoords[1]))
-        else:
-            sourceCoords = self.positionToCoordinatesBlack[sourceMove]
-            targetCoords = self.positionToCoordinatesBlack[targetMove]
-            piece = inputBoard[sourceCoords[0]][sourceCoords[1]]
-
-            action = (piece,(targetCoords[0]-sourceCoords[0],targetCoords[1]-sourceCoords[1]))
-
-        return action
 
 ###############################################################################################################################################################
+new = trainer()
+new.data_train()

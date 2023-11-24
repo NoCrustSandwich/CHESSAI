@@ -1,13 +1,12 @@
 # Library Imports
 import os
-import json
 import keras
 from keras.models import Model
 from keras.layers import Input, Flatten, Dense
 
 
 ###############################################################################################################################################################
-# Artificial Neural Network - Version 3.0 (22/11/2023)
+# Artificial Neural Network - Version 3.1 (24/11/2023)
 ###############################################################################################################################################################
 
 class neuralNetwork:
@@ -18,7 +17,7 @@ class neuralNetwork:
         - model (keras.models.Model): The neural network model.
 
     Methods:
-        - __init__(self, model_name: str): Initializes an instance of the NeuralNetwork class, and checks if the model folder exists on device and if not creates it.
+        - __init__(self, model_name: str): Initializes an instance of the NeuralNetwork class, and checks if the model folder and default model exists on device and if not creates them.
         - create_new_model(self, model_name: str): Creates a new instance of the neural network model and saves it.
         - load_model(self, filename: str) -> keras.models.Model: Loads the neural network model from a JSON file.
         - save_model(self, model_name: str): Saves the neural network model as a JSON file.
@@ -31,19 +30,26 @@ class neuralNetwork:
         - chessANN.load_model("ANNCA")
     """
 
-    def __init__(self, model_directory='Documents/ANNCA/ANNCA_Model'):
+    def __init__(self, model_directory='Documents/ANNCA/ANNCA_Model', default_model = "ANNCA"):
         """
-        Initializes an instance of the NeuralNetwork class, and checks if the model folder exists on device and if not creates it.
+        Initializes an instance of the NeuralNetwork class, and checks if the model folder and default model exists on device and if not creates them.
         """
-        self.model = None
-        self.model_directory = model_directory
-
         home_directory = os.path.expanduser("~")
-        full_model_directory = os.path.join(home_directory, model_directory)
-        if not os.path.exists(full_model_directory):
-            os.makedirs(full_model_directory)
-    
+        self.model_directory = os.path.join(home_directory, model_directory)
+
+        if not os.path.exists(self.model_directory):
+            os.makedirs(self.model_directory)
+
+        filename = os.path.join(self.model_directory, default_model)
+        json_filepath = filename + '.json'
+        if os.path.exists(json_filepath):   # Checks if the default ANNCA model JSON file exist and creates it if it doesn't
+            print(f"Model " + default_model + " JSON Already Exists.")
+        else:
+            self.create_new_model(default_model)
+            print(f"Model " + default_model + " JSON Created.")
         
+        self.model = self.load_model(default_model)
+
         
     def create_new_model(self, model_name: str):
         """
@@ -120,9 +126,7 @@ class neuralNetwork:
         Usage:
             - chessANN.save_model("saved_model_name")
         """
-        home_directory = os.path.expanduser("~")
-        full_model_directory = os.path.join(home_directory, self.model_directory)
-        filename = os.path.join(full_model_directory, model_name)
+        filename = os.path.join(self.model_directory, model_name)
         
         self.model.save_weights(filename + '.h5')
         model_json = self.model.to_json()
