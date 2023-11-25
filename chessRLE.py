@@ -60,8 +60,7 @@ class RLE():
         """
         self.neuralNetwork = chessANN.neuralNetwork()
 
-        self.move_history_cn_white = [] # CN == Coordinates Notation (ie. Source Tile -> Target Tile) 
-        self.move_history_cn_black = []
+        self.move_history_cn = [] # CN == Coordinates Notation (ie. Source Tile -> Target Tile) 
 
         self.en_passant_tile_white = None
         self.en_passant_tile_black = None
@@ -88,7 +87,7 @@ class RLE():
                 ["_","_","_","_","_","_","_","_"],
                 ["p1","p2","p3","p4","p5","p6","p7","p8"],
                 ["r1","n1","b1","q1","k","b2","n2","r2"]]
-        self.board_black = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
+        self.board_black = [["or2","on2","ob2","oq1","ok","ob1","on1","or1"],
                 ["op8","op7","op6","op5","op4","op3","op2","op1"],
                 ["_","_","_","_","_","_","_","_"],
                 ["_","_","_","_","_","_","_","_"],
@@ -1535,8 +1534,7 @@ class RLE():
         Returns:
             - None
         """
-        self.move_history_cn_white = []
-        self.move_history_cn_black = []
+        self.move_history_cn = []
 
         self.en_passant_tile_white = None
         self.en_passant_tile_black = None
@@ -1563,7 +1561,7 @@ class RLE():
                 ["_","_","_","_","_","_","_","_"],
                 ["p1","p2","p3","p4","p5","p6","p7","p8"],
                 ["r1","n1","b1","q1","k","b2","n2","r2"]]
-        self.board_black = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
+        self.board_black = [["or2","on2","ob2","oq1","ok","ob1","on1","or1"],
                 ["op8","op7","op6","op5","op4","op3","op2","op1"],
                 ["_","_","_","_","_","_","_","_"],
                 ["_","_","_","_","_","_","_","_"],
@@ -1648,14 +1646,13 @@ class RLE():
         Returns:
         - bool: True if the king is in check, False otherwise.
         """
-        for x in range(8):
-            for y in range(8):
+        for i in range(8):
+            for j in range(8):
                 if board[x][y] == "k":          # Finds king tile position
-                    king_tile_position = [x,y]  
+                    x = i
+                    y = j  
                     break
-            if king_tile_position:
-                break
-
+            
         in_pawn_check_tiles = [(-1, 1), (-1, -1)]
         in_knight_check_tiles = [(2, 1), (1, 2), (-2, 1), (-1, 2), (2, -1), (1, -2), (-2, -1), (-1, -2)]
         in_bishop_and_queen_check_tiles_1 = [(1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7)]
@@ -1687,7 +1684,7 @@ class RLE():
             try:
                 if board[x + dx][y + dy][0:2] == "ob" or board[x + dx][y + dy][0:2] == "oq":
                     return True
-                elif board[x + dx][y + dy][0:2] == "_":
+                elif board[x + dx][y + dy][0] == "_":
                     pass
                 else:
                     break
@@ -1697,7 +1694,7 @@ class RLE():
             try:
                 if board[x + dx][y + dy][0:2] == "ob" or board[x + dx][y + dy][0:2] == "oq":
                     return True
-                elif board[x + dx][y + dy][0:2] == "_":
+                elif board[x + dx][y + dy][0] == "_":
                     pass
                 else:
                     break
@@ -1707,7 +1704,7 @@ class RLE():
             try:
                 if board[x + dx][y + dy][0:2] == "ob" or board[x + dx][y + dy][0:2] == "oq":
                     return True
-                elif board[x + dx][y + dy][0:2] == "_":
+                elif board[x + dx][y + dy][0] == "_":
                     pass
                 else:
                     break
@@ -1717,7 +1714,7 @@ class RLE():
             try:
                 if board[x + dx][y + dy][0:2] == "ob" or board[x + dx][y + dy][0:2] == "oq":
                     return True
-                elif board[x + dx][y + dy][0:2] == "_":
+                elif board[x + dx][y + dy][0] == "_":
                     pass
                 else:
                     break
@@ -1729,7 +1726,7 @@ class RLE():
             try:
                 if board[x + dx][y + dy][0:2] == "or" or board[x + dx][y + dy][0:2] == "oq":
                     return True
-                elif board[x + dx][y + dy][0:2] == "_":
+                elif board[x + dx][y + dy][0] == "_":
                     pass
                 else:
                     break
@@ -1739,7 +1736,7 @@ class RLE():
             try:
                 if board[x + dx][y + dy][0:2] == "or" or board[x + dx][y + dy][0:2] == "oq":
                     return True
-                elif board[x + dx][y + dy][0:2] == "_":
+                elif board[x + dx][y + dy][0] == "_":
                     pass
                 else:
                     break
@@ -1749,7 +1746,7 @@ class RLE():
             try:
                 if board[x + dx][y + dy][0:2] == "or" or board[x + dx][y + dy][0:2] == "oq":
                     return True
-                elif board[x + dx][y + dy][0:2] == "_":
+                elif board[x + dx][y + dy][0] == "_":
                     pass
                 else:
                     break
@@ -1759,7 +1756,7 @@ class RLE():
             try:
                 if board[x + dx][y + dy][0:2] == "or" or board[x + dx][y + dy][0:2] == "oq":
                     return True
-                elif board[x + dx][y + dy][0:2] == "_":
+                elif board[x + dx][y + dy][0] == "_":
                     pass
                 else:
                     break
@@ -1768,6 +1765,176 @@ class RLE():
 
         return False # If no king in check flags hit return false
         
+    def opponent_king_in_check(self, board) -> bool:
+        """
+        Determines if the current position of the opponent king on the chessboard is under check.
+
+        Parameters:
+        - board (List[List[str]]): The current state of the chessboard.
+
+        Returns:
+        - bool: True if the opponent king is in check, False otherwise.
+        """
+        for i in range(8):
+            for j in range(8):
+                if board[x][y] == "ok":          # Finds opponent king tile position
+                    x = i
+                    y = j    
+                    break
+            
+        in_pawn_check_tiles = [(1, 1), (1, -1)]
+        in_knight_check_tiles = [(2, 1), (1, 2), (-2, 1), (-1, 2), (2, -1), (1, -2), (-2, -1), (-1, -2)]
+        in_bishop_and_queen_check_tiles_1 = [(1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7)]
+        in_bishop_and_queen_check_tiles_2 = [(-1, 1), (-2, 2), (-3, 3), (-4, 4), (-5, 5), (-6, 6), (-7, 7)]
+        in_bishop_and_queen_check_tiles_3 = [(1, -1), (2, -2), (3, -3), (4, -4), (5, -5), (6, -6), (7, -7)]
+        in_bishop_and_queen_check_tiles_4 = [(-1, -1), (-2, -2), (-3, -3), (-4, -4), (-5, -5), (-6, -6), (-7, -7)]
+        in_rook_and_queen_check_tiles_1 = [(1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0)]
+        in_rook_and_queen_check_tiles_2 = [(-1, 0), (-2, 0), (-3, 0), (-4, 0), (-5, 0), (-6, 0), (-7, 0)]
+        in_rook_and_queen_check_tiles_3 = [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7)]
+        in_rook_and_queen_check_tiles_4 = [(0, -1), (0, -2), (0, -3), (0, -4), (0, -5), (0, -6), (0, -7)]
+        
+        for dx, dy in in_pawn_check_tiles: # Checks for opponents pawns checking king
+            try:
+                if board[x + dx][y + dy][0] == "p":
+                    return True
+            except IndexError:
+                pass
+
+
+        for dx, dy in in_knight_check_tiles: # Checks for opponents knights checking king
+            try:
+                if board[x + dx][y + dy][0] == "n":
+                    return True
+            except IndexError:
+                pass
+
+
+        for dx, dy in in_bishop_and_queen_check_tiles_1: # Checks for opponents bishops or queens checking king
+            try:
+                if board[x + dx][y + dy][0] == "b" or board[x + dx][y + dy][0] == "q":
+                    return True
+                elif board[x + dx][y + dy][0] == "_":
+                    pass
+                else:
+                    break
+            except IndexError:
+                pass
+        for dx, dy in in_bishop_and_queen_check_tiles_2: # Checks for opponents bishops or queens checking king
+            try:
+                if board[x + dx][y + dy][0] == "b" or board[x + dx][y + dy][0] == "q":
+                    return True
+                elif board[x + dx][y + dy][0] == "_":
+                    pass
+                else:
+                    break
+            except IndexError:
+                pass
+        for dx, dy in in_bishop_and_queen_check_tiles_3: # Checks for opponents bishops or queens checking king
+            try:
+                if board[x + dx][y + dy][0] == "b" or board[x + dx][y + dy][0:2] == "q":
+                    return True
+                elif board[x + dx][y + dy][0] == "_":
+                    pass
+                else:
+                    break
+            except IndexError:
+                pass
+        for dx, dy in in_bishop_and_queen_check_tiles_4: # Checks for opponents bishops or queens checking king
+            try:
+                if board[x + dx][y + dy][0] == "b" or board[x + dx][y + dy][0] == "q":
+                    return True
+                elif board[x + dx][y + dy][0] == "_":
+                    pass
+                else:
+                    break
+            except IndexError:
+                pass
+        
+
+        for dx, dy in in_rook_and_queen_check_tiles_1: # Checks for opponents rooks or queens checking king
+            try:
+                if board[x + dx][y + dy][0] == "r" or board[x + dx][y + dy][0] == "q":
+                    return True
+                elif board[x + dx][y + dy][0] == "_":
+                    pass
+                else:
+                    break
+            except IndexError:
+                pass
+        for dx, dy in in_rook_and_queen_check_tiles_2: # Checks for opponents rooks or queens checking king
+            try:
+                if board[x + dx][y + dy][0] == "r" or board[x + dx][y + dy][0] == "q":
+                    return True
+                elif board[x + dx][y + dy][0] == "_":
+                    pass
+                else:
+                    break
+            except IndexError:
+                pass
+        for dx, dy in in_rook_and_queen_check_tiles_3: # Checks for opponents rooks or queens checking king
+            try:
+                if board[x + dx][y + dy][0] == "r" or board[x + dx][y + dy][0] == "q":
+                    return True
+                elif board[x + dx][y + dy][0] == "_":
+                    pass
+                else:
+                    break
+            except IndexError:
+                pass
+        for dx, dy in in_rook_and_queen_check_tiles_4: # Checks for opponents rooks or queens checking king
+            try:
+                if board[x + dx][y + dy][0] == "r" or board[x + dx][y + dy][0] == "q":
+                    return True
+                elif board[x + dx][y + dy][0] == "_":
+                    pass
+                else:
+                    break
+            except IndexError:
+                pass
+
+        return False # If no opponent king in check flags hit return false
+
+    def invalid_action(self, action_info, q_values, action_index, perspective):
+
+        action_reward = -1000.0
+        valid_move = False
+
+        if perspective == "w":
+            self.train_neural_network(self.board_white, action_reward, q_values, action_index)
+        else:
+            self.train_neural_network(self.board_black, action_reward, q_values, action_index)
+            
+        return action_info, action_reward, valid_move
+
+
+    def valid_action(self, action_info, action_reward, action, q_values, action_index, perspective, action_piece, target_tile_piece, source_tile_indices, target_tile_indices):
+
+        if perspective == "w":
+            board = self.board_white
+        else:
+            board = self.board_white
+
+        if self.king_in_check(board):
+            action_info = {"Invalid Move, King in Check After Action"}
+            return self.invalid_action(action_info, q_values, action_index, perspective)
+
+        valid_move = True
+        self.update_boards(action, perspective)
+        self.train_neural_network(board, action_reward, q_values, action_index)
+        
+        return action_info, action_reward, valid_move
+    
+
+    def update_boards(self, action, perspective):
+
+        if perspective == "w":
+
+            pass
+        else:
+
+            pass
+    
+
 
     def tile_indices_to_coordinates(self, source_tile, target_tile, perspective):
         """
@@ -1808,7 +1975,9 @@ class RLE():
         Note:
             This method modifies the Q-values in-place based on the observed reward and updates the neural network's weights accordingly.      
         """
-        
+        board_white = self.board_white.copy()
+        board_black = self.board_black.copy()
+
         if perspective == "w":
             board = self.board_white.copy()
             en_passant_location = self.en_passant_tile_white
@@ -1840,85 +2009,44 @@ class RLE():
         if action_piece == None:  
 
             action_info = {"Invalid Move, Action Piece Not Present on Board"}
-            final_board_state = board
-            action_reward = -1000.0
-            game_end = False
-            valid_move = False
+            return self.invalid_action(action_info, q_values, action_index, perspective)
 
-            self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-            return action_info, final_board_state, action_reward, valid_move, game_end
 
-        
         if target_tile_indices[0]>7 or target_tile_indices[1]>7 or target_tile_indices[0]<0 or target_tile_indices[1]<0:
             
             action_info = {"Invalid Move, Target Tile Location Out of Range"}
-            final_board_state = board
-            action_reward = -1000.0
-            game_end = False
-            valid_move = False
-
-            self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-            return action_info, final_board_state, action_reward, valid_move, game_end
+            return self.invalid_action(action_info, q_values, action_index, perspective)
 
 
         if target_tile_piece[0] != "o" and target_tile_piece[0] != "_": # "Invalid Move, Cannot Capture Piece that Belongs to Agent"
             
             action_info = {"Invalid Move, Cannot Capture Piece that Belongs to Agent"}
-            final_board_state = board
-            action_reward = -1000.0
-            game_end = False
-            valid_move = False
+            return self.invalid_action(action_info, q_values, action_index, perspective)
 
-            self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-            return action_info, final_board_state, action_reward, valid_move, game_end
-       
 
         if len(action) == 3 and target_tile_indices[0] != 0: # Invalid Move, Trying to Promote Pawn When not on the Promoting Row
 
             action_info = {"Invalid Move, Cannot Promote Pawn If Target Tile is not on the Promoting Row"}
-            final_board_state = board
-            action_reward = -1000.0
-            game_end = False
-            valid_move = False
-
-            self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-            return action_info, final_board_state, action_reward, valid_move, game_end
-
+            return self.invalid_action(action_info, q_values, action_index, perspective)
 
         if action[0] == "k" : # Invalid Move, Castling Attempts Outide of Castling Conditions
 
             if action[1][1] == 2 and (not (board[7][7] == "r2") or source_tile_indices != [7,4]):
                 
                 action_info = {"Invalid Move, King Cannot Castle Unless King and Right Rook are in Starting Positions"}
-                final_board_state = board
-                action_reward = -1000.0
-                game_end = False
-                valid_move = False
+                return self.invalid_action(action_info, q_values, action_index, perspective)
 
-                self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                return action_info, final_board_state, action_reward, valid_move, game_end
 
             if action[1][1] == -2 and (not (board[7][0] == "r1") or source_tile_indices != [7,4]):
                 
                 action_info = {"Invalid Move, King Cannot Castle Unless King and Left Rook are in Starting Positions"}
-                final_board_state = board
-                action_reward = -1000.0
-                game_end = False
-                valid_move = False
+                return self.invalid_action(action_info, q_values, action_index, perspective)
 
-                self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                return action_info, final_board_state, action_reward, valid_move, game_end
             
             if before_action_king_in_check:
                 
                 action_info = {"Invalid Move, King Cannot Castle When in Check"}
-                final_board_state = board
-                action_reward = -1000.0
-                game_end = False
-                valid_move = False
-
-                self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                return action_info, final_board_state, action_reward, valid_move, game_end
+                return self.invalid_action(action_info, q_values, action_index, perspective)
 
         
         if action[0][0] == "p": # Invalid Move, Illegal Pawn Move Attempts
@@ -1926,49 +2054,25 @@ class RLE():
             if action[1][0] == -2 and source_tile_indices[0]!=6:
                 
                 action_info = {"Invalid Move, Pawn Cannot Move 2 Spaces Unless in Starting Position"}
-                final_board_state = board
-                action_reward = -1000.0
-                game_end = False
-                valid_move = False
+                return self.invalid_action(action_info, q_values, action_index, perspective)
 
-                self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                return action_info, final_board_state, action_reward, valid_move, game_end
-            
 
             if action[1][1] != 0 and target_tile_piece == "_" and ( en_passant_location != target_tile_indices ):
                 
                 action_info = {"Invalid Move, Pawn Cannot Move Diagnally Unless Oppossing Piece is there or En Passant Condition is Met"}
-                final_board_state = board
-                action_reward = -1000.0
-                game_end = False
-                valid_move = False
+                return self.invalid_action(action_info, q_values, action_index, perspective)
 
-                self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                return action_info, final_board_state, action_reward, valid_move, game_end
-            
 
             if action[1][0] == -2 and source_tile_indices[0] == 6 and board[source_tile_indices[0]-1][source_tile_indices[1]] != "_":
                 
                 action_info = {"Invalid Move, Pawn Blocked by Other Piece in it's Path"}
-                final_board_state = board
-                action_reward = -1000.0
-                game_end = False
-                valid_move = False
-
-                self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                return action_info, final_board_state, action_reward, valid_move, game_end
+                return self.invalid_action(action_info, q_values, action_index, perspective)
 
 
             if action[1][0] == -1 and target_tile_piece != "_":
 
                 action_info = {"Invalid Move, Pawn Blocked by Other Piece in it's Path"}
-                final_board_state = board
-                action_reward = -1000.0
-                game_end = False
-                valid_move = False
-
-                self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                return action_info, final_board_state, action_reward, valid_move, game_end
+                return self.invalid_action(action_info, q_values, action_index, perspective)
 
         
         if action[0][0] == "r" or action[0][0] == "q": # Rook and Queen Invalid Move Attempts
@@ -1980,13 +2084,7 @@ class RLE():
                     if board[source_tile_indices[0]][source_tile_indices[1]+index] !=  "_":
 
                         action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path"}
-                        final_board_state = board
-                        action_reward = -1000.0
-                        game_end = False
-                        valid_move = False
-
-                        self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                        return action_info, final_board_state, action_reward, valid_move, game_end
+                        return self.invalid_action(action_info, q_values, action_index, perspective)
 
                     
             if action[1][1] < 0:
@@ -1996,13 +2094,7 @@ class RLE():
                     if board[source_tile_indices[0]][source_tile_indices[1]-index] !=  "_":
 
                         action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path"}
-                        final_board_state = board
-                        action_reward = -1000.0
-                        game_end = False
-                        valid_move = False
-
-                        self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                        return action_info, final_board_state, action_reward, valid_move, game_end
+                        return self.invalid_action(action_info, q_values, action_index, perspective)
 
                 
             if action[1][0] > 0:
@@ -2012,13 +2104,7 @@ class RLE():
                     if board[source_tile_indices[0]+index][source_tile_indices[1]] !=  "_":
                         
                         action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path"}
-                        final_board_state = board
-                        action_reward = -1000.0
-                        game_end = False
-                        valid_move = False
-
-                        self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                        return action_info, final_board_state, action_reward, valid_move, game_end
+                        return self.invalid_action(action_info, q_values, action_index, perspective)
 
                         
             if action[1][0] < 0:
@@ -2028,13 +2114,7 @@ class RLE():
                     if board[source_tile_indices[0]-index][source_tile_indices[1]-index] !=  "_":
 
                         action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path"}
-                        final_board_state = board
-                        action_reward = -1000.0
-                        game_end = False
-                        valid_move = False
-
-                        self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                        return action_info, final_board_state, action_reward, valid_move, game_end
+                        return self.invalid_action(action_info, q_values, action_index, perspective)
 
 
         
@@ -2047,13 +2127,7 @@ class RLE():
                     if board[source_tile_indices[0]+index][source_tile_indices[1]+index] !=  "_":
 
                         action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path"}
-                        final_board_state = board
-                        action_reward = -1000.0
-                        game_end = False
-                        valid_move = False
-
-                        self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                        return action_info, final_board_state, action_reward, valid_move, game_end
+                        return self.invalid_action(action_info, q_values, action_index, perspective)
 
                     
             if action[1][0] > 0 and action[1][1] < 0:
@@ -2063,13 +2137,7 @@ class RLE():
                     if board[source_tile_indices[0]+index][source_tile_indices[1]-index] !=  "_":
 
                         action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path"}
-                        final_board_state = board
-                        action_reward = -1000.0
-                        game_end = False
-                        valid_move = False
-
-                        self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                        return action_info, final_board_state, action_reward, valid_move, game_end
+                        return self.invalid_action(action_info, q_values, action_index, perspective)
 
 
             if action[1][0] < 0 and action[1][1] > 0:
@@ -2079,14 +2147,8 @@ class RLE():
                     if board[source_tile_indices[0]-index][source_tile_indices[1]+index] !=  "_":
 
                         action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path"}
-                        final_board_state = board
-                        action_reward = -1000.0
-                        game_end = False
-                        valid_move = False
+                        return self.invalid_action(action_info, q_values, action_index, perspective)
 
-                        self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                        return action_info, final_board_state, action_reward, valid_move, game_end
-                    
 
             if action[1][0] < 0 and action[1][1] < 0:
 
@@ -2095,13 +2157,7 @@ class RLE():
                     if board[source_tile_indices[0]-index][source_tile_indices[1]-index] !=  "_":
 
                         action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path"}
-                        final_board_state = board
-                        action_reward = -1000.0
-                        game_end = False
-                        valid_move = False
-
-                        self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                        return action_info, final_board_state, action_reward, valid_move, game_end
+                        return self.invalid_action(action_info, q_values, action_index, perspective)
 
         #----------------------------------------------------------------------------------------------------------------
         # Checking for Valid Moves
@@ -2118,46 +2174,32 @@ class RLE():
                 board[7][5] = castled_rook
 
                 action_info = {"Valid Move, Castling With r2 Rook"}
-                final_board_state = board
                 action_reward = 100.0
-                game_end = False
-                valid_move = True
-
-                if self.king_in_check(board):   #Invalid Move, King in Check After Action
-                    action_info = {"Invalid Move, King in Check After Action"}
-                    final_board_state = board
-                    action_reward = -1000.0
-                    game_end = False
-                    valid_move = False
-
-                    self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                    return action_info, final_board_state, action_reward, valid_move, game_end
 
                 if perspective == "w":
-                    self.board_white = board
-                    self.move_history_cn_white.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+                    
+                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
                     self.en_passant_tile_white = None
                     self.castling_available_r1_white = False
                     self.castling_available_r2_white = False
                     self.en_passant_tile_black = None
                 else:
-                    self.board_black = board
-                    self.move_history_cn_black.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+                    
+                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
                     self.en_passant_tile_black = None
                     self.castling_available_r1_black = False
                     self.castling_available_r2_black = False
                     self.en_passant_tile_white = None
 
-                print("Board: " + str(board))                       # Shows status of successful move attempts being trained into ANN
-                print("Action: " + str(action))
-                print("Source Location: " + str(source_tile_indices))
-                print("Target Location: " + str(target_tile_indices))
-                print("Source Tile: " + str(board[source_tile_indices[0]][source_tile_indices[1]]))
-                print("Target Tile: " + str(board[target_tile_indices[0]][target_tile_indices[1]]))
+                
 
-                self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                return action_info, final_board_state, action_reward, valid_move, game_end
+                
+                return self.valid_action(action_info, action_reward, action, q_values, action_index, source_tile_indices, target_tile_indices, perspective)
 
+                
+
+                
+               
 
             if action[1][1] == -2 and castling_r1_available:
 
@@ -2185,14 +2227,14 @@ class RLE():
 
                 if perspective == "w":
                     self.board_white = board
-                    self.move_history_cn_white.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
                     self.en_passant_tile_white = None
                     self.castling_available_r1_white = False
                     self.castling_available_r2_white = False
                     self.en_passant_tile_black = None
                 else:
                     self.board_black = board
-                    self.move_history_cn_black.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
                     self.en_passant_tile_black = None
                     self.castling_available_r1_black = False
                     self.castling_available_r2_black = False
@@ -2232,12 +2274,12 @@ class RLE():
 
             if perspective == "w":
                 self.board_white = board
-                self.move_history_cn_white.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+                self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
                 self.en_passant_tile_white = None
                 self.en_passant_tile_black = [2,abs(7-target_tile_indices[1])]
             else:
                 self.board_black = board
-                self.move_history_cn_black.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+                self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
                 self.en_passant_tile_black = None
                 self.en_passant_tile_white = [2,abs(7-target_tile_indices[1])]
 
@@ -2277,13 +2319,13 @@ class RLE():
 
                 if perspective == "w":
                     self.board_white = board
-                    self.move_history_cn_white.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
                     self.en_passant_tile_white = None
                     self.en_passant_tile_black = None
                     self.number_of_next_queen_white+=1
                 else:
                     self.board_black = board
-                    self.move_history_cn_black.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
                     self.en_passant_tile_black = None
                     self.en_passant_tile_white = None
                     self.number_of_next_queen_black+=1
@@ -2321,13 +2363,13 @@ class RLE():
 
                 if perspective == "w":
                     self.board_white = board
-                    self.move_history_cn_white.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
                     self.en_passant_tile_white = None
                     self.en_passant_tile_black = None
                     self.number_of_next_knight_white+=1
                 else:
                     self.board_black = board
-                    self.move_history_cn_black.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
                     self.en_passant_tile_black = None
                     self.en_passant_tile_white = None
                     self.number_of_next_knight_black+=1
@@ -2366,13 +2408,13 @@ class RLE():
 
                 if perspective == "w":
                     self.board_white = board
-                    self.move_history_cn_white.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
                     self.en_passant_tile_white = None
                     self.en_passant_tile_black = None
                     self.number_of_next_bishop_white+=1
                 else:
                     self.board_black = board
-                    self.move_history_cn_black.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
                     self.en_passant_tile_black = None
                     self.en_passant_tile_white = None
                     self.number_of_next_bishop_black+=1
@@ -2410,13 +2452,13 @@ class RLE():
 
                 if perspective == "w":
                     self.board_white = board
-                    self.move_history_cn_white.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
                     self.en_passant_tile_white = None
                     self.en_passant_tile_black = None
                     self.number_of_next_rook_white+=1
                 else:
                     self.board_black = board
-                    self.move_history_cn_black.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
                     self.en_passant_tile_black = None
                     self.en_passant_tile_white = None
                     self.number_of_next_rook_black+=1
@@ -2530,7 +2572,7 @@ class RLE():
 
         if perspective == "w":
             self.board_white = board
-            self.move_history_cn_white.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+            self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
             self.en_passant_tile_white = None
             self.en_passant_tile_black = None
             if action[0] == "r1":
@@ -2541,7 +2583,7 @@ class RLE():
                 self.castling_available_r2_white = False
         else:
             self.board_black = board
-            self.move_history_cn_black.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
+            self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
             self.en_passant_tile_black = None
             self.en_passant_tile_white = None
             if action[0] == "r1":

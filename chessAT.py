@@ -95,18 +95,19 @@ class trainer:
         return preprocessed_board
     
 
-    def san_to_action(self, board, san_move, perspective):
+    def san_to_action(self, board, san_move, lan_move, perspective):
+
+        if str(san_move) == "o-o-o":
+            return ("k", (0,-2))
+        
+        if str(san_move) == "o-o":
+            return ("k", (0,2))
 
         if len(san_move) == 2:
 
-            target_coordinates = san_move
-            source_coordinates = san_move[0]
-
-            if int(san_move[0]) <= 4:
-                source_coordinates += str(2)
-            else:
-                source_coordinates += str(7)
-
+            source_coordinates = str(lan_move)[0:2]
+            target_coordinates = str(lan_move)[2:4]
+            
             if perspective == "w":
                 source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
                 target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
@@ -120,75 +121,42 @@ class trainer:
 
             return (piece, (dx, dy))
 
-        elif len(san_move) == 3:
+        elif len(san_move) in {3,4,5,6} and str(san_move)[2] != "=":
 
-            if san_move[2] == "#":
-
-                target_coordinates = san_move
-                source_coordinates = san_move[0]
-
-                if int(san_move[0]) <= 4:
-                    source_coordinates += str(2)
-                else:
-                    source_coordinates += str(7)
-
-                if perspective == "w":
-                    source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
-                    target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
-                else:
-                    source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
-                    target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
-
-                piece = board[source_indices[0]][source_indices[1]]
-                dx = target_indices[0] - source_indices[0]
-                dy = target_indices[1] - source_indices[1]
-
-                return (piece, (dx, dy))
+            source_coordinates = str(lan_move)[0:2]
+            target_coordinates = str(lan_move)[2:4]
             
-            elif san_move[2] == "+":
-
-                target_coordinates = san_move
-                source_coordinates = san_move[0]
-
-                if int(san_move[0]) <= 4:
-                    source_coordinates += str(2)
-                else:
-                    source_coordinates += str(7)
-
-                if perspective == "w":
-                    source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
-                    target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
-                else:
-                    source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
-                    target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
-
-                piece = board[source_indices[0]][source_indices[1]]
-                dx = target_indices[0] - source_indices[0]
-                dy = target_indices[1] - source_indices[1]
-
-                return (piece, (dx, dy))
-            
+            if perspective == "w":
+                source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
+                target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
             else:
-                
-                
-                pass
+                source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
+                target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
 
-            pass
-        elif len(san_move) == 4:
+            piece = board[source_indices[0]][source_indices[1]]
+            dx = target_indices[0] - source_indices[0]
+            dy = target_indices[1] - source_indices[1]
 
-            pass
-        elif len(san_move) == 5:
+            return (piece, (dx, dy))
 
-            pass
-        elif len(san_move) == 6:
+        elif len(san_move) == 4 and str(san_move)[2] == "=":
 
-            pass
+            source_coordinates = str(lan_move)[0:2]
+            target_coordinates = str(lan_move)[2:4]
+            
+            if perspective == "w":
+                source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
+                target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
+            else:
+                source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
+                target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
+
+            piece = board[source_indices[0]][source_indices[1]]
+            dx = target_indices[0] - source_indices[0]
+            dy = target_indices[1] - source_indices[1]
+
+            return (piece, (dx, dy), str(san_move)[3].lower())
         
-        piece = " "
-        dx = 0
-        dy = 0 
-
-        return (piece, (dx,dy))
 
 
     def data_train(self):
@@ -233,42 +201,54 @@ class trainer:
                         winner = 'NA'
 
                     if game:
-
+                        
+                        perpsective = "w"
+                        move_index = 0
                         self.RLE.reset_game_state()
 
                         full_move_history_san = str(game.mainline_moves()).split(" ")
                         filtered_move_history_san = []
+                        
 
                         for index in range(len(full_move_history_san)):
                             if index % 3 == 1:
                                 filtered_move_history_san.append(full_move_history_san[index])
                             elif index % 3 == 2:
                                 filtered_move_history_san.append(full_move_history_san[index])
+                        
+                        for lan_move in game.mainline_moves():
 
-                        for index in range(len(filtered_move_history_san)):
+                            print(filtered_move_history_san[move_index])
+                            print(lan_move)
 
-                            if index % 2 == 0: # White's Move
+                            if perpsective == "w": # White's Move
 
-                                action = self.san_to_action(self.RLE.board_white, filtered_move_history_san[index], "w")
+                                action = self.san_to_action(self.RLE.board_white, filtered_move_history_san[move_index], lan_move, perpsective)
                                 q_values = self.RLE.neuralNetwork.model.predict(self.RLE.preprosess_input(self.RLE.board_white))
                                 action_index = self.RLE.POSSIBLE_MOVES.index(action)
 
                                 if winner == "w":
                                     self.RLE.train_neural_network(self.RLE.board_white, 10000.0, q_values, action_index)
 
-                                self.RLE.attempt_action(action, "w")
+                                self.RLE.attempt_action(action, perpsective)
+                                perpsective = "b"
+                                move_index += 1
 
                             else:              # Black's Move
 
-                                action = self.san_to_action(self.RLE.board_black, filtered_move_history_san[index], "b")
+                                action = self.san_to_action(self.RLE.board_black, filtered_move_history_san[move_index],lan_move, perpsective)
                                 q_values = self.RLE.neuralNetwork.model.predict(self.RLE.preprosess_input(self.RLE.board_black))
                                 action_index = self.RLE.POSSIBLE_MOVES.index(action)
 
                                 if winner == "b":
                                     self.RLE.train_neural_network(self.RLE.board_black, 10000.0, q_values, action_index)
                                 
-                                self.RLE.attempt_action(action, "b")
-                    
+                                self.RLE.attempt_action(action, perpsective)
+                                perpsective = "w"
+                                move_index += 1
+
                         self.RLE.neuralNetwork.save_model("ANNCA") 
 
 ###############################################################################################################################################################
+new = trainer()
+new.data_train()
