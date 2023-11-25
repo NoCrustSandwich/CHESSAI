@@ -1,9 +1,12 @@
 # Library Imports
+import copy
 import chessANN
 import numpy as np
+from typing import List
+
 
 ###############################################################################################################################################################
-# Reinforcment Learning Enviorment - Version 3.0 (24/11/2023)
+# Reinforcment Learning Enviorment - Version 4.0 (25/11/2023)
 ###############################################################################################################################################################
 
 class RLE():
@@ -14,10 +17,8 @@ class RLE():
 
     Attributes:
         - neuralNetwork (object): Instance of the neuralNetwork.
-        - move_history_cn_white (List[str]): List of move history in Coordinates Notation for white player.
-        - move_history_cn_black (List[str]): List of move history in Coordinates Notation for black player.
-        - en_passant_tile_white (List[int]): Coordinates of the en passant tile for white player.
-        - en_passant_tile_black (List[int]): Coordinates of the en passant tile for black player.
+        - move_history_cn (List[str]): List of move history in Coordinates Notation.
+        - en_passant_tile (List[int]): Coordinates of the available en passant tile.
         - castling_available_r1_white (bool): Availability of castling with the left rook of white player.
         - castling_available_r2_white (bool): Availability of castling with the right rook of white player.
         - castling_available_r1_black (bool): Availability of castling with the left rook of black player.
@@ -30,8 +31,7 @@ class RLE():
         - number_of_next_rook_black (int): Number of the next promoted rook for black player.
         - number_of_next_queen_white (int): Number of the next promoted queen for white player.
         - number_of_next_queen_black (int): Number of the next promoted queen for black player.
-        - board_white (List[List[str]]): 2D list representing the chess board from the perspective of white player.
-        - board_black (List[List[str]]): 2D list representing the chess board from the perspective of black player.
+        - board_state (List[List[str]]): 2D list representing the chess board.
         - TILE_INDICES_TO_COORDINATES_WHITE_PERSPECTIVE (Dict): Mapping of tile indices to coordinates for white player.
         - TILE_INDICES_TO_COORDINATES_BLACK_PERSPECTIVE (Dict): Mapping of tile indices to coordinates for black player.
         - PIECE_LABELS_OPPONENTS_PERSPECTIVE (Dict): Mapping of piece labels to their opponents' perspective.
@@ -42,6 +42,8 @@ class RLE():
     Methods:
         - __init__(self): Initialize the RLE object with default values for game state variables.
         - reset_game_state(self): Resets the game state to its initial configuration.
+        - change_board_perspective(self, board) -> List[List[str]]: Changes the perspective of the chessboard to represent the opponent's view.
+        - change_perspective(self): 
         - preprosess_input(self, board) -> np.ndarray: Translates a chessboard represented as a list of strings to a NumPy array with piece labels 
                                                        converted to their integer representations. The resulting array is formatted to be fed into 
                                                        a neural network as input.
@@ -49,8 +51,11 @@ class RLE():
                                                                              for the specified action index in the output layer.
         - get_action_piece_tiles(self, board, action): Returns information about the tiles involved in a specific action on the chessboard.
         - king_in_check(self, board) -> bool: Determines if the current position of the king on the chessboard is under check.
-        - tile_indices_to_coordinates(self, source_tile, target_tile, perspective): Convert chess tile indices to coordinates based on the given perspective.
-        - attempt_action(self, action, perspective): Attempts to take the given action, and trains the artificial neural network (ANN) based on the utility of the action,
+        - opponent_king_in_check(self, board) -> bool: Determines if the current position of the opponent king on the chessboard is under check.
+        - tile_indices_to_coordinates(self, source_tile, target_tile): Convert chess tile indices to coordinates based on the current perspective.
+        - invalid_action(self, action_info, q_values, action_index): Handles the case where an invalid action is taken by the agent.
+        - valid_action(self, action_info, q_values, action_index): Handles the case where an valid action is taken by the agent.
+        - attempt_action(self, action): Attempts to take the given action, and trains the artificial neural network (ANN) based on the utility of the action,
                                                      based on the game state, and the utility is represented by the action_reward.
     """
 
@@ -61,9 +66,9 @@ class RLE():
         self.neuralNetwork = chessANN.neuralNetwork()
 
         self.move_history_cn = [] # CN == Coordinates Notation (ie. Source Tile -> Target Tile) 
+        self.perspective = "w"
 
-        self.en_passant_tile_white = None
-        self.en_passant_tile_black = None
+        self.en_passant_tile = None
 
         self.castling_available_r1_white = True
         self.castling_available_r2_white = True
@@ -79,7 +84,7 @@ class RLE():
         self.number_of_next_queen_white = 2
         self.number_of_next_queen_black = 2
 
-        self.board_white = [["or2","on2","ob2","oq1","ok","ob1","on1","or1"],
+        self.board_state = [["or2","on2","ob2","oq1","ok","ob1","on1","or1"],
                 ["op8","op7","op6","op5","op4","op3","op2","op1"],
                 ["_","_","_","_","_","_","_","_"],
                 ["_","_","_","_","_","_","_","_"],
@@ -87,15 +92,7 @@ class RLE():
                 ["_","_","_","_","_","_","_","_"],
                 ["p1","p2","p3","p4","p5","p6","p7","p8"],
                 ["r1","n1","b1","q1","k","b2","n2","r2"]]
-        self.board_black = [["or2","on2","ob2","oq1","ok","ob1","on1","or1"],
-                ["op8","op7","op6","op5","op4","op3","op2","op1"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["p1","p2","p3","p4","p5","p6","p7","p8"],
-                ["r1","n1","b1","q1","k","b2","n2","r2"]]
-        
+
         self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE = {
             "a8":[0,0], "b8":[0,1], "c8":[0,2], "d8":[0,3], "e8":[0,4], "f8":[0,5], "g8":[0,6], "h8":[0,7],
             "a7":[1,0], "b7":[1,1], "c7":[1,2], "d7":[1,3], "e7":[1,4], "f7":[1,5], "g7":[1,6], "h7":[1,7],
@@ -144,6 +141,12 @@ class RLE():
             "r1": "or1", "r2": "or2", "r3": "or3", "r4": "or4", "r5": "or5", "r6": "or6", "r7": "or7", "r8": "or8", "r9": "or9", "r10": "or10",
             "q1": "oq1", "q2": "oq2", "q3": "oq3", "q4": "oq4", "q5": "oq5", "q6": "oq6", "q7": "oq7", "q8": "oq8", "q9": "oq9",
             "k": "ok",
+            "op1": "p1", "op2": "p2", "op3": "p3", "op4": "p4", "op5": "p5", "op6": "p6", "op7": "p7", "op8": "p8",
+            "on1": "n1", "on2": "n2", "on3": "n3", "on4": "n4", "on5": "n5", "on6": "n6", "on7": "n7", "on8": "n8", "on9": "n9", "on10": "n10",
+            "ob1": "b1", "ob2": "b2", "ob3": "b3", "ob4": "b4", "ob5": "b5", "ob6": "b6", "ob7": "b7", "ob8": "b8", "ob9": "b9", "ob10": "b10",
+            "or1": "r1", "or2": "r2", "or3": "r3", "or4": "r4", "or5": "r5", "or6": "r6", "or7": "r7", "or8": "r8", "or9": "r9", "or10": "r10",
+            "oq1": "q1", "oq2": "q2", "oq3": "q3", "oq4": "q4", "oq5": "q5", "oq6": "q6", "oq7": "q7", "oq8": "q8", "oq9": "q9",
+            "ok": "k",
         }
         self.PIECE_LABELS_INTEGER_TO_STRING = {
             0:"_",
@@ -1535,9 +1538,9 @@ class RLE():
             - None
         """
         self.move_history_cn = []
+        self.perspective = "w"
 
-        self.en_passant_tile_white = None
-        self.en_passant_tile_black = None
+        self.en_passant_tile = None
 
         self.castling_available_r1_white = True
         self.castling_available_r2_white = True
@@ -1553,7 +1556,7 @@ class RLE():
         self.number_of_next_queen_white = 2
         self.number_of_next_queen_black = 2
 
-        self.board_white = [["or2","on2","ob2","oq1","ok","ob1","on1","or1"],
+        self.board_state = [["or2","on2","ob2","oq1","ok","ob1","on1","or1"],
                 ["op8","op7","op6","op5","op4","op3","op2","op1"],
                 ["_","_","_","_","_","_","_","_"],
                 ["_","_","_","_","_","_","_","_"],
@@ -1561,14 +1564,50 @@ class RLE():
                 ["_","_","_","_","_","_","_","_"],
                 ["p1","p2","p3","p4","p5","p6","p7","p8"],
                 ["r1","n1","b1","q1","k","b2","n2","r2"]]
-        self.board_black = [["or2","on2","ob2","oq1","ok","ob1","on1","or1"],
-                ["op8","op7","op6","op5","op4","op3","op2","op1"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["_","_","_","_","_","_","_","_"],
-                ["p1","p2","p3","p4","p5","p6","p7","p8"],
-                ["r1","n1","b1","q1","k","b2","n2","r2"]]
+
+    
+    def change_board_perspective(self, board) -> List[List[str]]:
+        """
+        Changes the perspective of the chessboard to represent the opponent's view.
+
+        This method takes a chessboard and transforms it to represent the perspective of the
+        opponent. It reverses both the rows and columns and updates the piece labels accordingly.
+
+        Parameters:
+            - board (List[List[str]]): The current state of the chessboard.
+
+        Returns:
+            - (List[List[str]]): The updated chessboard representing the opponent's perspective.
+        """
+        board = [row[::-1] for row in board[::-1]]
+
+        for i in range(8):
+            for j in range(8):
+                board[i][j] = self.PIECE_LABELS_OPPONENTS_PERSPECTIVE[board[i][j]]
+
+        return board
+
+
+    def change_perspective(self):
+        """
+        Changes the perspective of the game state.
+
+        This method updates the internal game state to represent the perspective of the
+        opposite player. It calls the `change_board_perspective` method to update the
+        chessboard accordingly.
+
+        Parameters:
+            - None
+
+        Returns:
+            - None
+        """
+        self.board = self.change_board_perspective(copy.deepcopy(self.board))
+
+        if self.perspective == "w":
+            self.perspective = "b"
+        else:
+            self.perspective = "w"
 
         
     def preprosess_input(self, board) -> np.ndarray:
@@ -1765,6 +1804,7 @@ class RLE():
 
         return False # If no king in check flags hit return false
         
+
     def opponent_king_in_check(self, board) -> bool:
         """
         Determines if the current position of the opponent king on the chessboard is under check.
@@ -1775,186 +1815,78 @@ class RLE():
         Returns:
         - bool: True if the opponent king is in check, False otherwise.
         """
-        for i in range(8):
-            for j in range(8):
-                if board[x][y] == "ok":          # Finds opponent king tile position
-                    x = i
-                    y = j    
-                    break
-            
-        in_pawn_check_tiles = [(1, 1), (1, -1)]
-        in_knight_check_tiles = [(2, 1), (1, 2), (-2, 1), (-1, 2), (2, -1), (1, -2), (-2, -1), (-1, -2)]
-        in_bishop_and_queen_check_tiles_1 = [(1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7)]
-        in_bishop_and_queen_check_tiles_2 = [(-1, 1), (-2, 2), (-3, 3), (-4, 4), (-5, 5), (-6, 6), (-7, 7)]
-        in_bishop_and_queen_check_tiles_3 = [(1, -1), (2, -2), (3, -3), (4, -4), (5, -5), (6, -6), (7, -7)]
-        in_bishop_and_queen_check_tiles_4 = [(-1, -1), (-2, -2), (-3, -3), (-4, -4), (-5, -5), (-6, -6), (-7, -7)]
-        in_rook_and_queen_check_tiles_1 = [(1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0)]
-        in_rook_and_queen_check_tiles_2 = [(-1, 0), (-2, 0), (-3, 0), (-4, 0), (-5, 0), (-6, 0), (-7, 0)]
-        in_rook_and_queen_check_tiles_3 = [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7)]
-        in_rook_and_queen_check_tiles_4 = [(0, -1), (0, -2), (0, -3), (0, -4), (0, -5), (0, -6), (0, -7)]
-        
-        for dx, dy in in_pawn_check_tiles: # Checks for opponents pawns checking king
-            try:
-                if board[x + dx][y + dy][0] == "p":
-                    return True
-            except IndexError:
-                pass
-
-
-        for dx, dy in in_knight_check_tiles: # Checks for opponents knights checking king
-            try:
-                if board[x + dx][y + dy][0] == "n":
-                    return True
-            except IndexError:
-                pass
-
-
-        for dx, dy in in_bishop_and_queen_check_tiles_1: # Checks for opponents bishops or queens checking king
-            try:
-                if board[x + dx][y + dy][0] == "b" or board[x + dx][y + dy][0] == "q":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
-                pass
-        for dx, dy in in_bishop_and_queen_check_tiles_2: # Checks for opponents bishops or queens checking king
-            try:
-                if board[x + dx][y + dy][0] == "b" or board[x + dx][y + dy][0] == "q":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
-                pass
-        for dx, dy in in_bishop_and_queen_check_tiles_3: # Checks for opponents bishops or queens checking king
-            try:
-                if board[x + dx][y + dy][0] == "b" or board[x + dx][y + dy][0:2] == "q":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
-                pass
-        for dx, dy in in_bishop_and_queen_check_tiles_4: # Checks for opponents bishops or queens checking king
-            try:
-                if board[x + dx][y + dy][0] == "b" or board[x + dx][y + dy][0] == "q":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
-                pass
-        
-
-        for dx, dy in in_rook_and_queen_check_tiles_1: # Checks for opponents rooks or queens checking king
-            try:
-                if board[x + dx][y + dy][0] == "r" or board[x + dx][y + dy][0] == "q":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
-                pass
-        for dx, dy in in_rook_and_queen_check_tiles_2: # Checks for opponents rooks or queens checking king
-            try:
-                if board[x + dx][y + dy][0] == "r" or board[x + dx][y + dy][0] == "q":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
-                pass
-        for dx, dy in in_rook_and_queen_check_tiles_3: # Checks for opponents rooks or queens checking king
-            try:
-                if board[x + dx][y + dy][0] == "r" or board[x + dx][y + dy][0] == "q":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
-                pass
-        for dx, dy in in_rook_and_queen_check_tiles_4: # Checks for opponents rooks or queens checking king
-            try:
-                if board[x + dx][y + dy][0] == "r" or board[x + dx][y + dy][0] == "q":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
-                pass
-
-        return False # If no opponent king in check flags hit return false
-
-    def invalid_action(self, action_info, q_values, action_index, perspective):
-
-        action_reward = -1000.0
-        valid_move = False
-
-        if perspective == "w":
-            self.train_neural_network(self.board_white, action_reward, q_values, action_index)
-        else:
-            self.train_neural_network(self.board_black, action_reward, q_values, action_index)
-            
-        return action_info, action_reward, valid_move
-
-
-    def valid_action(self, action_info, action_reward, action, q_values, action_index, perspective, action_piece, target_tile_piece, source_tile_indices, target_tile_indices):
-
-        if perspective == "w":
-            board = self.board_white
-        else:
-            board = self.board_white
-
-        if self.king_in_check(board):
-            action_info = {"Invalid Move, King in Check After Action"}
-            return self.invalid_action(action_info, q_values, action_index, perspective)
-
-        valid_move = True
-        self.update_boards(action, perspective)
-        self.train_neural_network(board, action_reward, q_values, action_index)
-        
-        return action_info, action_reward, valid_move
+        return self.king_in_check(self.change_board_perspective(copy.deepcopy(board)))
     
 
-    def update_boards(self, action, perspective):
-
-        if perspective == "w":
-
-            pass
-        else:
-
-            pass
-    
-
-
-    def tile_indices_to_coordinates(self, source_tile, target_tile, perspective):
+    def tile_indices_to_coordinates(self, source_tile, target_tile):
         """
         Convert chess tile indices to coordinates based on the given perspective.
 
         Parameters:
             - source_tile (List[int]): The index of the source tile.
             - target_tile (List[int]): The index of the target tile.
-            - perspective (str): The perspective of the board ("w" for white, any other value for black).
 
         Returns:
             - str: A string containing containinng the source tile and target tile coordinates representing a move.
         """
-        if perspective == "w":
+        if self.perspective == "w":
             return self.TILE_INDICES_TO_COORDINATES_WHITE_PERSPECTIVE[(source_tile[0],source_tile[1])]+self.TILE_INDICES_TO_COORDINATES_WHITE_PERSPECTIVE[(target_tile[0],target_tile[1])]
         else:
             return self.TILE_INDICES_TO_COORDINATES_BLACK_PERSPECTIVE[(source_tile[0],source_tile[1])]+self.TILE_INDICES_TO_COORDINATES_BLACK_PERSPECTIVE[(target_tile[0],target_tile[1])]
 
 
-    def attempt_action(self, action, perspective):
+    def invalid_action(self, action_info, q_values, action_index):
+        """
+        Handles the case where an invalid action is taken by the agent.
+
+        This method is called when an invalid action is attempted during the game. It updates
+        the neural network based on the negative reward associated with the invalid action.
+
+        Parameters:
+            - action_info (tuple): Information about the attempted action.
+            - q_values (numpy.ndarray): Q-values predicted by the neural network for the current state.
+            - action_index (int): Index of the attempted action in the list of possible moves.
+        """
+        action_reward = -1000.0
+        valid_move = False
+        game_end = False
+
+        self.train_neural_network(self.board_state, action_reward, q_values, action_index)
+         
+        return action_info, action_reward, valid_move, game_end
+
+
+    def valid_action(self, action_info, action_reward, q_values, action_index, target_piece):
+        """
+        Handles the case where an valid action is taken by the agent.
+
+        This method is called when an valid action is attempted during the game. It updates
+        the neural network based on the reward associated with the action and checks if it causes a checked king position 
+        that would make it an invalid move. Also Checks if it causes a checked opponent king position and rewards the action greatly.
+
+        Parameters:
+            - action_info (tuple): Information about the attempted action.
+            - action_reward (tuple): Reward associated with the action.
+            - q_values (numpy.ndarray): Q-values predicted by the neural network for the current state.
+            - action_index (int): Index of the attempted action in the list of possible moves.
+            - target_piece (str): The target tile piece of the action being taken.
+        """
+        valid_move = True
+        if target_piece == "ok": # Checks if opponent king is captured to declare the check mate and end of the game
+            game_end = True
+        else:
+            game_end = False
+
+        if self.opponent_king_in_check(self.board_state):
+            action_reward += 1000
+
+        self.train_neural_network(self.board_state, action_reward, q_values, action_index)
+        self.change_perspective()
+
+        return action_info, action_reward, valid_move, game_end
+
+
+    def attempt_action(self, action):
         """
         Attempts to take the given action, and trains the artificial neural network (ANN) based on the utility of the action,
         based on the game state, and the utility is represented by the action_reward.
@@ -1963,11 +1895,9 @@ class RLE():
             - action (Tuple[str, Tuple[int]]): The tuple representing the action being attempted.
             or
             - action (Tuple[str, Tuple[int], str]) *This is only the case for pawn promotion attempts*
-            - perspective (str): The perspective of the board ("w" for white, any other value for black).
         
         Returns:
             - action_info (str): String details the move attempt outcome.
-            - final_board_state (List[List[str]]): The state of the chessboard after action attempt, with piece labels in string representations.
             - action_reward (int): Integer indicating the utility of the action attempted.
             - valid_move (bool): Boolean indicates whether move attempt was valid or not.
             - game_end (bool): Boolean indicates whether end game state is reached.
@@ -1975,22 +1905,17 @@ class RLE():
         Note:
             This method modifies the Q-values in-place based on the observed reward and updates the neural network's weights accordingly.      
         """
-        board_white = self.board_white.copy()
-        board_black = self.board_black.copy()
+        board = self.board_state.copy()
+        en_passant_location = self.en_passant_tile
 
-        if perspective == "w":
-            board = self.board_white.copy()
-            en_passant_location = self.en_passant_tile_white
+        if self.perspective =="w":
             number_of_next_knight = self.number_of_next_knight_white
             number_of_next_bishop = self.number_of_next_bishop_white
             number_of_next_rook = self.number_of_next_rook_white
             number_of_next_queen = self.number_of_next_queen_white
             castling_r1_available = self.castling_available_r1_white
             castling_r2_available = self.castling_available_r2_white
-            
         else:
-            board = self.board_black.copy()
-            en_passant_location = self.en_passant_tile_black
             number_of_next_knight = self.number_of_next_knight_black
             number_of_next_bishop = self.number_of_next_bishop_black
             number_of_next_rook = self.number_of_next_rook_black
@@ -2001,81 +1926,81 @@ class RLE():
         before_action_king_in_check = self.king_in_check(board)
         q_values = self.neuralNetwork.model.predict(self.preprosess_input(board))
         action_index = self.POSSIBLE_MOVES.index(action)
-        action_piece, target_tile_piece, source_tile_indices, target_tile_indices, = self.get_action_piece_tiles(board, action) # Returns None,None,None,None if action_piece not present 
-                                                                                                                                # on board
+
+        action_piece, target_tile_piece, source_tile_indices, target_tile_indices, = self.get_action_piece_tiles(board, action) # Returns None,None,None,None if action_piece not present                                                                                                                   # on board
         #----------------------------------------------------------------------------------------------------------------
         # Checking for Invalid Moves
 
         if action_piece == None:  
 
             action_info = {"Invalid Move, Action Piece Not Present on Board"}
-            return self.invalid_action(action_info, q_values, action_index, perspective)
+            return self.invalid_action(action_info, q_values, action_index)
 
 
         if target_tile_indices[0]>7 or target_tile_indices[1]>7 or target_tile_indices[0]<0 or target_tile_indices[1]<0:
             
             action_info = {"Invalid Move, Target Tile Location Out of Range"}
-            return self.invalid_action(action_info, q_values, action_index, perspective)
+            return self.invalid_action(action_info, q_values, action_index)
 
 
-        if target_tile_piece[0] != "o" and target_tile_piece[0] != "_": # "Invalid Move, Cannot Capture Piece that Belongs to Agent"
+        if target_tile_piece[0] != "o" and target_tile_piece[0] != "_":
             
             action_info = {"Invalid Move, Cannot Capture Piece that Belongs to Agent"}
-            return self.invalid_action(action_info, q_values, action_index, perspective)
+            return self.invalid_action(action_info, q_values, action_index)
 
 
-        if len(action) == 3 and target_tile_indices[0] != 0: # Invalid Move, Trying to Promote Pawn When not on the Promoting Row
+        if len(action) == 3 and target_tile_indices[0] != 0:
 
             action_info = {"Invalid Move, Cannot Promote Pawn If Target Tile is not on the Promoting Row"}
-            return self.invalid_action(action_info, q_values, action_index, perspective)
+            return self.invalid_action(action_info, q_values, action_index)
 
-        if action[0] == "k" : # Invalid Move, Castling Attempts Outide of Castling Conditions
+        if action[0] == "k" :
 
             if action[1][1] == 2 and (not (board[7][7] == "r2") or source_tile_indices != [7,4]):
                 
                 action_info = {"Invalid Move, King Cannot Castle Unless King and Right Rook are in Starting Positions"}
-                return self.invalid_action(action_info, q_values, action_index, perspective)
+                return self.invalid_action(action_info, q_values, action_index)
 
 
             if action[1][1] == -2 and (not (board[7][0] == "r1") or source_tile_indices != [7,4]):
                 
                 action_info = {"Invalid Move, King Cannot Castle Unless King and Left Rook are in Starting Positions"}
-                return self.invalid_action(action_info, q_values, action_index, perspective)
+                return self.invalid_action(action_info, q_values, action_index)
 
             
             if before_action_king_in_check:
                 
                 action_info = {"Invalid Move, King Cannot Castle When in Check"}
-                return self.invalid_action(action_info, q_values, action_index, perspective)
+                return self.invalid_action(action_info, q_values, action_index)
 
         
-        if action[0][0] == "p": # Invalid Move, Illegal Pawn Move Attempts
+        if action[0][0] == "p":
 
             if action[1][0] == -2 and source_tile_indices[0]!=6:
                 
                 action_info = {"Invalid Move, Pawn Cannot Move 2 Spaces Unless in Starting Position"}
-                return self.invalid_action(action_info, q_values, action_index, perspective)
+                return self.invalid_action(action_info, q_values, action_index)
 
 
             if action[1][1] != 0 and target_tile_piece == "_" and ( en_passant_location != target_tile_indices ):
                 
                 action_info = {"Invalid Move, Pawn Cannot Move Diagnally Unless Oppossing Piece is there or En Passant Condition is Met"}
-                return self.invalid_action(action_info, q_values, action_index, perspective)
+                return self.invalid_action(action_info, q_values, action_index)
 
 
             if action[1][0] == -2 and source_tile_indices[0] == 6 and board[source_tile_indices[0]-1][source_tile_indices[1]] != "_":
                 
                 action_info = {"Invalid Move, Pawn Blocked by Other Piece in it's Path"}
-                return self.invalid_action(action_info, q_values, action_index, perspective)
+                return self.invalid_action(action_info, q_values, action_index)
 
 
             if action[1][0] == -1 and target_tile_piece != "_":
 
                 action_info = {"Invalid Move, Pawn Blocked by Other Piece in it's Path"}
-                return self.invalid_action(action_info, q_values, action_index, perspective)
+                return self.invalid_action(action_info, q_values, action_index)
 
         
-        if action[0][0] == "r" or action[0][0] == "q": # Rook and Queen Invalid Move Attempts
+        if action[0][0] == "r" or action[0][0] == "q":
 
             if action[1][1] > 0:
 
@@ -2084,7 +2009,7 @@ class RLE():
                     if board[source_tile_indices[0]][source_tile_indices[1]+index] !=  "_":
 
                         action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path"}
-                        return self.invalid_action(action_info, q_values, action_index, perspective)
+                        return self.invalid_action(action_info, q_values, action_index)
 
                     
             if action[1][1] < 0:
@@ -2094,7 +2019,7 @@ class RLE():
                     if board[source_tile_indices[0]][source_tile_indices[1]-index] !=  "_":
 
                         action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path"}
-                        return self.invalid_action(action_info, q_values, action_index, perspective)
+                        return self.invalid_action(action_info, q_values, action_index)
 
                 
             if action[1][0] > 0:
@@ -2104,7 +2029,7 @@ class RLE():
                     if board[source_tile_indices[0]+index][source_tile_indices[1]] !=  "_":
                         
                         action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path"}
-                        return self.invalid_action(action_info, q_values, action_index, perspective)
+                        return self.invalid_action(action_info, q_values, action_index)
 
                         
             if action[1][0] < 0:
@@ -2114,11 +2039,10 @@ class RLE():
                     if board[source_tile_indices[0]-index][source_tile_indices[1]-index] !=  "_":
 
                         action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path"}
-                        return self.invalid_action(action_info, q_values, action_index, perspective)
+                        return self.invalid_action(action_info, q_values, action_index)
 
 
-        
-        if action[0][0] == "b" or action[0][0] == "q":  # Bishop and Queen Invalid Move Attempts
+        if action[0][0] == "b" or action[0][0] == "q": 
 
             if action[1][0] > 0 and action[1][1] > 0:
 
@@ -2127,7 +2051,7 @@ class RLE():
                     if board[source_tile_indices[0]+index][source_tile_indices[1]+index] !=  "_":
 
                         action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path"}
-                        return self.invalid_action(action_info, q_values, action_index, perspective)
+                        return self.invalid_action(action_info, q_values, action_index)
 
                     
             if action[1][0] > 0 and action[1][1] < 0:
@@ -2137,7 +2061,7 @@ class RLE():
                     if board[source_tile_indices[0]+index][source_tile_indices[1]-index] !=  "_":
 
                         action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path"}
-                        return self.invalid_action(action_info, q_values, action_index, perspective)
+                        return self.invalid_action(action_info, q_values, action_index)
 
 
             if action[1][0] < 0 and action[1][1] > 0:
@@ -2147,7 +2071,7 @@ class RLE():
                     if board[source_tile_indices[0]-index][source_tile_indices[1]+index] !=  "_":
 
                         action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path"}
-                        return self.invalid_action(action_info, q_values, action_index, perspective)
+                        return self.invalid_action(action_info, q_values, action_index)
 
 
             if action[1][0] < 0 and action[1][1] < 0:
@@ -2157,7 +2081,7 @@ class RLE():
                     if board[source_tile_indices[0]-index][source_tile_indices[1]-index] !=  "_":
 
                         action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path"}
-                        return self.invalid_action(action_info, q_values, action_index, perspective)
+                        return self.invalid_action(action_info, q_values, action_index)
 
         #----------------------------------------------------------------------------------------------------------------
         # Checking for Valid Moves
@@ -2173,33 +2097,25 @@ class RLE():
                 board[7][7] = "_"
                 board[7][5] = castled_rook
 
+                if self.king_in_check(board):
+                    action_info = {"Invalid Move, King in Check After Action"}
+                    return self.invalid_action(action_info, q_values, action_index)
+
                 action_info = {"Valid Move, Castling With r2 Rook"}
                 action_reward = 100.0
+                self.board_state = board
+                self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices))
+                self.en_passant_tile = None
 
-                if perspective == "w":
-                    
-                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-                    self.en_passant_tile_white = None
+                if self.perspective == "w":
                     self.castling_available_r1_white = False
                     self.castling_available_r2_white = False
-                    self.en_passant_tile_black = None
                 else:
-                    
-                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-                    self.en_passant_tile_black = None
                     self.castling_available_r1_black = False
                     self.castling_available_r2_black = False
-                    self.en_passant_tile_white = None
+     
+                return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
 
-                
-
-                
-                return self.valid_action(action_info, action_reward, action, q_values, action_index, source_tile_indices, target_tile_indices, perspective)
-
-                
-
-                
-               
 
             if action[1][1] == -2 and castling_r1_available:
 
@@ -2209,46 +2125,24 @@ class RLE():
                 board[7][0] = "_"
                 board[7][3] = castled_rook
 
-                action_info = {"Valid Move, Castling With r1 Rook"}
-                final_board_state = board
-                action_reward = 100.0
-                game_end = False
-                valid_move = True
-
-                if self.king_in_check(board):   #Invalid Move, King in Check After Action
+                if self.king_in_check(board):
                     action_info = {"Invalid Move, King in Check After Action"}
-                    final_board_state = board
-                    action_reward = -1000.0
-                    game_end = False
-                    valid_move = False
+                    return self.invalid_action(action_info, q_values, action_index)
 
-                    self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                    return action_info, final_board_state, action_reward, valid_move, game_end
+                action_info = {"Valid Move, Castling With r1 Rook"}
+                action_reward = 100.0
+                self.board_state = board
+                self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices))
+                self.en_passant_tile = None
 
-                if perspective == "w":
-                    self.board_white = board
-                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-                    self.en_passant_tile_white = None
+                if self.perspective == "w":
                     self.castling_available_r1_white = False
                     self.castling_available_r2_white = False
-                    self.en_passant_tile_black = None
                 else:
-                    self.board_black = board
-                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-                    self.en_passant_tile_black = None
                     self.castling_available_r1_black = False
                     self.castling_available_r2_black = False
-                    self.en_passant_tile_white = None
-
-                print("Board: " + str(board))                       # Shows status of successful move attempts being trained into ANN
-                print("Action: " + str(action))
-                print("Source Location: " + str(source_tile_indices))
-                print("Target Location: " + str(target_tile_indices))
-                print("Source Tile: " + str(board[source_tile_indices[0]][source_tile_indices[1]]))
-                print("Target Tile: " + str(board[target_tile_indices[0]][target_tile_indices[1]]))
-
-                self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                return action_info, final_board_state, action_reward, valid_move, game_end
+                
+                return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
 
 
         if action[0][0] == "p" and action[1][0] == -2:                      # Valid Pawn Starting Move 2 Spaces, Activating En Passant Conditional
@@ -2256,42 +2150,17 @@ class RLE():
             board[target_tile_indices[0]][target_tile_indices[1]] = action[0]
             board[source_tile_indices[0]][source_tile_indices[1]] = "_"
 
-            action_info = {"Valid Move, Pawn Moved Two Spaces From Starting Position, Activating En Passant Condition"}
-            final_board_state = board
-            action_reward = 0.0
-            game_end = False
-            valid_move = True
-
-            if self.king_in_check(board):   #Invalid Move, King in Check After Action
+            if self.king_in_check(board):
                     action_info = {"Invalid Move, King in Check After Action"}
-                    final_board_state = board
-                    action_reward = -1000.0
-                    game_end = False
-                    valid_move = False
+                    return self.invalid_action(action_info, q_values, action_index)
 
-                    self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                    return action_info, final_board_state, action_reward, valid_move, game_end
+            action_info = {"Valid Move, Pawn Moved Two Spaces From Starting Position, Activating En Passant Condition"}
+            action_reward = 0.0
+            self.board_state = board
+            self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices))
+            self.en_passant_tile = [2,abs(7-target_tile_indices[1])]
 
-            if perspective == "w":
-                self.board_white = board
-                self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-                self.en_passant_tile_white = None
-                self.en_passant_tile_black = [2,abs(7-target_tile_indices[1])]
-            else:
-                self.board_black = board
-                self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-                self.en_passant_tile_black = None
-                self.en_passant_tile_white = [2,abs(7-target_tile_indices[1])]
-
-            print("Board: " + str(board))                       # Shows status of successful move attempts being trained into ANN
-            print("Action: " + str(action))
-            print("Source Location: " + str(source_tile_indices))
-            print("Target Location: " + str(target_tile_indices))
-            print("Source Tile: " + str(board[source_tile_indices[0]][source_tile_indices[1]]))
-            print("Target Tile: " + str(board[target_tile_indices[0]][target_tile_indices[1]]))
-
-            self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-            return action_info, final_board_state, action_reward, valid_move, game_end
+            return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
         
 
         if len(action) == 3 and target_tile_indices[0] == 0:     # Valid Move, Pawn Promotion Attempt
@@ -2301,88 +2170,45 @@ class RLE():
                 board[target_tile_indices[0]][target_tile_indices[1]] = "q" + str(number_of_next_queen)
                 board[source_tile_indices[0]][source_tile_indices[1]] = "_"
 
-                action_info = {"Valid Move, Pawn Promoted to Queen"}
-                final_board_state = board
-                action_reward = 90.0
-                game_end = False
-                valid_move = True
-
-                if self.king_in_check(board):   #Invalid Move, King in Check After Action
+                if self.king_in_check(board):
                     action_info = {"Invalid Move, King in Check After Action"}
-                    final_board_state = board
-                    action_reward = -1000.0
-                    game_end = False
-                    valid_move = False
+                    return self.invalid_action(action_info, q_values, action_index)
 
-                    self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                    return action_info, final_board_state, action_reward, valid_move, game_end
+                action_info = {"Valid Move, Pawn Promoted to Queen"}
+                action_reward = 90.0
+                self.board_state = board
+                self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices))
+                self.en_passant_tile = None
 
-                if perspective == "w":
-                    self.board_white = board
-                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-                    self.en_passant_tile_white = None
-                    self.en_passant_tile_black = None
+                if self.perspective == "w":
                     self.number_of_next_queen_white+=1
                 else:
-                    self.board_black = board
-                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-                    self.en_passant_tile_black = None
-                    self.en_passant_tile_white = None
                     self.number_of_next_queen_black+=1
 
-                print("Board: " + str(board))                       # Shows status of successful move attempts being trained into ANN
-                print("Action: " + str(action))
-                print("Source Location: " + str(source_tile_indices))
-                print("Target Location: " + str(target_tile_indices))
-                print("Source Tile: " + str(board[source_tile_indices[0]][source_tile_indices[1]]))
-                print("Target Tile: " + str(board[target_tile_indices[0]][target_tile_indices[1]]))
+                return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
 
-                self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                return action_info, final_board_state, action_reward, valid_move, game_end
-            
+                
             if action[2] == "n":
 
                 board[target_tile_indices[0]][target_tile_indices[1]] = "n" + str(number_of_next_knight)
                 board[source_tile_indices[0]][source_tile_indices[1]] = "_"
 
-                action_info = {"Valid Move, Pawn Promoted to Knight"}
-                final_board_state = board
-                action_reward = 30.0
-                game_end = False
-                valid_move = True
-
-                if self.king_in_check(board):   #Invalid Move, King in Check After Action
+                if self.king_in_check(board):
                     action_info = {"Invalid Move, King in Check After Action"}
-                    final_board_state = board
-                    action_reward = -1000.0
-                    game_end = False
-                    valid_move = False
+                    return self.invalid_action(action_info, q_values, action_index)
 
-                    self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                    return action_info, final_board_state, action_reward, valid_move, game_end
+                action_info = {"Valid Move, Pawn Promoted to Knight"}
+                action_reward = 30.0
+                self.board_state = board
+                self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices))
+                self.en_passant_tile = None
 
-                if perspective == "w":
-                    self.board_white = board
-                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-                    self.en_passant_tile_white = None
-                    self.en_passant_tile_black = None
+                if self.perspective == "w":
                     self.number_of_next_knight_white+=1
                 else:
-                    self.board_black = board
-                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-                    self.en_passant_tile_black = None
-                    self.en_passant_tile_white = None
                     self.number_of_next_knight_black+=1
 
-                print("Board: " + str(board))                       # Shows status of successful move attempts being trained into ANN
-                print("Action: " + str(action))
-                print("Source Location: " + str(source_tile_indices))
-                print("Target Location: " + str(target_tile_indices))
-                print("Source Tile: " + str(board[source_tile_indices[0]][source_tile_indices[1]]))
-                print("Target Tile: " + str(board[target_tile_indices[0]][target_tile_indices[1]]))
-
-                self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                return action_info, final_board_state, action_reward, valid_move, game_end
+                return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
 
 
             if action[2] == "b":
@@ -2390,101 +2216,53 @@ class RLE():
                 board[target_tile_indices[0]][target_tile_indices[1]] = "b" + str(number_of_next_bishop)
                 board[source_tile_indices[0]][source_tile_indices[1]] = "_"
 
-                action_info = {"Valid Move, Pawn Promoted to Bishop"}
-                final_board_state = board
-                action_reward = 30.0
-                game_end = False
-                valid_move = True
-
-                if self.king_in_check(board):   #Invalid Move, King in Check After Action
+                if self.king_in_check(board):
                     action_info = {"Invalid Move, King in Check After Action"}
-                    final_board_state = board
-                    action_reward = -1000.0
-                    game_end = False
-                    valid_move = False
+                    return self.invalid_action(action_info, q_values, action_index)
 
-                    self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                    return action_info, final_board_state, action_reward, valid_move, game_end
+                action_info = {"Valid Move, Pawn Promoted to Bishop"}
+                action_reward = 30.0
+                self.board_state = board
+                self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices))
+                self.en_passant_tile = None
 
-                if perspective == "w":
-                    self.board_white = board
-                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-                    self.en_passant_tile_white = None
-                    self.en_passant_tile_black = None
+                if self.perspective == "w":
                     self.number_of_next_bishop_white+=1
                 else:
-                    self.board_black = board
-                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-                    self.en_passant_tile_black = None
-                    self.en_passant_tile_white = None
                     self.number_of_next_bishop_black+=1
 
-                print("Board: " + str(board))                       # Shows status of successful move attempts being trained into ANN
-                print("Action: " + str(action))
-                print("Source Location: " + str(source_tile_indices))
-                print("Target Location: " + str(target_tile_indices))
-                print("Source Tile: " + str(board[source_tile_indices[0]][source_tile_indices[1]]))
-                print("Target Tile: " + str(board[target_tile_indices[0]][target_tile_indices[1]]))
-
-                self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                return action_info, final_board_state, action_reward, valid_move, game_end
+                return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
             
             if action[2] == "r":
 
                 board[target_tile_indices[0]][target_tile_indices[1]] = "r" + str(number_of_next_rook)
                 board[source_tile_indices[0]][source_tile_indices[1]] = "_"
 
-                action_info = {"Valid Move, Pawn Promoted to Rook"}
-                final_board_state = board
-                action_reward = 50.0
-                game_end = False
-                valid_move = True
-
-                if self.king_in_check(board):   #Invalid Move, King in Check After Action
+                if self.king_in_check(board):
                     action_info = {"Invalid Move, King in Check After Action"}
-                    final_board_state = board
-                    action_reward = -1000.0
-                    game_end = False
-                    valid_move = False
+                    return self.invalid_action(action_info, q_values, action_index)
 
-                    self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                    return action_info, final_board_state, action_reward, valid_move, game_end
+                action_info = {"Valid Move, Pawn Promoted to Rook"}
+                action_reward = 50.0
+                self.board_state = board
+                self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices))
+                self.en_passant_tile = None
 
                 if perspective == "w":
-                    self.board_white = board
-                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-                    self.en_passant_tile_white = None
-                    self.en_passant_tile_black = None
                     self.number_of_next_rook_white+=1
                 else:
-                    self.board_black = board
-                    self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-                    self.en_passant_tile_black = None
-                    self.en_passant_tile_white = None
                     self.number_of_next_rook_black+=1
 
-                print("Board: " + str(board))                       # Shows status of successful move attempts being trained into ANN
-                print("Action: " + str(action))
-                print("Source Location: " + str(source_tile_indices))
-                print("Target Location: " + str(target_tile_indices))
-                print("Source Tile: " + str(board[source_tile_indices[0]][source_tile_indices[1]]))
-                print("Target Tile: " + str(board[target_tile_indices[0]][target_tile_indices[1]]))
-
-                self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-                return action_info, final_board_state, action_reward, valid_move, game_end
+                return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
             
 
-        
         if target_tile_piece == "_":    # Valid Move, Non-Special Target Tile is Empty Tile Move
 
             board[target_tile_indices[0]][target_tile_indices[1]] = action[0]
             board[source_tile_indices[0]][source_tile_indices[1]] = "_"
 
             action_info = {"Valid Move, Non-Special Target Tile is Empty Tile Move"}
-            final_board_state = board
             action_reward = 0.0
-            game_end = False
-            valid_move = True
 
     
         if target_tile_piece[0:2] == "op":  # Valid Move, Captured Opponent Pawn
@@ -2493,10 +2271,7 @@ class RLE():
             board[source_tile_indices[0]][source_tile_indices[1]] = "_"
 
             action_info = {"Valid Move, Captured Opponent Pawn"}
-            final_board_state = board
             action_reward = 1.0
-            game_end = False
-            valid_move = True
 
 
         if target_tile_piece[0:2] == "on":  # Valid Move, Captured Opponent Knight
@@ -2505,10 +2280,7 @@ class RLE():
             board[source_tile_indices[0]][source_tile_indices[1]] = "_"
 
             action_info = {"Valid Move, Captured Opponent Knight"}
-            final_board_state = board
             action_reward = 30.0
-            game_end = False
-            valid_move = True
 
             
         if target_tile_piece[0:2] == "ob":  # Valid Move, Captured Opponent Bishop
@@ -2517,10 +2289,7 @@ class RLE():
             board[source_tile_indices[0]][source_tile_indices[1]] = "_"
 
             action_info = {"Valid Move, Captured Opponent Bishop"}
-            final_board_state = board
             action_reward = 30.0
-            game_end = False
-            valid_move = True
 
             
         if target_tile_piece[0:2] == "or":  # Valid Move, Captured Opponent Rook
@@ -2529,10 +2298,7 @@ class RLE():
             board[source_tile_indices[0]][source_tile_indices[1]] = "_"
 
             action_info = {"Valid Move, Captured Opponent Rook"}
-            final_board_state = board
             action_reward = 50.0
-            game_end = False
-            valid_move = True
 
             
         if target_tile_piece[0:2] == "oq":  # Valid Move, Captured Opponent Queen
@@ -2541,10 +2307,7 @@ class RLE():
             board[source_tile_indices[0]][source_tile_indices[1]] = "_"
 
             action_info = {"Valid Move, Captured Opponent Queen"}
-            final_board_state = board
             action_reward = 90.0
-            game_end = False
-            valid_move = True
 
 
         if target_tile_piece == "ok":
@@ -2553,28 +2316,17 @@ class RLE():
             board[source_tile_indices[0]][source_tile_indices[1]] = "_"
 
             action_info = {"Valid Move, Captured Opponent King"}
-            final_board_state = board
             action_reward = 100000.0
-            game_end = False
-            valid_move = True
 
 
-        if self.king_in_check(board):   #Invalid Move, King in Check After Action
-            action_info = {"Invalid Move, King in Check After Action"}
-            final_board_state = board
-            action_reward = -1000.0
-            game_end = False
-            valid_move = False
+        if self.king_in_check(board):
+                    action_info = {"Invalid Move, King in Check After Action"}
+                    return self.invalid_action(action_info, q_values, action_index)
 
-            self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-            return action_info, final_board_state, action_reward, valid_move, game_end
+        self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices))
+        self.en_passant_tile = None
 
-
-        if perspective == "w":
-            self.board_white = board
-            self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-            self.en_passant_tile_white = None
-            self.en_passant_tile_black = None
+        if self.perspective == "w":
             if action[0] == "r1":
                 self.castling_available_r1_white = False
             if action[0] == "r2":
@@ -2582,10 +2334,6 @@ class RLE():
             if action[0] == "k":
                 self.castling_available_r2_white = False
         else:
-            self.board_black = board
-            self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices,perspective))
-            self.en_passant_tile_black = None
-            self.en_passant_tile_white = None
             if action[0] == "r1":
                 self.castling_available_r1_black = False
             if action[0] == "r2":
@@ -2593,14 +2341,6 @@ class RLE():
             if action[0] == "k":
                 self.castling_available_r2_black = False
         
-        print("Board: " + str(board))                       # Shows status of successful move attempts being trained into ANN
-        print("Action: " + str(action))
-        print("Source Location: " + str(source_tile_indices))
-        print("Target Location: " + str(target_tile_indices))
-        print("Source Tile: " + str(board[source_tile_indices[0]][source_tile_indices[1]]))
-        print("Target Tile: " + str(board[target_tile_indices[0]][target_tile_indices[1]]))
-
-        self.train_neural_network(final_board_state, action_reward, q_values, action_index)
-        return action_info, final_board_state, action_reward, valid_move, game_end
+        return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
 
 ###############################################################################################################################################################
