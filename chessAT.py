@@ -95,10 +95,126 @@ class trainer:
         return preprocessed_board
     
 
-    def data_train(self): # Trains Agent by Reinforcing Winning Player's Game Moves in PGN Files 
+    def san_to_action(self, board, san_move, perspective):
 
+        if len(san_move) == 2:
+
+            target_coordinates = san_move
+            source_coordinates = san_move[0]
+
+            if int(san_move[0]) <= 4:
+                source_coordinates += str(2)
+            else:
+                source_coordinates += str(7)
+
+            if perspective == "w":
+                source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
+                target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
+            else:
+                source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
+                target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
+
+            piece = board[source_indices[0]][source_indices[1]]
+            dx = target_indices[0] - source_indices[0]
+            dy = target_indices[1] - source_indices[1]
+
+            return (piece, (dx, dy))
+
+        elif len(san_move) == 3:
+
+            if san_move[2] == "#":
+
+                target_coordinates = san_move
+                source_coordinates = san_move[0]
+
+                if int(san_move[0]) <= 4:
+                    source_coordinates += str(2)
+                else:
+                    source_coordinates += str(7)
+
+                if perspective == "w":
+                    source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
+                    target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
+                else:
+                    source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
+                    target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
+
+                piece = board[source_indices[0]][source_indices[1]]
+                dx = target_indices[0] - source_indices[0]
+                dy = target_indices[1] - source_indices[1]
+
+                return (piece, (dx, dy))
+            
+            elif san_move[2] == "+":
+
+                target_coordinates = san_move
+                source_coordinates = san_move[0]
+
+                if int(san_move[0]) <= 4:
+                    source_coordinates += str(2)
+                else:
+                    source_coordinates += str(7)
+
+                if perspective == "w":
+                    source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
+                    target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
+                else:
+                    source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
+                    target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
+
+                piece = board[source_indices[0]][source_indices[1]]
+                dx = target_indices[0] - source_indices[0]
+                dy = target_indices[1] - source_indices[1]
+
+                return (piece, (dx, dy))
+            
+            else:
+                
+                
+                pass
+
+            pass
+        elif len(san_move) == 4:
+
+            pass
+        elif len(san_move) == 5:
+
+            pass
+        elif len(san_move) == 6:
+
+            pass
+        
+        piece = " "
+        dx = 0
+        dy = 0 
+
+        return (piece, (dx,dy))
+
+
+    def data_train(self):
+        """
+        Trains the Agent by Reinforcing Winning Player's Game Moves in PGN Files.
+
+        This method reads chess games from PGN files, identifies the winning player, and reinforces
+        the neural network based on the moves made by the winning player.
+
+        The training process involves iterating through the moves of each game, extracting the SAN
+        (Standard Algebraic Notation) moves, and updating the neural network based on the moves made
+        by the winning player.
+
+        Note: The neural network used for training should be associated with the Reinforcement
+        Learning Environment (RLE) instance.
+
+        Returns:
+            - None
+
+        Example:
+            chessAT = trainer()
+            chessAT.data_train()
+        """
         home_directory = os.path.expanduser("~")
         full_model_directory = os.path.join(home_directory, self.training_data_directory)
+
         for filename in os.listdir(full_model_directory):
 
             if filename.endswith(".pgn"):
@@ -120,15 +236,39 @@ class trainer:
 
                         self.RLE.reset_game_state()
 
-                        print(game.mainline_moves())
+                        full_move_history_san = str(game.mainline_moves()).split(" ")
+                        filtered_move_history_san = []
 
-                        for move in game.mainline_moves():
-                            #print(move)
-                            pass
+                        for index in range(len(full_move_history_san)):
+                            if index % 3 == 1:
+                                filtered_move_history_san.append(full_move_history_san[index])
+                            elif index % 3 == 2:
+                                filtered_move_history_san.append(full_move_history_san[index])
 
-                self.RLE.neuralNetwork.save_model("ANNCA") 
+                        for index in range(len(filtered_move_history_san)):
 
+                            if index % 2 == 0: # White's Move
+
+                                action = self.san_to_action(self.RLE.board_white, filtered_move_history_san[index], "w")
+                                q_values = self.RLE.neuralNetwork.model.predict(self.RLE.preprosess_input(self.RLE.board_white))
+                                action_index = self.RLE.POSSIBLE_MOVES.index(action)
+
+                                if winner == "w":
+                                    self.RLE.train_neural_network(self.RLE.board_white, 10000.0, q_values, action_index)
+
+                                self.RLE.attempt_action(action, "w")
+
+                            else:              # Black's Move
+
+                                action = self.san_to_action(self.RLE.board_black, filtered_move_history_san[index], "b")
+                                q_values = self.RLE.neuralNetwork.model.predict(self.RLE.preprosess_input(self.RLE.board_black))
+                                action_index = self.RLE.POSSIBLE_MOVES.index(action)
+
+                                if winner == "b":
+                                    self.RLE.train_neural_network(self.RLE.board_black, 10000.0, q_values, action_index)
+                                
+                                self.RLE.attempt_action(action, "b")
+                    
+                        self.RLE.neuralNetwork.save_model("ANNCA") 
 
 ###############################################################################################################################################################
-new = trainer()
-new.data_train()
