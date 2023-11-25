@@ -2248,7 +2248,7 @@ class RLE():
                 self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices))
                 self.en_passant_tile = None
 
-                if perspective == "w":
+                if self.perspective == "w":
                     self.number_of_next_rook_white+=1
                 else:
                     self.number_of_next_rook_black+=1
