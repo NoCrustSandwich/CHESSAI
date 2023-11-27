@@ -1,20 +1,42 @@
 # Library Imports
 import os
+import random
+import chessRLE
 import chess.pgn
 import numpy as np
-import chessRLE
-import random
-import re
+
 
 ###############################################################################################################################################################
-# Agent Trainer - Version 2.0 (24/11/2023)
+# Agent Trainer - Version 3.1 (27/11/2023)
 ###############################################################################################################################################################
 
 class trainer:
+    """
+    Trainer is a class responsible for training the neural network, by either feeding it PGN game data 
+    or by simulating chess games against itself.
+
+    Methods:
+        - __init__(self, training_data_directory: str): Initializes an instance of the trainer class and checks if the training data folder exists
+                                                        on the device. If not, it creates the folder.
+        - active_train(self, number_of_games: int): Trains the agent by playing against itself, considering the top 10 moves at each step.
+        - san_to_action(self, board, san_move, lan_move, perspective): Translates Standard Algebraic Notation to an action format that can be fed 
+                                                                       into the ANN as an expected output.
+        - data_train(self): Trains the agent by reinforcing the winning player's game moves in PGN files.
+
+    Usage Example:
+        - chessAT = trainer()
+        - chessANN.data_train()
+        or
+        - chessANN.active_train(10)
+    """
 
     def __init__(self, training_data_directory='Documents/ANNCA/training_data'):
         """
-        Initializes an instance of the trainer class, and checks if the training data folder exists on device and if not creates it.
+        Initializes an instance of the trainer class and checks if the training data folder exists on the device.
+        If not, it creates the folder.
+
+        Parameters:
+            - training_data_directory (str): The directory path where training data is stored.
         """
         self.RLE = chessRLE.RLE()
         self.training_data_directory = training_data_directory
@@ -24,49 +46,59 @@ class trainer:
         if not os.path.exists(full_model_directory):
             os.makedirs(full_model_directory)
 
-        
-    def active_train(self, number_of_games): # Trains Agent by Playing Against Itself
+    
+    def active_train(self, number_of_games: int): # Trains Agent by Playing Against Itself
+        """
+        Trains the agent by playing against itself, considering the top 10 moves at each step.
 
+        Parameters:
+            - number_of_games (int): The number of games to play for training.
+
+        Returns:
+            - None
+        """
         for game in range(number_of_games):
 
             self.RLE.reset_game_state()
             total_reward = 0
-            perspective = "w"
 
             while True:
                 
-                qValues = self.RLE.neuralNetwork.model.predict(self.RLE.preprosess_input())
-                best_actions = np.argsort(qValues)[-10:][::-1]
+                q_values = self.RLE.neuralNetwork.model.predict(self.RLE.preprosess_input(self.RLE.board_state))
+                best_actions = np.argsort(q_values)[-10:][::-1]
                 random_integer = random.randint(1, 1023)
 
+                print(q_values)
+                print(best_actions)
+
                 if random_integer > 511:                            # Randomly picks 1 of the current top 10 moves with decreasing likelihood
-                    action = self.RLE.POSSIBLE_MOVES[best_actions[0]]
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[0][0]]
                 elif random_integer > 255:
-                    action = self.RLE.POSSIBLE_MOVES[best_actions[1]]
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[0][1]]
                 elif random_integer > 127:
-                    action = self.RLE.POSSIBLE_MOVES[best_actions[2]]
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[0][2]]
                 elif random_integer > 63:
-                    action = self.RLE.POSSIBLE_MOVES[best_actions[3]]
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[0][3]]
                 elif random_integer > 31:
-                    action = self.RLE.POSSIBLE_MOVES[best_actions[4]]
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[0][4]]
                 elif random_integer > 15:
-                    action = self.RLE.POSSIBLE_MOVES[best_actions[5]]
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[0][5]]
                 elif random_integer > 7:
-                    action = self.RLE.POSSIBLE_MOVES[best_actions[6]]
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[0][6]]
                 elif random_integer > 3:
-                    action = self.RLE.POSSIBLE_MOVES[best_actions[7]]
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[0][7]]
                 elif random_integer > 1:
-                    action = self.RLE.POSSIBLE_MOVES[best_actions[8]]
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[0][8]]
                 elif random_integer == 1:
-                    action = self.RLE.POSSIBLE_MOVES[best_actions[9]]
-      
-                action_info, final_board_state, action_reward, valid_move, game_end = self.RLE.attempt_action(action,perspective)
+                    action = self.RLE.POSSIBLE_MOVES[best_actions[0][9]]
+
+                print("Board State: "+ str(self.RLE.board_state))
+                print("Action: " +str(action))
+                action_info, action_reward, valid_move, game_end = self.RLE.attempt_action(action)
+                print(action_info)
 
                 if valid_move:              # Switches player turn on successful move being made 
-                    if perspective == "w":
-                        perspective = "b"
-                    else:
-                        perspective = "w"
+                    self.RLE.change_perspective()
 
                 total_reward += action_reward
 
@@ -77,26 +109,20 @@ class trainer:
 
             self.RLE.neuralNetwork.save_model("ANNCA")
 
-
-    def preprocess_board(self,board): # preprocesses board for input to the neural network
-        
-        preprocessed_board = []
-
-        for rank in range(8):
-            rank = []
-            for file in range(8):
-                piece = board.piece_at(chess.square(file, 7 - rank))
-                if piece is None:
-                    rank.append("_")
-                else:
-                    rank.append(piece.symbol())
-            preprocessed_board.append(rank)
-
-        return preprocessed_board
     
-
     def san_to_action(self, board, san_move, lan_move, perspective):
+        """
+        Translates Standard Algebraic Notation to an action format that can be fed into the ANN as an expected output.
 
+        Parameters:
+            - board (list): The current state of the chessboard.
+            - san_move (str): Standard Algebraic Notation move.
+            - lan_move (chess.Move): The corresponding move in LAN format.
+            - perspective (str): The perspective, either 'w' for white or 'b' for black.
+
+        Returns:
+            - Tuple: A tuple representing the action in the format (piece, (dx, dy), [promotion] or [castling]).
+        """
         if str(san_move) == "o-o-o":
             return ("k", (0,-2))
         
@@ -158,27 +184,15 @@ class trainer:
             return (piece, (dx, dy), str(san_move)[3].lower())
         
 
-
     def data_train(self):
         """
-        Trains the Agent by Reinforcing Winning Player's Game Moves in PGN Files.
+        Trains the agent by reinforcing the winning player's game moves in PGN files.
 
-        This method reads chess games from PGN files, identifies the winning player, and reinforces
-        the neural network based on the moves made by the winning player.
-
-        The training process involves iterating through the moves of each game, extracting the SAN
-        (Standard Algebraic Notation) moves, and updating the neural network based on the moves made
-        by the winning player.
-
-        Note: The neural network used for training should be associated with the Reinforcement
-        Learning Environment (RLE) instance.
+        This method reads chess games from PGN files, identifies the winning player,
+        and reinforces the neural network based on the moves made by the winning player.
 
         Returns:
             - None
-
-        Example:
-            chessAT = trainer()
-            chessAT.data_train()
         """
         home_directory = os.path.expanduser("~")
         full_model_directory = os.path.join(home_directory, self.training_data_directory)
@@ -200,6 +214,7 @@ class trainer:
                     else:
                         winner = 'NA'
 
+                    print("NEWGAME***************")
                     if game:
                         
                         perpsective = "w"
@@ -209,7 +224,6 @@ class trainer:
                         full_move_history_san = str(game.mainline_moves()).split(" ")
                         filtered_move_history_san = []
                         
-
                         for index in range(len(full_move_history_san)):
                             if index % 3 == 1:
                                 filtered_move_history_san.append(full_move_history_san[index])
@@ -217,38 +231,34 @@ class trainer:
                                 filtered_move_history_san.append(full_move_history_san[index])
                         
                         for lan_move in game.mainline_moves():
-
-                            print(filtered_move_history_san[move_index])
-                            print(lan_move)
+                            action = self.san_to_action(self.RLE.board_state, filtered_move_history_san[move_index], lan_move, perpsective)
+                            print("Perspective: "+ perpsective)
+                            print("Board State: "+ str(self.RLE.board_state))
+                            print("Move: "+ str(lan_move))
+                            print("Action: " +str(action))
+                            q_values = self.RLE.neuralNetwork.model.predict(self.RLE.preprosess_input(self.RLE.board_state))
+                            action_index = self.RLE.POSSIBLE_MOVES.index(action)
+                            action_info, action_reward, valid_move, game_end = self.RLE.attempt_action(action)
+                            print(action_info)
 
                             if perpsective == "w": # White's Move
 
-                                action = self.san_to_action(self.RLE.board_white, filtered_move_history_san[move_index], lan_move, perpsective)
-                                q_values = self.RLE.neuralNetwork.model.predict(self.RLE.preprosess_input(self.RLE.board_white))
-                                action_index = self.RLE.POSSIBLE_MOVES.index(action)
-
                                 if winner == "w":
-                                    self.RLE.train_neural_network(self.RLE.board_white, 10000.0, q_values, action_index)
+                                    self.RLE.train_neural_network(self.RLE.board_state, 10000.0, q_values, action_index)
 
-                                self.RLE.attempt_action(action, perpsective)
+                                self.RLE.change_perspective()
                                 perpsective = "b"
                                 move_index += 1
 
                             else:              # Black's Move
-
-                                action = self.san_to_action(self.RLE.board_black, filtered_move_history_san[move_index],lan_move, perpsective)
-                                q_values = self.RLE.neuralNetwork.model.predict(self.RLE.preprosess_input(self.RLE.board_black))
-                                action_index = self.RLE.POSSIBLE_MOVES.index(action)
-
+                            
                                 if winner == "b":
-                                    self.RLE.train_neural_network(self.RLE.board_black, 10000.0, q_values, action_index)
-                                
-                                self.RLE.attempt_action(action, perpsective)
+                                    self.RLE.train_neural_network(self.RLE.board_state, 10000.0, q_values, action_index)
+                            
+                                self.RLE.change_perspective()
                                 perpsective = "w"
                                 move_index += 1
 
                         self.RLE.neuralNetwork.save_model("ANNCA") 
 
 ###############################################################################################################################################################
-new = trainer()
-new.data_train()

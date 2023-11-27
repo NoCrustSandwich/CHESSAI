@@ -8,7 +8,7 @@ import time
 
 
 ###############################################################################################################################################################
-#Adaptive Neural Network Chess Agent (ANNCA) - Version 3 (21/11/2023)
+# Adaptive Neural Network Chess Agent (ANNCA) - Version 3.1 (27/11/2023)
 ###############################################################################################################################################################
 
 class ANNCA:
@@ -16,9 +16,9 @@ class ANNCA:
     def __init__(self, state):
 
         # Initializes instances of the classes necessary for the agent
-        self.chessWebScraper = chessWS.webScraper()
-        self.chessLogic = chessRLE.RLE()
-        self.chessController = chessIC.controller()
+        self.chessWS = chessWS.webScraper()
+        self.chessRLE = chessRLE.RLE()
+        self.chessIC = chessIC.controller()
         self.state = state
 
         # Enter IDLE state when you want the Khan to play

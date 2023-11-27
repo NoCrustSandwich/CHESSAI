@@ -6,7 +6,7 @@ from typing import List
 
 
 ###############################################################################################################################################################
-# Reinforcment Learning Enviorment - Version 4.0 (25/11/2023)
+# Reinforcment Learning Enviorment - Version 4.1 (27/11/2023)
 ###############################################################################################################################################################
 
 class RLE():
@@ -1531,13 +1531,13 @@ class RLE():
         """
         Resets the game state to its initial configuration.
 
-        This method resets the chess game state by reassigning the initial board configuration to both the white player's
+        This method resets the chess game statke by reassigning the initial board configuration to both the white player's
         board and the black player's board. It also clears the move histories.
 
         Returns:
             - None
         """
-        self.move_history_cn = []
+        self.move_history_cn = [] # CN == Coordinates Notation (ie. Source Tile -> Target Tile) 
         self.perspective = "w"
 
         self.en_passant_tile = None
@@ -1602,7 +1602,7 @@ class RLE():
         Returns:
             - None
         """
-        self.board = self.change_board_perspective(copy.deepcopy(self.board))
+        self.board_state = self.change_board_perspective(copy.deepcopy(self.board_state))
 
         if self.perspective == "w":
             self.perspective = "b"
@@ -1671,7 +1671,10 @@ class RLE():
         for x in range(len(board)):
             for y in range(len(board[x])):
                 if board[x][y] == action[0]:
-                    return board[x][y], board[x+action[1][0]][y+action[1][1]], [x,y], [x+action[1][0],y+action[1][1]]
+                    try:
+                        return board[x][y], board[x+action[1][0]][y+action[1][1]], [x,y], [x+action[1][0],y+action[1][1]]
+                    except IndexError:
+                        return "IndexError", None, None, None
         return None, None, None, None
     
 
@@ -1687,7 +1690,7 @@ class RLE():
         """
         for i in range(8):
             for j in range(8):
-                if board[x][y] == "k":          # Finds king tile position
+                if board[i][j] == "k":          # Finds king tile position
                     x = i
                     y = j  
                     break
@@ -1704,103 +1707,106 @@ class RLE():
         in_rook_and_queen_check_tiles_4 = [(0, -1), (0, -2), (0, -3), (0, -4), (0, -5), (0, -6), (0, -7)]
         
         for dx, dy in in_pawn_check_tiles: # Checks for opponents pawns checking king
-            try:
-                if board[x + dx][y + dy][0:2] == "op":
-                    return True
-            except IndexError:
+            if (x + dx) > 7 or (x + dx) < 0 or (y + dy) > 7 or (y + dy) < 0:
                 pass
-
-
+            elif board[x + dx][y + dy][0:2] == "op":
+                print("Pawn Check: " + "x:"+str(x + dx) +"y :"+ str(y + dy))
+                return True
+           
         for dx, dy in in_knight_check_tiles: # Checks for opponents knights checking king
-            try:
-                if board[x + dx][y + dy][0:2] == "on":
-                    return True
-            except IndexError:
+            if (x + dx) > 7 or (x + dx) < 0 or (y + dy) > 7 or (y + dy) < 0:
                 pass
-
+            elif board[x + dx][y + dy][0:2] == "on":
+                print("Knight Check: " + "x:"+str(x + dx) +"y :"+ str(y + dy))
+                return True
 
         for dx, dy in in_bishop_and_queen_check_tiles_1: # Checks for opponents bishops or queens checking king
-            try:
-                if board[x + dx][y + dy][0:2] == "ob" or board[x + dx][y + dy][0:2] == "oq":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
+            if (x + dx) > 7 or (x + dx) < 0 or (y + dy) > 7 or (y + dy) < 0:
                 pass
+            elif board[x + dx][y + dy][0:2] == "ob" or board[x + dx][y + dy][0:2] == "oq":
+                print("Queen/Bishop Check 1: " + "x:"+str(x + dx) +"y :"+ str(y + dy))
+                return True
+            elif board[x + dx][y + dy] == "_":
+                pass
+            else:
+                break
+            
         for dx, dy in in_bishop_and_queen_check_tiles_2: # Checks for opponents bishops or queens checking king
-            try:
-                if board[x + dx][y + dy][0:2] == "ob" or board[x + dx][y + dy][0:2] == "oq":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
+            if (x + dx) > 7 or (x + dx) < 0 or (y + dy) > 7 or (y + dy) < 0:
                 pass
+            elif board[x + dx][y + dy][0:2] == "ob" or board[x + dx][y + dy][0:2] == "oq":
+                print("Queen/Bishop Check 2: " + "x:"+str(x + dx) +"y :"+ str(y + dy))
+                return True
+            elif board[x + dx][y + dy] == "_":
+                pass
+            else:
+                break
+            
         for dx, dy in in_bishop_and_queen_check_tiles_3: # Checks for opponents bishops or queens checking king
-            try:
-                if board[x + dx][y + dy][0:2] == "ob" or board[x + dx][y + dy][0:2] == "oq":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
+            if (x + dx) > 7 or (x + dx) < 0 or (y + dy) > 7 or (y + dy) < 0:
                 pass
-        for dx, dy in in_bishop_and_queen_check_tiles_4: # Checks for opponents bishops or queens checking king
-            try:
-                if board[x + dx][y + dy][0:2] == "ob" or board[x + dx][y + dy][0:2] == "oq":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
+            elif board[x + dx][y + dy][0:2] == "ob" or board[x + dx][y + dy][0:2] == "oq":
+                print("Queen/Bishop Check 3: " + "x:"+str(x + dx) +"y :"+ str(y + dy))
+                return True
+            elif board[x + dx][y + dy] == "_":
                 pass
-        
+            else:
+                break
 
+        for dx, dy in in_bishop_and_queen_check_tiles_4: # Checks for opponents bishops or queens checking king
+            if (x + dx) > 7 or (x + dx) < 0 or (y + dy) > 7 or (y + dy) < 0:
+                pass
+            elif board[x + dx][y + dy][0:2] == "ob" or board[x + dx][y + dy][0:2] == "oq":
+                print("Queen/Bishop Check 4: " + "x:"+str(x + dx) +"y :"+ str(y + dy))
+                return True
+            elif board[x + dx][y + dy] == "_":
+                pass
+            else:
+                break
+        
         for dx, dy in in_rook_and_queen_check_tiles_1: # Checks for opponents rooks or queens checking king
-            try:
-                if board[x + dx][y + dy][0:2] == "or" or board[x + dx][y + dy][0:2] == "oq":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
+            if (x + dx) > 7 or (x + dx) < 0 or (y + dy) > 7 or (y + dy) < 0:
                 pass
+            elif board[x + dx][y + dy][0:2] == "or" or board[x + dx][y + dy][0:2] == "oq":
+                print("Queen/Rook Check 1: " + "x:"+str(x + dx) +"y :"+ str(y + dy))
+                return True
+            elif board[x + dx][y + dy] == "_":
+                pass
+            else:
+                break
+
         for dx, dy in in_rook_and_queen_check_tiles_2: # Checks for opponents rooks or queens checking king
-            try:
-                if board[x + dx][y + dy][0:2] == "or" or board[x + dx][y + dy][0:2] == "oq":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
+            if (x + dx) > 7 or (x + dx) < 0 or (y + dy) > 7 or (y + dy) < 0:
                 pass
+            elif board[x + dx][y + dy][0:2] == "or" or board[x + dx][y + dy][0:2] == "oq":
+                print("Queen/Rook Check 2: " + "x:"+str(x + dx) +"y :"+ str(y + dy))
+                return True
+            elif board[x + dx][y + dy] == "_":
+                pass
+            else:
+                break
+
         for dx, dy in in_rook_and_queen_check_tiles_3: # Checks for opponents rooks or queens checking king
-            try:
-                if board[x + dx][y + dy][0:2] == "or" or board[x + dx][y + dy][0:2] == "oq":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
+            if (x + dx) > 7 or (x + dx) < 0 or (y + dy) > 7 or (y + dy) < 0:
                 pass
+            elif board[x + dx][y + dy][0:2] == "or" or board[x + dx][y + dy][0:2] == "oq":
+                print("Queen/Rook Check 3: " + "x:"+str(x + dx) +"y :"+ str(y + dy))
+                return True
+            elif board[x + dx][y + dy] == "_":
+                pass
+            else:
+                break
+
         for dx, dy in in_rook_and_queen_check_tiles_4: # Checks for opponents rooks or queens checking king
-            try:
-                if board[x + dx][y + dy][0:2] == "or" or board[x + dx][y + dy][0:2] == "oq":
-                    return True
-                elif board[x + dx][y + dy][0] == "_":
-                    pass
-                else:
-                    break
-            except IndexError:
+            if (x + dx) > 7 or (x + dx) < 0 or (y + dy) > 7 or (y + dy) < 0:
                 pass
+            elif board[x + dx][y + dy][0:2] == "or" or board[x + dx][y + dy][0:2] == "oq":
+                print("Queen/Rook Check 4: " + "x:"+str(x + dx) +"y :"+ str(y + dy))
+                return True
+            elif board[x + dx][y + dy] == "_":
+                pass
+            else:
+                break
 
         return False # If no king in check flags hit return false
         
@@ -1881,7 +1887,6 @@ class RLE():
             action_reward += 1000
 
         self.train_neural_network(self.board_state, action_reward, q_values, action_index)
-        self.change_perspective()
 
         return action_info, action_reward, valid_move, game_end
 
@@ -1930,16 +1935,19 @@ class RLE():
         action_piece, target_tile_piece, source_tile_indices, target_tile_indices, = self.get_action_piece_tiles(board, action) # Returns None,None,None,None if action_piece not present                                                                                                                   # on board
         #----------------------------------------------------------------------------------------------------------------
         # Checking for Invalid Moves
-
+        
         if action_piece == None:  
 
             action_info = {"Invalid Move, Action Piece Not Present on Board"}
             return self.invalid_action(action_info, q_values, action_index)
 
+        if action_piece == "IndexError":
+            action_info = {"Invalid Move, Target Tile Location Out of Range 1"}
+            return self.invalid_action(action_info, q_values, action_index)
 
         if target_tile_indices[0]>7 or target_tile_indices[1]>7 or target_tile_indices[0]<0 or target_tile_indices[1]<0:
             
-            action_info = {"Invalid Move, Target Tile Location Out of Range"}
+            action_info = {"Invalid Move, Target Tile Location Out of Range 2"}
             return self.invalid_action(action_info, q_values, action_index)
 
 
@@ -1956,20 +1964,20 @@ class RLE():
 
         if action[0] == "k" :
 
-            if action[1][1] == 2 and (not (board[7][7] == "r2") or source_tile_indices != [7,4]):
+            if action[1][1] == 2 and (not castling_r2_available):
                 
                 action_info = {"Invalid Move, King Cannot Castle Unless King and Right Rook are in Starting Positions"}
                 return self.invalid_action(action_info, q_values, action_index)
 
 
-            if action[1][1] == -2 and (not (board[7][0] == "r1") or source_tile_indices != [7,4]):
+            if action[1][1] == -2 and (not castling_r1_available):
                 
                 action_info = {"Invalid Move, King Cannot Castle Unless King and Left Rook are in Starting Positions"}
                 return self.invalid_action(action_info, q_values, action_index)
 
             
-            if before_action_king_in_check:
-                
+            if before_action_king_in_check and abs(action[1][1]) > 1:
+                print("ACTION HERE"+str(action))
                 action_info = {"Invalid Move, King Cannot Castle When in Check"}
                 return self.invalid_action(action_info, q_values, action_index)
 
@@ -1990,55 +1998,55 @@ class RLE():
 
             if action[1][0] == -2 and source_tile_indices[0] == 6 and board[source_tile_indices[0]-1][source_tile_indices[1]] != "_":
                 
-                action_info = {"Invalid Move, Pawn Blocked by Other Piece in it's Path"}
+                action_info = {"Invalid Move, Pawn Blocked by Other Piece in it's Path 1"}
                 return self.invalid_action(action_info, q_values, action_index)
 
 
-            if action[1][0] == -1 and target_tile_piece != "_":
+            if action[1][0] == -1 and (target_tile_piece != "_" and target_tile_piece[0] != "o"):
 
-                action_info = {"Invalid Move, Pawn Blocked by Other Piece in it's Path"}
+                action_info = {"Invalid Move, Pawn Blocked by Other Piece in it's Path 2"}
                 return self.invalid_action(action_info, q_values, action_index)
 
         
         if action[0][0] == "r" or action[0][0] == "q":
 
-            if action[1][1] > 0:
+            if action[1][1] > 0 and action[1][0] == 0:
 
                 for index in range(1, action[1][1]):
 
                     if board[source_tile_indices[0]][source_tile_indices[1]+index] !=  "_":
 
-                        action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path"}
+                        action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path 1"}
                         return self.invalid_action(action_info, q_values, action_index)
 
                     
-            if action[1][1] < 0:
+            if action[1][1] < 0 and action[1][0] == 0:
 
                 for index in range(1, -action[1][1]):
 
                     if board[source_tile_indices[0]][source_tile_indices[1]-index] !=  "_":
 
-                        action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path"}
+                        action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path 2"}
                         return self.invalid_action(action_info, q_values, action_index)
 
                 
-            if action[1][0] > 0:
+            if action[1][0] > 0 and action[1][1] == 0:
 
                 for index in range(1, action[1][0]):
 
                     if board[source_tile_indices[0]+index][source_tile_indices[1]] !=  "_":
                         
-                        action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path"}
+                        action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path 3"}
                         return self.invalid_action(action_info, q_values, action_index)
 
                         
-            if action[1][0] < 0:
+            if action[1][0] < 0 and action[1][1] == 0:
 
                 for index in range(1, -action[1][0]):
 
-                    if board[source_tile_indices[0]-index][source_tile_indices[1]-index] !=  "_":
+                    if board[source_tile_indices[0]-index][source_tile_indices[1]] !=  "_":
 
-                        action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path"}
+                        action_info = {"Invalid Move, Rook or Queen Blocked by Other Piece in it's Path 4"}
                         return self.invalid_action(action_info, q_values, action_index)
 
 
@@ -2050,7 +2058,7 @@ class RLE():
 
                     if board[source_tile_indices[0]+index][source_tile_indices[1]+index] !=  "_":
 
-                        action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path"}
+                        action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path 1"}
                         return self.invalid_action(action_info, q_values, action_index)
 
                     
@@ -2060,7 +2068,7 @@ class RLE():
 
                     if board[source_tile_indices[0]+index][source_tile_indices[1]-index] !=  "_":
 
-                        action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path"}
+                        action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path 2"}
                         return self.invalid_action(action_info, q_values, action_index)
 
 
@@ -2070,7 +2078,7 @@ class RLE():
 
                     if board[source_tile_indices[0]-index][source_tile_indices[1]+index] !=  "_":
 
-                        action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path"}
+                        action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path 3"}
                         return self.invalid_action(action_info, q_values, action_index)
 
 
@@ -2080,7 +2088,7 @@ class RLE():
 
                     if board[source_tile_indices[0]-index][source_tile_indices[1]-index] !=  "_":
 
-                        action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path"}
+                        action_info = {"Invalid Move, Bishop or Queen Blocked by Other Piece in it's Path 4"}
                         return self.invalid_action(action_info, q_values, action_index)
 
         #----------------------------------------------------------------------------------------------------------------
@@ -2091,11 +2099,18 @@ class RLE():
 
             if action[1][1] == 2 and castling_r2_available:
                 
-                castled_rook = board[7][7]
-                board[target_tile_indices[0]][target_tile_indices[1]] = action[0]
-                board[source_tile_indices[0]][source_tile_indices[1]] = "_"
-                board[7][7] = "_"
-                board[7][5] = castled_rook
+                if self.perspective == "w":
+                    castled_rook = board[7][7]
+                    board[target_tile_indices[0]][target_tile_indices[1]] = action[0]
+                    board[source_tile_indices[0]][source_tile_indices[1]] = "_"
+                    board[7][7] = "_"
+                    board[7][5] = castled_rook
+                else:
+                    castled_rook = board[7][7]
+                    board[target_tile_indices[0]][target_tile_indices[1]] = action[0]
+                    board[source_tile_indices[0]][source_tile_indices[1]] = "_"
+                    board[7][7] = "_"
+                    board[7][4] = castled_rook
 
                 if self.king_in_check(board):
                     action_info = {"Invalid Move, King in Check After Action"}
@@ -2114,16 +2129,23 @@ class RLE():
                     self.castling_available_r1_black = False
                     self.castling_available_r2_black = False
      
-                return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
+                return self.valid_action(action_info, action_reward, q_values, action_index, target_tile_piece)
 
 
             if action[1][1] == -2 and castling_r1_available:
 
-                castled_rook = board[7][0]
-                board[target_tile_indices[0]][target_tile_indices[1]] = action[0]
-                board[source_tile_indices[0]][source_tile_indices[1]] = "_"
-                board[7][0] = "_"
-                board[7][3] = castled_rook
+                if self.perspective == "w":
+                    castled_rook = board[7][0]
+                    board[target_tile_indices[0]][target_tile_indices[1]] = action[0]
+                    board[source_tile_indices[0]][source_tile_indices[1]] = "_"
+                    board[7][0] = "_"
+                    board[7][3] = castled_rook
+                else:
+                    castled_rook = board[7][0]
+                    board[target_tile_indices[0]][target_tile_indices[1]] = action[0]
+                    board[source_tile_indices[0]][source_tile_indices[1]] = "_"
+                    board[7][0] = "_"
+                    board[7][2] = castled_rook
 
                 if self.king_in_check(board):
                     action_info = {"Invalid Move, King in Check After Action"}
@@ -2142,7 +2164,7 @@ class RLE():
                     self.castling_available_r1_black = False
                     self.castling_available_r2_black = False
                 
-                return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
+                return self.valid_action(action_info, action_reward, q_values, action_index, target_tile_piece)
 
 
         if action[0][0] == "p" and action[1][0] == -2:                      # Valid Pawn Starting Move 2 Spaces, Activating En Passant Conditional
@@ -2160,7 +2182,7 @@ class RLE():
             self.move_history_cn.append(self.tile_indices_to_coordinates(source_tile_indices,target_tile_indices))
             self.en_passant_tile = [2,abs(7-target_tile_indices[1])]
 
-            return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
+            return self.valid_action(action_info, action_reward, q_values, action_index, target_tile_piece)
         
 
         if len(action) == 3 and target_tile_indices[0] == 0:     # Valid Move, Pawn Promotion Attempt
@@ -2185,7 +2207,7 @@ class RLE():
                 else:
                     self.number_of_next_queen_black+=1
 
-                return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
+                return self.valid_action(action_info, action_reward, q_values, action_index, target_tile_piece)
 
                 
             if action[2] == "n":
@@ -2208,7 +2230,7 @@ class RLE():
                 else:
                     self.number_of_next_knight_black+=1
 
-                return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
+                return self.valid_action(action_info, action_reward, q_values, action_index, target_tile_piece)
 
 
             if action[2] == "b":
@@ -2231,7 +2253,7 @@ class RLE():
                 else:
                     self.number_of_next_bishop_black+=1
 
-                return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
+                return self.valid_action(action_info, action_reward, q_values, action_index, target_tile_piece)
             
             if action[2] == "r":
 
@@ -2253,7 +2275,7 @@ class RLE():
                 else:
                     self.number_of_next_rook_black+=1
 
-                return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
+                return self.valid_action(action_info, action_reward, q_values, action_index, target_tile_piece)
             
 
         if target_tile_piece == "_":    # Valid Move, Non-Special Target Tile is Empty Tile Move
@@ -2341,6 +2363,6 @@ class RLE():
             if action[0] == "k":
                 self.castling_available_r2_black = False
         
-        return self.valid_action(action_info, action_reward, action, q_values, action_index, target_tile_piece)
+        return self.valid_action(action_info, action_reward, q_values, action_index, target_tile_piece)
 
 ###############################################################################################################################################################

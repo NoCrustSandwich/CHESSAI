@@ -64,6 +64,7 @@ class neuralNetwork:
         input_layer = Input(shape=(8, 8))
 
         x = Flatten()(input_layer)
+        x = Dense(20512, activation='relu')(x)
         x = Dense(10256, activation='relu')(x)
         x = Dense(5128, activation='relu')(x)
         x = Dense(2564, activation='relu')(x)
@@ -156,4 +157,3 @@ class neuralNetwork:
             print(f"Model '{model_name}' JSON file not found.")
 
 ###############################################################################################################################################################
-
