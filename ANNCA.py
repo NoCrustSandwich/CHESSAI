@@ -1,72 +1,42 @@
 # Class and Library Imports
-import chessWS
-import chessRLE
-import chessIC
-import chessGUI
-import keyboard
-import time
-
+import chessAT
+import tkinter as tk
 
 ###############################################################################################################################################################
-# Adaptive Neural Network Chess Agent (ANNCA) - Version 3.1 (27/11/2023)
+# Adaptive Neural Network Chess Agent (ANNCA) - Version 3.2 (28/11/2023)
 ###############################################################################################################################################################
 
-class ANNCA:
+def on_button_click_data_train():
+    agent_trainer = chessAT.trainer()
+    agent_trainer.data_train()
 
-    def __init__(self, state):
+def on_button_click_active_train():
+    agent_trainer = chessAT.trainer()
+    agent_trainer.active_train()
 
-        # Initializes instances of the classes necessary for the agent
-        self.chessWS = chessWS.webScraper()
-        self.chessRLE = chessRLE.RLE()
-        self.chessIC = chessIC.controller()
-        self.state = state
+state = "IDLE"
+    
 
-        # Enter IDLE state when you want the Khan to play
-        if self.state == "RUN":
-            self.runState()
 
-        if self.state == "UT":
-            pass
+root = tk.Tk()
+root.title("ANNCA")
 
-    # Returns the state ANNCA is in currently
-    def getState(self):
-        return self.state
+label = tk.Label(root, text="Enter your name:")
+label.pack()
 
-     # IDLE run state for Agent waiting for instruction
-    def runState(self):
+button = tk.Button(root, text="Play", command=on_button_click)
+button.pack()
 
-        # Input the gameURL
-        gameURL = input("Input gameURL:")
-        self.chessWebScraper.updateGameURL(url=gameURL)
-        playerColor = input("Input player Color (w/b):").lower() 
-        self.chessWebScraper.updatePlayerColor(color=playerColor)
+button = tk.Button(root, text="Unit Test", command=on_button_click)
+button.pack()
 
-        # Opens web page in the background
-        self.chessWebScraper.openWebPage()
+button = tk.Button(root, text="Data Train", command=on_button_click_data_train)
+button.pack()
 
-        while True:
+button = tk.Button(root, text="Active Train", command=on_button_click_active_train)
+button.pack()
 
-            time.sleep(1)
 
-            # Makes a move
-            if keyboard.is_pressed('space'):
-                self.chessWebScraper.updateCurrentBoard()
-                self.chessLogic.updateBoard(self.chessWebScraper.getCurrentBoard())
-                sourceTile, targetTile = self.chessLogic.getMovePrediction()
-                self.chessController.movePieceExternally(sourceTile,targetTile)
-
-                if self.chessWebScraper.getPlayerColor == "w":
-                    print("Move made: "+self.chessController.getWhiteCoords(sourceTile)+" to "+ self.chessController.getWhiteCoords(targetTile))
-                else:
-                    print("Move made: "+self.chessController.getBlackCoords(sourceTile)+" to "+ self.chessController.getBlackCoords(targetTile))
-
-                self.chessLogic.ANN.save_ANN("CANN")
-
-            # Saves ANN and then ends application
-            if keyboard.is_pressed('esc'):
-                # Saves trained model
-                self.chessLogic.ANN.save_ANN("CANN")
-                exit()
 
 ###############################################################################################################################################################
 

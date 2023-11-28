@@ -63,12 +63,13 @@ class webScraper:
         time.sleep(5)   # Wait 5 seconds for page to load and retrieve most recent data
 
     
-    def fetch_latest_move_history_san(self) -> Tuple[int, str, str]:
+    def fetch_latest_action_history(self) -> list:
         """
-        Retrieves the move history of the current Chess.com game session in Standard Algebraic Notation.
+        Retrieves the move history of the current Chess.com game session in Standard Algebraic Notation,
+        and then translates it to action format.
 
         Returns:
-            - Tuple[int, str, str]: The history of moves in the game session.
+            - list: The history of actions in the game session.
         """
         div_class = 'move'
         div_elements = self.web_page.find_elements(By.CLASS_NAME, div_class)

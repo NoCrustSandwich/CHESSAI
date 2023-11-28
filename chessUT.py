@@ -14,7 +14,6 @@ ut_for_chessIC = False
 ut_for_chessANNT = False
 ut_for_chessGUI = False
 
-
 # ANSI escape codes to print text in green and red:
 GREEN = '\033[92m'
 RED = '\033[91m'
