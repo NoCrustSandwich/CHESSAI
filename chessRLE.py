@@ -2365,7 +2365,82 @@ class RLE():
         return self.valid_action(action_info, action_reward, q_values, action_index, target_tile_piece)
 
 
-    def san_to_an(self):
+    def san_to_an(self, san_move):
+        """
+        Translates Standard Algebraic Notation to an action format that can be used by the interface Controller.
+
+        Parameters:
+            - san_move (str): Standard Algebraic Notation move.
+
+        Returns:
+            - Tuple: A tuple representing the action in the format (piece, (dx, dy), [promotion] or [castling]).
+        """
+        if str(san_move) == "o-o-o":
+            return ("k", (0,-2))
+        
+        if str(san_move) == "o-o":
+            return ("k", (0,2))
+
+        if len(san_move) == 2:
+
+            if self.perspective == "w":
+                source_coordinates = str(san_move)[0:1] + "2"
+            else:
+                source_coordinates = str(san_move)[0:1] + "7"
+
+            target_coordinates = str(san_move)
+            
+            if self.perspective == "w":
+                source_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
+                target_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
+            else:
+                source_indices = self.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
+                target_indices = self.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
+
+            piece = self.board_state[source_indices[0]][source_indices[1]]
+            dx = target_indices[0] - source_indices[0]
+            dy = target_indices[1] - source_indices[1]
+
+            return (piece, (dx, dy))
+
+        elif len(san_move) == 3:
+
+            if san_move[0].isupper():
+                piece_label = san_move[0].lower()
+
+            source_coordinates = str(lan_move)[0:2]
+            target_coordinates = str(lan_move)[2:4]
+            
+            if perspective == "w":
+                source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
+                target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
+            else:
+                source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
+                target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
+
+            piece = board[source_indices[0]][source_indices[1]]
+            dx = target_indices[0] - source_indices[0]
+            dy = target_indices[1] - source_indices[1]
+
+            return (piece, (dx, dy))
+
+        elif len(san_move) == 4 and str(san_move)[2] == "=":
+
+            source_coordinates = str(lan_move)[0:2]
+            target_coordinates = str(lan_move)[2:4]
+            
+            if perspective == "w":
+                source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
+                target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
+            else:
+                source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
+                target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
+
+            piece = board[source_indices[0]][source_indices[1]]
+            dx = target_indices[0] - source_indices[0]
+            dy = target_indices[1] - source_indices[1]
+
+            return (piece, (dx, dy), str(san_move)[3].lower())
         pass
 
 ###############################################################################################################################################################
