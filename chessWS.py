@@ -1,11 +1,10 @@
 import time
-from typing import Tuple
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 
 ###############################################################################################################################################################
-# Web Scraper - Version 2.0 (21/11/2023) 
+# Web Scraper - Version 2.1 (30/11/2023) 
 ###############################################################################################################################################################
 
 class webScraper:
@@ -19,7 +18,7 @@ class webScraper:
     Methods:
         - __init__(self): Initializes the Web Scraper class.
         - update_game_url(self, url): Updates the game_url attribute with the one of the desired game session.
-        - fetch_latest_move_history_san(self) -> Tuple[int, str, str]: Retrieves the latest move history of the current Chess.com game session in Standard Algebraic Notation.
+        - fetch_latest_move_history_san(self) -> List[str]: Retrieves the latest move history of the current Chess.com game session in Standard Algebraic Notation.
 
     Usage Example:
         - chessWS = webScraper()
@@ -61,13 +60,12 @@ class webScraper:
         time.sleep(5)   # Wait 5 seconds for page to load and retrieve most recent data
 
     
-    def fetch_latest_action_history(self) -> list:
+    def fetch_latest_move_history_san(self) -> list:
         """
-        Retrieves the move history of the current Chess.com game session in Standard Algebraic Notation,
-        and then translates it to action format.
+        Retrieves the move history of the current Chess.com game session in Standard Algebraic Notation.
 
         Returns:
-            - list: The history of actions in the game session.
+            - list: The history of moves in the game session.
         """
         div_class = 'move'
         div_elements = self.web_page.find_elements(By.CLASS_NAME, div_class)

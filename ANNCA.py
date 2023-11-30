@@ -29,7 +29,9 @@ def on_button_click_play():
 
     while not game_end:
 
-        latest_action_history = web_scraper.fetch_latest_action_history
+        latest_move_history_san = web_scraper.fetch_latest_move_history_san()
+        latest_action_history = adaptive_agent.san_to_an(latest_move_history_san)
+
         latest_action_history_length = len(latest_action_history)
         action_history_length = len(action_history)
 
@@ -47,7 +49,7 @@ def on_button_click_play():
                 action_info, action_reward, valid_move, game_end = adaptive_agent.attempt_action(action)
             
             action_history.append(action)
-            interface_controller.execute_action(action)
+            interface_controller.execute_action(action, adaptive_agent.board_state)
 
         elif latest_action_history_length > action_history_length: # Condition to update board to most recent
             for index in range(action_history_length, latest_action_history_length):
@@ -56,7 +58,7 @@ def on_button_click_play():
                 elif index%2 == 1 and adaptive_agent.perspective != "b":
                     adaptive_agent.change_perspective()
                     
-                action = latest_action_history_length[index]
+                action = latest_action_history[index]
                 action_info, action_reward, valid_move, game_end = adaptive_agent.attempt_action(action)
                 action_history.append(action)
         else:

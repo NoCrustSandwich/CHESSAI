@@ -2364,4 +2364,8 @@ class RLE():
         
         return self.valid_action(action_info, action_reward, q_values, action_index, target_tile_piece)
 
+
+    def san_to_an(self):
+        pass
+
 ###############################################################################################################################################################

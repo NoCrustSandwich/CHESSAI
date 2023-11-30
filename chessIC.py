@@ -209,7 +209,15 @@ class controller:
 
         pyautogui.moveTo(1, 1, 1)
 
-    def execute_action(self, action):
-        pass
+    def execute_action(self, action, board):
+
+        for i in range(8):
+            for j in range(8):
+                if board[i][j] == action[0]:
+                    source_tile = [i,j]
+
+        target_tile = [source_tile[0]+action[1][0], source_tile[1]+action[1][1]]
+
+        self.move_piece_on_board(source_tile, target_tile)
 
 ###############################################################################################################################################################
