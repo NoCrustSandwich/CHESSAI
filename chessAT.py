@@ -1,4 +1,3 @@
-# Library Imports
 import os
 import random
 import chessRLE

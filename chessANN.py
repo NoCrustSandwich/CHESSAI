@@ -1,4 +1,3 @@
-# Library Imports
 import os
 import keras
 from keras.models import Model

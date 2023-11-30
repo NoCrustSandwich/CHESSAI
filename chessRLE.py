@@ -1,4 +1,3 @@
-# Library Imports
 import copy
 import chessANN
 import numpy as np

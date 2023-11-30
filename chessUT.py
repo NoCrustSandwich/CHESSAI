@@ -1,10 +1,9 @@
-# Library and Class Imports
 import chessWS
 import chessIC
 import chessAT
 import chessANN
 import chessRLE
-import chessGUI
+
 
 # Flags to run unit testing on the classes you want to
 ut_for_chessWS = False
@@ -515,33 +514,5 @@ def ut_chessANNT():
 if ut_for_chessANNT:
     ut_chessANNT()
 
-
-###############################################################################################################################################################
-
-
-###############################################################################################################################################################
-# Unit Testing: Graphical User Interface - Version 1.0 (21/11/2023)
-###############################################################################################################################################################
-
-def ut_chessGUI():
-    """
-    Perform unit tests for the ANNCA Graphical User Interface (chessGUI) module.
-
-
-    Results of each unit test are printed, indicating success or failure.
-
-    Usage:
-        - ut_chessGUI()
-    """
-    interface = chessGUI.interface()
-
-    print("------------------------------------------------------------------------------------------------------------------------------")
-    print("\tGRAPHICAL USER INTERFACE UNIT TESTING")
-    print("------------------------------------------------------------------------------------------------------------------------------\n")
-
-    print("------------------------------------------------------------------------------------------------------------------------------")
-
-if ut_for_chessGUI:
-    ut_chessGUI()
 
 ###############################################################################################################################################################
