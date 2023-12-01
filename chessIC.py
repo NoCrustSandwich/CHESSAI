@@ -182,7 +182,7 @@ class controller:
             current_coordinates[1] += row_Length
         
 
-    def move_piece_on_board(self, source_tile_indices, target_tile_indices):
+    def move_piece_on_board(self, source_tile_indices, target_tile_indices, promotion_piece):
         """
         Moves a chess piece from the source location to the target location on the Chess.com game Board.
 
@@ -206,8 +206,27 @@ class controller:
         pyautogui.mouseDown()
         time.sleep(0.5)
         pyautogui.mouseUp()
+        time.sleep(1)
+
+        if promotion_piece == "q":
+            x, y = self.board_tile_display_coordinates[target_tile_indices[0],target_tile_indices[1]]
+        elif promotion_piece == "n":
+            x, y = self.board_tile_display_coordinates[target_tile_indices[0]+1,target_tile_indices[1]]
+        elif promotion_piece == "r":
+            x, y = self.board_tile_display_coordinates[target_tile_indices[0]+2,target_tile_indices[1]]
+        elif promotion_piece == "b":
+            x, y = self.board_tile_display_coordinates[target_tile_indices[0]+3,target_tile_indices[1]]
+        else:
+            pyautogui.moveTo(1, 1, 1)
+            return
+
+        pyautogui.moveTo(x, y, 1)
+        pyautogui.mouseDown()
+        time.sleep(0.5)
+        pyautogui.mouseUp()
 
         pyautogui.moveTo(1, 1, 1)
+
 
     def execute_action(self, action, board):
 
@@ -218,6 +237,9 @@ class controller:
 
         target_tile = [source_tile[0]+action[1][0], source_tile[1]+action[1][1]]
 
-        self.move_piece_on_board(source_tile, target_tile)
+        if len(action) == 3:
+            self.move_piece_on_board(source_tile, target_tile, action[2])
+        else:
+            self.move_piece_on_board(source_tile, target_tile, None)
 
 ###############################################################################################################################################################

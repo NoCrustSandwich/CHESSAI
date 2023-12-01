@@ -2365,6 +2365,24 @@ class RLE():
         return self.valid_action(action_info, action_reward, q_values, action_index, target_tile_piece)
 
 
+    def find_valid_piece_source_tile(self, piece_label, board, source_tile_letter, source_tile_number, target_tile):
+
+        possible_pieces = []
+
+        for i in range(8):
+            for j in range(8):
+                if board[i][j][0] == piece_label:
+                    possible_pieces.append(board[i][j], (i,j))
+        
+        if self.perspective == "w":
+            target_tile_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_tile]
+        else:
+            target_tile_indices = self.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_tile]
+
+        
+
+        pass
+
     def san_to_an(self, san_move):
         """
         Translates Standard Algebraic Notation to an action format that can be used by the interface Controller.
@@ -2403,44 +2421,150 @@ class RLE():
 
             return (piece, (dx, dy))
 
+
         elif len(san_move) == 3:
 
-            if san_move[0].isupper():
-                piece_label = san_move[0].lower()
+            if str(san_move[0]).isupper():
 
-            source_coordinates = str(lan_move)[0:2]
-            target_coordinates = str(lan_move)[2:4]
-            
-            if perspective == "w":
-                source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
-                target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
+                piece_label = str(san_move[0]).lower()
+                target_coordinates = str(san_move[1:3])
+                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, None, target_coordinates)
+                
             else:
-                source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
-                target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
 
-            piece = board[source_indices[0]][source_indices[1]]
+                target_coordinates = str(san_move)[0:2]
+
+                if self.perspective == "w":
+                    source_coordinates = str(san_move)[0:1] + "2"
+                else:
+                    source_coordinates = str(san_move)[0:1] + "7"
+
+            if self.perspective == "w":
+                source_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
+                target_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
+            else:
+                source_indices = self.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
+                target_indices = self.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
+
+            piece = self.board_state[source_indices[0]][source_indices[1]]
             dx = target_indices[0] - source_indices[0]
             dy = target_indices[1] - source_indices[1]
 
             return (piece, (dx, dy))
 
-        elif len(san_move) == 4 and str(san_move)[2] == "=":
 
-            source_coordinates = str(lan_move)[0:2]
-            target_coordinates = str(lan_move)[2:4]
+        elif len(san_move) == 4:
+
+            if str(san_move[3]).isupper():
+
+                piece_label = "p"
+                promotion_piece_label = str(san_move[3]).lower()
+                target_coordinates = str(san_move)[0:2]
+                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, None, target_coordinates)
+
+            elif str(san_move[3]) == "+" or str(san_move[3]) == "#":
+
+                piece_label = str(san_move[0]).lower()
+                target_coordinates = str(san_move[1:3])
+                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, None, target_coordinates)
+
+            elif str(san_move[0]).islower():
+
+                piece_label = "p"
+                target_coordinates = str(san_move[2:4])
+                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move[0]), None, target_coordinates)
             
-            if perspective == "w":
-                source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
-                target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
-            else:
-                source_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
-                target_indices = self.RLE.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
+            elif san_move[1] == "x":
 
-            piece = board[source_indices[0]][source_indices[1]]
+                piece_label = str(san_move[0]).lower()
+                target_coordinates = str(san_move[2:4])
+                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move[0]), None, target_coordinates)
+
+            else:
+
+                piece_label = str(san_move[0]).lower()
+                target_coordinates = str(san_move[2:4])
+
+                if str(san_move[1]).isdigit():
+                    source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, str(san_move[1]), target_coordinates)
+                else:
+                    source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move[1]), None, target_coordinates)
+
+            if self.perspective == "w":
+                source_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
+                target_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
+            else:
+                source_indices = self.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
+                target_indices = self.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
+
+            piece = self.board_state[source_indices[0]][source_indices[1]]
             dx = target_indices[0] - source_indices[0]
             dy = target_indices[1] - source_indices[1]
 
-            return (piece, (dx, dy), str(san_move)[3].lower())
-        pass
+            if promotion_piece_label:
+                return (piece, (dx, dy), promotion_piece_label)
+            else:
+                return (piece, (dx, dy))
+
+
+        elif len(san_move) == 5:
+
+            if str(san_move[0]).islower():
+
+                piece_label = "p"
+                target_coordinates = str(san_move[2:4])
+                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move[0]), None, target_coordinates)
+
+            elif str(san_move[4]) == "#" or str(san_move[4]) == "+":
+
+                piece_label = str(san_move[0]).lower()
+                target_coordinates = str(san_move[2:4])
+                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, None, target_coordinates)
+
+            else:
+
+                piece_label = str(san_move[0]).lower()
+                target_coordinates = str(san_move[3:5])
+
+                if str(san_move[1]).isdigit():
+                    source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, str(san_move[1]), target_coordinates)
+                else:
+                    source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move[1]), None, target_coordinates)
+
+            if self.perspective == "w":
+                source_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
+                target_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
+            else:
+                source_indices = self.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
+                target_indices = self.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
+
+            piece = self.board_state[source_indices[0]][source_indices[1]]
+            dx = target_indices[0] - source_indices[0]
+            dy = target_indices[1] - source_indices[1]
+
+            return (piece, (dx, dy))
+
+        else:
+
+            piece_label = str(san_move[0]).lower()
+            target_coordinates = str(san_move[3:5])
+
+            if str(san_move[1]).isdigit():
+                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, str(san_move[1]), target_coordinates)
+            else:
+                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move[1]), None, target_coordinates)
+
+            if self.perspective == "w":
+                source_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
+                target_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_coordinates]
+            else:
+                source_indices = self.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[source_coordinates]
+                target_indices = self.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_coordinates]
+
+            piece = self.board_state[source_indices[0]][source_indices[1]]
+            dx = target_indices[0] - source_indices[0]
+            dy = target_indices[1] - source_indices[1]
+
+            return (piece, (dx, dy))
 
 ###############################################################################################################################################################
