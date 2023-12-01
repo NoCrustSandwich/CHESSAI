@@ -92,6 +92,18 @@ class RLE():
                 ["p1","p2","p3","p4","p5","p6","p7","p8"],
                 ["r1","n1","b1","q1","k","b2","n2","r2"]]
 
+        self.LETTER_TO_COLUMN_WHITE_PERSPECTIVE = {
+            "a":0, "b":1, "c":2, "d":3, "e":4, "f":5, "g":6, "h":7
+        }
+        self.LETTER_TO_COLUMN_BLACK_PERSPECTIVE = {
+            "h":0, "g":1, "f":2, "e":3, "d":4, "c":5, "b":6, "a":7
+        }
+        self.NUMBER_TO_ROW_WHITE_PERSPECTIVE = {
+            "8":0, "7":1, "6":2, "5":3, "4":4, "3":5, "2":6, "1":7
+        }
+        self.NUMBER_TO_ROW_BLACK_PERSPECTIVE = {
+            "1":0, "2":1, "3":2, "4":3, "5":4, "6":5, "7":6, "8":7
+        }
         self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE = {
             "a8":[0,0], "b8":[0,1], "c8":[0,2], "d8":[0,3], "e8":[0,4], "f8":[0,5], "g8":[0,6], "h8":[0,7],
             "a7":[1,0], "b7":[1,1], "c7":[1,2], "d7":[1,3], "e7":[1,4], "f7":[1,5], "g7":[1,6], "h7":[1,7],
@@ -2368,6 +2380,18 @@ class RLE():
     def find_valid_piece_source_tile(self, piece_label, board, source_tile_letter, source_tile_number, target_tile):
 
         possible_pieces = []
+        possible_pawn_actions = [(-1, 1), (-1, -1), (-1, 0), (-2, 0)]
+        possible_knight_actions = [(2, 1), (1, 2), (-2, 1), (-1, 2), (2, -1), (1, -2), (-2, -1), (-1, -2)]
+        possible_bishop_and_queen_actions = [(1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7),
+                                             (-1, 1), (-2, 2), (-3, 3), (-4, 4), (-5, 5), (-6, 6), (-7, 7),
+                                             (1, -1), (2, -2), (3, -3), (4, -4), (5, -5), (6, -6), (7, -7),
+                                             (-1, -1), (-2, -2), (-3, -3), (-4, -4), (-5, -5), (-6, -6), (-7, -7)]
+        possible_rook_and_queen_actions = [(1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0),
+                                           (-1, 0), (-2, 0), (-3, 0), (-4, 0), (-5, 0), (-6, 0), (-7, 0),
+                                           (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
+                                           (0, -1), (0, -2), (0, -3), (0, -4), (0, -5), (0, -6), (0, -7)]
+        possible_king_actions = [(-1, 0), (-1, -1), (-1, 1), (0, -1), (0, -2), (0, 1), (0, 2), (1, 0), (1, -1), (1, 1)]
+
 
         for i in range(8):
             for j in range(8):
@@ -2376,12 +2400,145 @@ class RLE():
         
         if self.perspective == "w":
             target_tile_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_tile]
+
+            if source_tile_letter != None:
+                source_tile_column = self.LETTER_TO_COLUMN_WHITE_PERSPECTIVE[source_tile_letter]
+
+            if source_tile_number != None:
+                source_tile_row = self.NUMBER_TO_ROW_WHITE_PERSPECTIVE[source_tile_number]
+
         else:
             target_tile_indices = self.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_tile]
 
+            if source_tile_letter != None:
+                source_tile_column = self.LETTER_TO_COLUMN_BLACK_PERSPECTIVE[source_tile_letter]
+
+            if source_tile_number != None:
+                source_tile_row = self.NUMBER_TO_ROW_BLACK_PERSPECTIVE[source_tile_number]
+
+
+
+        if piece_label == "p":
+
+            for action in possible_pawn_actions:
+                possible_source_tile = [target_tile_indices[0]-action[0], target_tile_indices[1]-action[1]]
+
+                if board[possible_source_tile[0]][possible_source_tile[1]][0] != piece_label:
+                    continue
+                if source_tile_letter != None and source_tile_column != possible_source_tile[1]:
+                    continue
+                if source_tile_number != None and source_tile_row != possible_source_tile[0]:
+                    continue
+
+                if self.perspective == "w":
+                    return self.TILE_INDICES_TO_COORDINATES_WHITE_PERSPECTIVE[(possible_source_tile[0],possible_source_tile[1])]
+                else:
+                    return self.TILE_INDICES_TO_COORDINATES_BLACK_PERSPECTIVE[(possible_source_tile[0],possible_source_tile[1])]
+                
+
+        elif piece_label == "k":
+
+            for action in possible_king_actions:
+                possible_source_tile = [target_tile_indices[0]-action[0], target_tile_indices[1]-action[1]]
+
+                if board[possible_source_tile[0]][possible_source_tile[1]][0] != piece_label:
+                    continue
+                if source_tile_letter != None and source_tile_column != possible_source_tile[1]:
+                    continue
+                if source_tile_number != None and source_tile_row != possible_source_tile[0]:
+                    continue
+
+                if self.perspective == "w":
+                    return self.TILE_INDICES_TO_COORDINATES_WHITE_PERSPECTIVE[(possible_source_tile[0],possible_source_tile[1])]
+                else:
+                    return self.TILE_INDICES_TO_COORDINATES_BLACK_PERSPECTIVE[(possible_source_tile[0],possible_source_tile[1])]
         
 
-        pass
+        elif piece_label == "n":
+
+            for action in possible_knight_actions:
+                possible_source_tile = [target_tile_indices[0]-action[0], target_tile_indices[1]-action[1]]
+
+                if board[possible_source_tile[0]][possible_source_tile[1]][0] != piece_label:
+                    continue
+                if source_tile_letter != None and source_tile_column != possible_source_tile[1]:
+                    continue
+                if source_tile_number != None and source_tile_row != possible_source_tile[0]:
+                    continue
+
+                if self.perspective == "w":
+                    return self.TILE_INDICES_TO_COORDINATES_WHITE_PERSPECTIVE[(possible_source_tile[0],possible_source_tile[1])]
+                else:
+                    return self.TILE_INDICES_TO_COORDINATES_BLACK_PERSPECTIVE[(possible_source_tile[0],possible_source_tile[1])]
+                
+        
+        elif piece_label == "b":
+
+            for action in possible_bishop_and_queen_actions:
+                possible_source_tile = [target_tile_indices[0]-action[0], target_tile_indices[1]-action[1]]
+
+                if board[possible_source_tile[0]][possible_source_tile[1]][0] != piece_label:
+                    continue
+                if source_tile_letter != None and source_tile_column != possible_source_tile[1]:
+                    continue
+                if source_tile_number != None and source_tile_row != possible_source_tile[0]:
+                    continue
+
+                if self.perspective == "w":
+                    return self.TILE_INDICES_TO_COORDINATES_WHITE_PERSPECTIVE[(possible_source_tile[0],possible_source_tile[1])]
+                else:
+                    return self.TILE_INDICES_TO_COORDINATES_BLACK_PERSPECTIVE[(possible_source_tile[0],possible_source_tile[1])]
+                
+        elif piece_label == "r":
+
+            for action in possible_rook_and_queen_actions:
+                possible_source_tile = [target_tile_indices[0]-action[0], target_tile_indices[1]-action[1]]
+
+                if board[possible_source_tile[0]][possible_source_tile[1]][0] != piece_label:
+                    continue
+                if source_tile_letter != None and source_tile_column != possible_source_tile[1]:
+                    continue
+                if source_tile_number != None and source_tile_row != possible_source_tile[0]:
+                    continue
+
+                if self.perspective == "w":
+                    return self.TILE_INDICES_TO_COORDINATES_WHITE_PERSPECTIVE[(possible_source_tile[0],possible_source_tile[1])]
+                else:
+                    return self.TILE_INDICES_TO_COORDINATES_BLACK_PERSPECTIVE[(possible_source_tile[0],possible_source_tile[1])]
+                
+        
+        elif piece_label == "q":
+
+            for action in possible_bishop_and_queen_actions:
+                possible_source_tile = [target_tile_indices[0]-action[0], target_tile_indices[1]-action[1]]
+
+                if board[possible_source_tile[0]][possible_source_tile[1]][0] != piece_label:
+                    continue
+                if source_tile_letter != None and source_tile_column != possible_source_tile[1]:
+                    continue
+                if source_tile_number != None and source_tile_row != possible_source_tile[0]:
+                    continue
+
+                if self.perspective == "w":
+                    return self.TILE_INDICES_TO_COORDINATES_WHITE_PERSPECTIVE[(possible_source_tile[0],possible_source_tile[1])]
+                else:
+                    return self.TILE_INDICES_TO_COORDINATES_BLACK_PERSPECTIVE[(possible_source_tile[0],possible_source_tile[1])]
+            
+            for action in possible_rook_and_queen_actions:
+                possible_source_tile = [target_tile_indices[0]-action[0], target_tile_indices[1]-action[1]]
+
+                if board[possible_source_tile[0]][possible_source_tile[1]][0] != piece_label:
+                    continue
+                if source_tile_letter != None and source_tile_column != possible_source_tile[1]:
+                    continue
+                if source_tile_number != None and source_tile_row != possible_source_tile[0]:
+                    continue
+
+                if self.perspective == "w":
+                    return self.TILE_INDICES_TO_COORDINATES_WHITE_PERSPECTIVE[(possible_source_tile[0],possible_source_tile[1])]
+                else:
+                    return self.TILE_INDICES_TO_COORDINATES_BLACK_PERSPECTIVE[(possible_source_tile[0],possible_source_tile[1])]
+
 
     def san_to_an(self, san_move):
         """
