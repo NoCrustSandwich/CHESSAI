@@ -3,7 +3,7 @@ import pyautogui
 from typing import List
 
 ###############################################################################################################################################################
-# Chess.com Interface Controller - Version 1.2 (21/11/2023)
+# Chess.com Interface Controller - Version 1.3 (5/12/2023)
 ###############################################################################################################################################################
 
 class controller:
@@ -168,7 +168,6 @@ class controller:
             else:
                 print("Tile "+str(9)+" Coordinates captured at: "+ str(self.get_mouse_coordinates()))
 
-         
         column_Length = display_calibration_points[1][0] - display_calibration_points[0][0] # Calculates block lengths to interpolate the rest of the tile's coordinates
         row_Length = display_calibration_points[2][1] - display_calibration_points[0][1]
 
@@ -181,6 +180,30 @@ class controller:
             current_coordinates[0] = self.board_tile_display_coordinates[0][0]
             current_coordinates[1] += row_Length
         
+
+    def execute_action(self, action, board):
+        """
+        Executes the given action on the screen.
+
+        Parameters:
+            - action, (Tuple): A tuple representing the action to be taken.
+            - board, (List[List[str]]): A 2d list representing the current chessboard state.
+
+        Returns:
+            - None
+        """
+        for i in range(8):
+            for j in range(8):
+                if board[i][j] == action[0]:
+                    source_tile = [i,j]
+
+        target_tile = [source_tile[0]+action[1][0], source_tile[1]+action[1][1]]
+
+        if len(action) == 3:
+            self.move_piece_on_board(source_tile, target_tile, action[2])
+        else:
+            self.move_piece_on_board(source_tile, target_tile, None)
+
 
     def move_piece_on_board(self, source_tile_indices, target_tile_indices, promotion_piece):
         """
@@ -226,20 +249,5 @@ class controller:
         pyautogui.mouseUp()
 
         pyautogui.moveTo(1, 1, 1)
-
-
-    def execute_action(self, action, board):
-
-        for i in range(8):
-            for j in range(8):
-                if board[i][j] == action[0]:
-                    source_tile = [i,j]
-
-        target_tile = [source_tile[0]+action[1][0], source_tile[1]+action[1][1]]
-
-        if len(action) == 3:
-            self.move_piece_on_board(source_tile, target_tile, action[2])
-        else:
-            self.move_piece_on_board(source_tile, target_tile, None)
 
 ###############################################################################################################################################################

@@ -65,7 +65,7 @@ class webScraper:
         Retrieves the move history of the current Chess.com game session in Standard Algebraic Notation.
 
         Returns:
-            - list: The history of moves in the game session.
+            - List: The history of moves in the game session.
         """
         div_class = 'move'
         div_elements = self.web_page.find_elements(By.CLASS_NAME, div_class)

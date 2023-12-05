@@ -6,7 +6,7 @@ import numpy as np
 
 
 ###############################################################################################################################################################
-# Agent Trainer - Version 3.1 (27/11/2023)
+# Agent Trainer - Version 3.2 (5/12/2023)
 ###############################################################################################################################################################
 
 class trainer:
@@ -24,9 +24,9 @@ class trainer:
 
     Usage Example:
         - chessAT = trainer()
-        - chessANN.data_train()
+        - chessAT.data_train()
         or
-        - chessANN.active_train(10)
+        - chessAT.active_train(10)
     """
 
     def __init__(self, training_data_directory='Documents/ANNCA/training_data'):
@@ -101,14 +101,14 @@ class trainer:
 
                 total_reward += action_reward
 
+                self.RLE.neuralNetwork.save_model("ANNCA")
+
                 if game_end:
                     break
-
+                
             print(f"Game {game + 1}/{number_of_games}, Game's Total Reward: {total_reward}")
 
-            self.RLE.neuralNetwork.save_model("ANNCA")
 
-    
     def san_to_action(self, board, san_move, lan_move, perspective):
         """
         Translates Standard Algebraic Notation to an action format that can be fed into the ANN as an expected output.

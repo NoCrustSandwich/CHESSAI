@@ -12,7 +12,9 @@ import tkinter as tk
 ###############################################################################################################################################################
 
 def on_button_click_play():
-
+    """
+    ANNCA enters the playing state, where it interacts with chess.com game based on game url input.
+    """
     interface_controller = chessIC.controller()
     web_scraper = chessWS.webScraper()
     adaptive_agent = chessRLE.RLE()
@@ -60,13 +62,19 @@ def on_button_click_play():
                     
                 action = latest_action_history[index]
                 action_info, action_reward, valid_move, game_end = adaptive_agent.attempt_action(action)
+                q_values = adaptive_agent.neuralNetwork.model.predict(adaptive_agent.board_state)
+                action_index = np.argmax(q_values)
+                adaptive_agent.train_neural_network(adaptive_agent.board_state, 1000, q_values, action_index)
+
                 action_history.append(action)
         else:
             time.sleep(5)
 
 
 def on_button_click_data_train():
-
+    """
+    ANNCA enters the data training state, where it trains the agent on given data.
+    """
     clear_text(text_box)
     text_box.insert(tk.END, "Data training started...")
     agent_trainer = chessAT.trainer()
@@ -74,23 +82,38 @@ def on_button_click_data_train():
     clear_text(text_box)
     text_box.insert(tk.END, "Data training completed. Please select an option above...")
     
-def on_button_click_active_train():
 
+def on_button_click_active_train():
+    """
+    ANNCA enters the active training state, where it trains the agent by simulating games against itself.
+    """
     clear_text(text_box)
     text_box.insert(tk.END, "Active training started...")
     agent_trainer = chessAT.trainer()
-    agent_trainer.active_train()
+    agent_trainer.active_train(10)
     clear_text(text_box)
     text_box.insert(tk.END, "Active training completed. Please select an option above...")
 
-def clear_text(widget):
 
+def clear_text(widget):
+    """
+    Clears the text in the widget that is input.
+
+    Parameters:
+            - widget: GUI Widget.
+    """
     widget.configure(state=tk.NORMAL)
     widget.delete("1.0", tk.END)
     widget.configure(state=tk.DISABLED)
 
+
 def bold_and_center_text(widget):
-    
+    """
+    Bolds and centres the text in the widget that is input.
+
+    Parameters:
+            - widget: GUI Widget.
+    """
     widget.tag_configure("center", justify="center")
     widget.tag_add("center", 1.0, "end")
     widget.tag_configure("bold", font=("Helvetica", 12, "bold"))
@@ -100,6 +123,9 @@ def bold_and_center_text(widget):
 #----------------------------------------------------------------------------------------------------------------------------------------------
 # Graphical User Interface - Version 1.0 (30/11/2023)
 #----------------------------------------------------------------------------------------------------------------------------------------------
+"""
+Graphical User Interface for ANNCA application.
+"""
 root = tk.Tk()
 root.title("ANNCA")
 
