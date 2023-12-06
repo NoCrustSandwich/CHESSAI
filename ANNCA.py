@@ -62,11 +62,12 @@ def on_button_click_play():
                     
                 action = latest_action_history[index]
                 action_info, action_reward, valid_move, game_end = adaptive_agent.attempt_action(action)
+
                 q_values = adaptive_agent.neuralNetwork.model.predict(adaptive_agent.board_state)
                 action_index = np.argmax(q_values)
                 adaptive_agent.train_neural_network(adaptive_agent.board_state, 1000, q_values, action_index)
-
                 action_history.append(action)
+
         else:
             time.sleep(5)
 
@@ -90,7 +91,7 @@ def on_button_click_active_train():
     clear_text(text_box)
     text_box.insert(tk.END, "Active training started...")
     agent_trainer = chessAT.trainer()
-    agent_trainer.active_train(10)
+    agent_trainer.active_train(1000)
     clear_text(text_box)
     text_box.insert(tk.END, "Active training completed. Please select an option above...")
 
