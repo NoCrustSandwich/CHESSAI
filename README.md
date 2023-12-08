@@ -1,7 +1,8 @@
-# ANNCA - (Adaptive Neural Network Chess Agent)
+ANNCA - (Adaptive Neural Network Chess Agent)
 
-# ChessEngine that can interact with chess.com games.
+ChessEngine that can interact with chess.com games.
 
-# ANNCA.py is the main run file.
+How to Run:
+  ANNCA.py is the main run file, after running ANNCA follow the instructions printed to the console.
 
 
