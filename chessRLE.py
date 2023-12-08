@@ -2377,7 +2377,8 @@ class RLE():
         return self.valid_action(action_info, action_reward, q_values, action_index, target_tile_piece)
 
 
-    def find_valid_piece_source_tile(self, piece_label, board, source_tile_letter, source_tile_number, target_tile):
+    def find_valid_piece_source_tile(self, piece_label, board, source_tile_letter, source_tile_number, target_tile_indices):
+        
 
         possible_pieces = []
         possible_pawn_actions = [(-1, 1), (-1, -1), (-1, 0), (-2, 0)]
@@ -2386,7 +2387,7 @@ class RLE():
                                              (-1, 1), (-2, 2), (-3, 3), (-4, 4), (-5, 5), (-6, 6), (-7, 7),
                                              (1, -1), (2, -2), (3, -3), (4, -4), (5, -5), (6, -6), (7, -7),
                                              (-1, -1), (-2, -2), (-3, -3), (-4, -4), (-5, -5), (-6, -6), (-7, -7)]
-        possible_rook_and_queen_actions = [(1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0),
+        possible_rook_and_queen_actions =  [(1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0),
                                            (-1, 0), (-2, 0), (-3, 0), (-4, 0), (-5, 0), (-6, 0), (-7, 0),
                                            (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
                                            (0, -1), (0, -2), (0, -3), (0, -4), (0, -5), (0, -6), (0, -7)]
@@ -2399,7 +2400,6 @@ class RLE():
                     possible_pieces.append(board[i][j], (i,j))
         
         if self.perspective == "w":
-            target_tile_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[target_tile]
 
             if source_tile_letter != None:
                 source_tile_column = self.LETTER_TO_COLUMN_WHITE_PERSPECTIVE[source_tile_letter]
@@ -2408,14 +2408,12 @@ class RLE():
                 source_tile_row = self.NUMBER_TO_ROW_WHITE_PERSPECTIVE[source_tile_number]
 
         else:
-            target_tile_indices = self.COORDINATES_TO_TILE_INDICES_BLACK_PERSPECTIVE[target_tile]
 
             if source_tile_letter != None:
                 source_tile_column = self.LETTER_TO_COLUMN_BLACK_PERSPECTIVE[source_tile_letter]
 
             if source_tile_number != None:
                 source_tile_row = self.NUMBER_TO_ROW_BLACK_PERSPECTIVE[source_tile_number]
-
 
 
         if piece_label == "p":
@@ -2581,10 +2579,10 @@ class RLE():
 
         elif len(san_move) == 3:
 
-            if str(san_move[0]).isupper():
+            if str(san_move)[0].isupper():
 
-                piece_label = str(san_move[0]).lower()
-                target_coordinates = str(san_move[1:3])
+                piece_label = str(san_move)[0].lower()
+                target_coordinates = str(san_move)[1:3]
                 source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, None, target_coordinates)
                 
             else:
@@ -2612,40 +2610,40 @@ class RLE():
 
         elif len(san_move) == 4:
 
-            if str(san_move[3]).isupper():
+            if str(san_move)[3].isupper():
 
                 piece_label = "p"
-                promotion_piece_label = str(san_move[3]).lower()
+                promotion_piece_label = str(san_move)[3].lower()
                 target_coordinates = str(san_move)[0:2]
                 source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, None, target_coordinates)
 
-            elif str(san_move[3]) == "+" or str(san_move[3]) == "#":
+            elif str(san_move)[3] == "+" or str(san_move)[3] == "#":
 
-                piece_label = str(san_move[0]).lower()
-                target_coordinates = str(san_move[1:3])
+                piece_label = str(san_move)[0].lower()
+                target_coordinates = str(san_move)[1:3]
                 source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, None, target_coordinates)
 
-            elif str(san_move[0]).islower():
+            elif str(san_move)[0].islower():
 
                 piece_label = "p"
-                target_coordinates = str(san_move[2:4])
-                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move[0]), None, target_coordinates)
+                target_coordinates = str(san_move)[2:4]
+                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move)[0], None, target_coordinates)
             
-            elif san_move[1] == "x":
+            elif str(san_move)[1] == "x":
 
-                piece_label = str(san_move[0]).lower()
-                target_coordinates = str(san_move[2:4])
-                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move[0]), None, target_coordinates)
+                piece_label = str(san_move)[0].lower()
+                target_coordinates = str(san_move)[2:4]
+                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move)[0], None, target_coordinates)
 
             else:
 
-                piece_label = str(san_move[0]).lower()
-                target_coordinates = str(san_move[2:4])
+                piece_label = str(san_move)[0].lower()
+                target_coordinates = str(san_move)[2:4]
 
-                if str(san_move[1]).isdigit():
-                    source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, str(san_move[1]), target_coordinates)
+                if str(san_move)[0].isdigit():
+                    source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, str(san_move)[1], target_coordinates)
                 else:
-                    source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move[1]), None, target_coordinates)
+                    source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move)[1], None, target_coordinates)
 
             if self.perspective == "w":
                 source_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
@@ -2666,27 +2664,27 @@ class RLE():
 
         elif len(san_move) == 5:
 
-            if str(san_move[0]).islower():
+            if str(san_move)[0].islower():
 
                 piece_label = "p"
-                target_coordinates = str(san_move[2:4])
-                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move[0]), None, target_coordinates)
+                target_coordinates = str(san_move)[2:4]
+                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move)[0], None, target_coordinates)
 
-            elif str(san_move[4]) == "#" or str(san_move[4]) == "+":
+            elif str(san_move)[4] == "#" or str(san_move)[4] == "+":
 
-                piece_label = str(san_move[0]).lower()
-                target_coordinates = str(san_move[2:4])
+                piece_label = str(san_move)[0].lower()
+                target_coordinates = str(san_move)[2:4]
                 source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, None, target_coordinates)
 
             else:
 
-                piece_label = str(san_move[0]).lower()
-                target_coordinates = str(san_move[3:5])
+                piece_label = str(san_move)[0].lower()
+                target_coordinates = str(san_move)[3:5]
 
-                if str(san_move[1]).isdigit():
-                    source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, str(san_move[1]), target_coordinates)
+                if str(san_move)[1].isdigit():
+                    source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, str(san_move)[1], target_coordinates)
                 else:
-                    source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move[1]), None, target_coordinates)
+                    source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move)[1], None, target_coordinates)
 
             if self.perspective == "w":
                 source_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]
@@ -2703,13 +2701,13 @@ class RLE():
 
         else:
 
-            piece_label = str(san_move[0]).lower()
-            target_coordinates = str(san_move[3:5])
+            piece_label = str(san_move)[0].lower()
+            target_coordinates = str(san_move)[3:5]
 
-            if str(san_move[1]).isdigit():
-                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, str(san_move[1]), target_coordinates)
+            if str(san_move)[1].isdigit():
+                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, None, str(san_move)[1], target_coordinates)
             else:
-                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move[1]), None, target_coordinates)
+                source_coordinates = self.find_valid_piece_source_tile(piece_label, self.board_state, str(san_move)[1], None, target_coordinates)
 
             if self.perspective == "w":
                 source_indices = self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE[source_coordinates]

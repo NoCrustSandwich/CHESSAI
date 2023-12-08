@@ -43,7 +43,14 @@ class controller:
         """
         Initializes the Chessboard Controller class.
         """
-        self.board_tile_display_coordinates = None
+        self.board_tile_display_coordinates = [[0,0,0,0,0,0,0,0],
+                                               [0,0,0,0,0,0,0,0],
+                                               [0,0,0,0,0,0,0,0],
+                                               [0,0,0,0,0,0,0,0],
+                                               [0,0,0,0,0,0,0,0],
+                                               [0,0,0,0,0,0,0,0],
+                                               [0,0,0,0,0,0,0,0],
+                                               [0,0,0,0,0,0,0,0]]
         self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE = {
             "a8":[0,0], "b8":[0,1], "c8":[0,2], "d8":[0,3], "e8":[0,4], "f8":[0,5], "g8":[0,6], "h8":[0,7],
             "a7":[1,0], "b7":[1,1], "c7":[1,2], "d7":[1,3], "e7":[1,4], "f7":[1,5], "g7":[1,6], "h7":[1,7],
@@ -162,8 +169,8 @@ class controller:
                 time.sleep(1)
                 print(str(5-j) +"...")
 
-            display_calibration_points.append(self.get_mouse_coordinates())
-
+            display_calibration_points.append((self.get_mouse_coordinates()))
+            
             if i<2:
                 print("Tile "+str(i+1)+" Coordinates captured at: "+ str(self.get_mouse_coordinates()))
             else:
@@ -172,13 +179,15 @@ class controller:
         column_Length = display_calibration_points[1][0] - display_calibration_points[0][0] # Calculates block lengths to interpolate the rest of the tile's coordinates
         row_Length = display_calibration_points[2][1] - display_calibration_points[0][1]
 
+
         current_coordinates = copy.deepcopy(display_calibration_points[0])
-        for x in range(8):
-            for y in range(8):    
-                self.board_tile_display_coordinates[x][y] = copy.deepcopy(current_coordinates)
+        
+        for row in range(8):
+            for col in range(8):    
+                self.board_tile_display_coordinates[row][col] = copy.deepcopy(current_coordinates)
                 current_coordinates[0] += column_Length
 
-            current_coordinates[0] = self.board_tile_display_coordinates[0][0]
+            current_coordinates = self.board_tile_display_coordinates[0][0]
             current_coordinates[1] += row_Length
         
 
