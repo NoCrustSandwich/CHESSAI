@@ -71,7 +71,7 @@ class neuralNetwork:
 
         q_values = Dense(1282, name='q_values', activation='linear')(x)
         self.model = Model(inputs=input_layer, outputs=q_values)
-        self.model.compile(optimizer="adam", loss='mae', metrics=['accuracy'])
+        self.model.compile(optimizer="adam", loss='mse', metrics=['accuracy'])
 
         self.save_model(model_name)
         print(f"Model '{model_name}' JSON file created.")
@@ -111,7 +111,7 @@ class neuralNetwork:
         model = keras.models.model_from_json(model_json)
         model.load_weights(h5_filename)
 
-        model.compile(optimizer="adam", loss='mae', metrics=['accuracy'])   # Sets up ANN optimizers and loss on load
+        model.compile(optimizer="adam", loss='mse', metrics=['accuracy'])   # Sets up ANN optimizers and loss on load
 
         return model
 

@@ -1,3 +1,4 @@
+import copy
 import time
 import pyautogui
 from typing import List
@@ -171,10 +172,10 @@ class controller:
         column_Length = display_calibration_points[1][0] - display_calibration_points[0][0] # Calculates block lengths to interpolate the rest of the tile's coordinates
         row_Length = display_calibration_points[2][1] - display_calibration_points[0][1]
 
-        current_coordinates = display_calibration_points[0].copy()
+        current_coordinates = copy.deepcopy(display_calibration_points[0])
         for x in range(8):
             for y in range(8):    
-                self.board_tile_display_coordinates[x][y] = current_coordinates.copy()
+                self.board_tile_display_coordinates[x][y] = copy.deepcopy(current_coordinates)
                 current_coordinates[0] += column_Length
 
             current_coordinates[0] = self.board_tile_display_coordinates[0][0]
