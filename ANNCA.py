@@ -49,8 +49,9 @@ def on_button_click_play():
             action_history.append(action)
             interface_controller.execute_action(action, adaptive_agent.board_state)
             
-        else:
+        elif len(latest_move_history_san) == 0:
             continue
+
 
         latest_action_history = adaptive_agent.san_to_an(latest_move_history_san)
 

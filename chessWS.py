@@ -76,7 +76,12 @@ class webScraper:
             div_content = div_element.text
             seperated_moves = div_content.split("\n")
 
-            latest_move_history.append((index,seperated_moves[1],seperated_moves[2]))
+            if seperated_moves[2]:
+                buffer_array = [index,seperated_moves[1],seperated_moves[2]]
+            else:
+                buffer_array = [index,seperated_moves[1],None]
+
+            latest_move_history.append(buffer_array)
         
         return latest_move_history
 
