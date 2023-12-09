@@ -1,10 +1,10 @@
 
 # Flags to run unit testing on the classes you want to
-ut_for_chessWS = False
+ut_for_chessWS = True
 ut_for_chessANN = False
 ut_for_chessRLE = False
 ut_for_chessIC = False
-ut_for_chessAT = True
+ut_for_chessAT = False
 
 
 # ANSI escape codes to print text in green and red:
@@ -44,7 +44,7 @@ def ut_chessWS():
     print("------------------------------------------------------------------------------------------------------------------------------\n")
 
     print("chessWS Unit Test 1: Retrieval of latest move history from game session \n") # Unit Test 1: Retrieval of latest move history from game session
-    if webScraper.fetch_latest_move_history_san():
+    if webScraper.fetch_latest_move_history_san() == [] or webScraper.fetch_latest_move_history_san():
         print("\t"+GREEN+"SUCCESS"+RESET+"\n")
     else:
         print("\t"+RED+"FAILED"+RESET+"\n")

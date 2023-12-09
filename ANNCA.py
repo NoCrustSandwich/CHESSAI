@@ -32,7 +32,26 @@ def on_button_click_play():
     while not game_end:
 
         latest_move_history_san = web_scraper.fetch_latest_move_history_san()
-        print("Latest_Move_history_San:"+str(latest_move_history_san))
+        
+        if len(latest_move_history_san) == 0 and player_perspective=="w":
+
+            if adaptive_agent.perspective != player_perspective:
+                adaptive_agent.change_perspective()
+
+            valid_move = False
+            while not valid_move: # Continues Attempting the most viable action known to ANNCA.
+
+                q_values = adaptive_agent.neuralNetwork.model.predict(adaptive_agent.board_state)
+                action_index = np.argmax(q_values)
+                action = adaptive_agent.POSSIBLE_MOVES[action_index] 
+                action_info, action_reward, valid_move, game_end = adaptive_agent.attempt_action(action)
+            
+            action_history.append(action)
+            interface_controller.execute_action(action, adaptive_agent.board_state)
+            
+        else:
+            continue
+
         latest_action_history = adaptive_agent.san_to_an(latest_move_history_san)
 
         latest_action_history_length = len(latest_action_history)
