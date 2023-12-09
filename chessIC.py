@@ -4,7 +4,7 @@ import pyautogui
 from typing import List
 
 ###############################################################################################################################################################
-# Chess.com Interface Controller - Version 1.3 (5/12/2023)
+# Chess.com Interface Controller - Version 1.4 (9/12/2023)
 ###############################################################################################################################################################
 
 class controller:
@@ -43,14 +43,14 @@ class controller:
         """
         Initializes the Chessboard Controller class.
         """
-        self.board_tile_display_coordinates = [[0,0,0,0,0,0,0,0],
-                                               [0,0,0,0,0,0,0,0],
-                                               [0,0,0,0,0,0,0,0],
-                                               [0,0,0,0,0,0,0,0],
-                                               [0,0,0,0,0,0,0,0],
-                                               [0,0,0,0,0,0,0,0],
-                                               [0,0,0,0,0,0,0,0],
-                                               [0,0,0,0,0,0,0,0]]
+        self.board_tile_display_coordinates = [[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
+                                               [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
+                                               [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
+                                               [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
+                                               [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
+                                               [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
+                                               [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
+                                               [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]]
         self.COORDINATES_TO_TILE_INDICES_WHITE_PERSPECTIVE = {
             "a8":[0,0], "b8":[0,1], "c8":[0,2], "d8":[0,3], "e8":[0,4], "f8":[0,5], "g8":[0,6], "h8":[0,7],
             "a7":[1,0], "b7":[1,1], "c7":[1,2], "d7":[1,3], "e7":[1,4], "f7":[1,5], "g7":[1,6], "h7":[1,7],
@@ -227,14 +227,18 @@ class controller:
             - Adjust the sleep durations as needed based on the responsiveness of the Chess.com interface.
             - The final line moves the mouse back to a neutral position (1, 1, 1) to avoid unintended actions.
         """
-        x, y = self.board_tile_display_coordinates[source_tile_indices[0],source_tile_indices[1]]
+        print(self.board_tile_display_coordinates)
+        print(source_tile_indices)
+        print(target_tile_indices)
+
+        x, y = self.board_tile_display_coordinates[source_tile_indices[0]][source_tile_indices[1]]
         pyautogui.moveTo(x, y, 1)
         pyautogui.mouseDown()
         time.sleep(0.5)
         pyautogui.mouseUp()
         time.sleep(1)
 
-        x, y = self.board_tile_display_coordinates[target_tile_indices[0],target_tile_indices[1]]
+        x, y = self.board_tile_display_coordinates[target_tile_indices[0]][target_tile_indices[1]]
         pyautogui.moveTo(x, y, 1)
         pyautogui.mouseDown()
         time.sleep(0.5)
@@ -242,13 +246,13 @@ class controller:
         time.sleep(1)
 
         if promotion_piece == "q":
-            x, y = self.board_tile_display_coordinates[target_tile_indices[0],target_tile_indices[1]]
+            x, y = self.board_tile_display_coordinates[target_tile_indices[0]][target_tile_indices[1]]
         elif promotion_piece == "n":
-            x, y = self.board_tile_display_coordinates[target_tile_indices[0]+1,target_tile_indices[1]]
+            x, y = self.board_tile_display_coordinates[target_tile_indices[0]+1][target_tile_indices[1]]
         elif promotion_piece == "r":
-            x, y = self.board_tile_display_coordinates[target_tile_indices[0]+2,target_tile_indices[1]]
+            x, y = self.board_tile_display_coordinates[target_tile_indices[0]+2][target_tile_indices[1]]
         elif promotion_piece == "b":
-            x, y = self.board_tile_display_coordinates[target_tile_indices[0]+3,target_tile_indices[1]]
+            x, y = self.board_tile_display_coordinates[target_tile_indices[0]+3][target_tile_indices[1]]
         else:
             pyautogui.moveTo(1, 1, 1)
             return

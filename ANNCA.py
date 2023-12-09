@@ -8,7 +8,7 @@ import tkinter as tk
 
 
 ###############################################################################################################################################################
-# Adaptive Neural Network Chess Agent (ANNCA) - Version 3.3 (30/11/2023)
+# Adaptive Neural Network Chess Agent (ANNCA) - Version 3.4 (9/12/2023)
 ###############################################################################################################################################################
 
 def on_button_click_play():
@@ -41,7 +41,7 @@ def on_button_click_play():
             valid_move = False
             while not valid_move: # Continues Attempting the most viable action known to ANNCA.
 
-                q_values = adaptive_agent.neuralNetwork.model.predict(adaptive_agent.board_state)
+                q_values = adaptive_agent.neuralNetwork.model.predict(adaptive_agent.preprosess_input(adaptive_agent.board_state))
                 action_index = np.argmax(q_values)
                 action = adaptive_agent.POSSIBLE_MOVES[action_index] 
                 action_info, action_reward, valid_move, game_end = adaptive_agent.attempt_action(action)
@@ -50,6 +50,8 @@ def on_button_click_play():
             interface_controller.execute_action(action, adaptive_agent.board_state)
             
         elif len(latest_move_history_san) == 0:
+            print("Waiting for opposing player's Move...")
+            time.sleep(5)
             continue
 
 
@@ -66,7 +68,7 @@ def on_button_click_play():
             valid_move = False
             while not valid_move: # Continues Attempting the most viable action known to ANNCA.
 
-                q_values = adaptive_agent.neuralNetwork.model.predict(adaptive_agent.board_state)
+                q_values = adaptive_agent.neuralNetwork.model.predict(adaptive_agent.preprosess_input(adaptive_agent.board_state))
                 action_index = np.argmax(q_values)
                 action = adaptive_agent.POSSIBLE_MOVES[action_index] 
                 action_info, action_reward, valid_move, game_end = adaptive_agent.attempt_action(action)
@@ -84,12 +86,13 @@ def on_button_click_play():
                 action = latest_action_history[index]
                 action_info, action_reward, valid_move, game_end = adaptive_agent.attempt_action(action)
 
-                q_values = adaptive_agent.neuralNetwork.model.predict(adaptive_agent.board_state)
+                q_values = adaptive_agent.neuralNetwork.model.predict(adaptive_agent.preprosess_input(adaptive_agent.board_state))
                 action_index = np.argmax(q_values)
                 adaptive_agent.train_neural_network(adaptive_agent.board_state, 1000, q_values, action_index)
                 action_history.append(action)
 
         else:
+            print("Waiting for opposing player's Move...")
             time.sleep(5)
 
 
