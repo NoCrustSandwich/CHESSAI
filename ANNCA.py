@@ -32,6 +32,7 @@ def on_button_click_play():
     while not game_end:
 
         latest_move_history_san = web_scraper.fetch_latest_move_history_san()
+        print("Latest_Move_history_San:"+str(latest_move_history_san))
         latest_action_history = adaptive_agent.san_to_an(latest_move_history_san)
 
         latest_action_history_length = len(latest_action_history)

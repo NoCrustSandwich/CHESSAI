@@ -5,7 +5,7 @@ from typing import List
 
 
 ###############################################################################################################################################################
-# Reinforcment Learning Enviorment - Version 4.1 (27/11/2023)
+# Reinforcment Learning Enviorment - Version 4.2 (9/12/2023)
 ###############################################################################################################################################################
 
 class RLE():
@@ -2378,7 +2378,10 @@ class RLE():
 
 
     def find_valid_piece_source_tile(self, piece_label, board, source_tile_letter, source_tile_number, target_tile_indices):
-        
+
+        print("source_tile_number"+ str(source_tile_number))
+        print("source_tile_letter"+ str(source_tile_letter))
+        print("target_tile_indices"+ str(target_tile_indices))
 
         possible_pieces = []
         possible_pawn_actions = [(-1, 1), (-1, -1), (-1, 0), (-2, 0)]
@@ -2402,18 +2405,18 @@ class RLE():
         if self.perspective == "w":
 
             if source_tile_letter != None:
-                source_tile_column = self.LETTER_TO_COLUMN_WHITE_PERSPECTIVE[source_tile_letter]
+                source_tile_column = self.LETTER_TO_COLUMN_WHITE_PERSPECTIVE[str(source_tile_letter)]
 
             if source_tile_number != None:
-                source_tile_row = self.NUMBER_TO_ROW_WHITE_PERSPECTIVE[source_tile_number]
+                source_tile_row = self.NUMBER_TO_ROW_WHITE_PERSPECTIVE[str(source_tile_number)]
 
         else:
 
             if source_tile_letter != None:
-                source_tile_column = self.LETTER_TO_COLUMN_BLACK_PERSPECTIVE[source_tile_letter]
+                source_tile_column = self.LETTER_TO_COLUMN_BLACK_PERSPECTIVE[str(source_tile_letter)]
 
             if source_tile_number != None:
-                source_tile_row = self.NUMBER_TO_ROW_BLACK_PERSPECTIVE[source_tile_number]
+                source_tile_row = self.NUMBER_TO_ROW_BLACK_PERSPECTIVE[str(source_tile_number)]
 
 
         if piece_label == "p":
