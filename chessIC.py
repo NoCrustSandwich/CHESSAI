@@ -176,19 +176,21 @@ class controller:
             else:
                 print("Tile "+str(9)+" Coordinates captured at: "+ str(self.get_mouse_coordinates()))
 
-        column_Length = display_calibration_points[1][0] - display_calibration_points[0][0] # Calculates block lengths to interpolate the rest of the tile's coordinates
-        row_Length = display_calibration_points[2][1] - display_calibration_points[0][1]
+        column_length = display_calibration_points[1][0] - display_calibration_points[0][0] # Calculates block lengths to interpolate the rest of the tile's coordinates
+        row_length = display_calibration_points[2][1] - display_calibration_points[0][1]
 
 
         current_coordinates = copy.deepcopy(display_calibration_points[0])
-        
-        for row in range(8):
-            for col in range(8):    
-                self.board_tile_display_coordinates[row][col] = copy.deepcopy(current_coordinates)
-                current_coordinates[0] += column_Length
 
-            current_coordinates = self.board_tile_display_coordinates[0][0]
-            current_coordinates[1] += row_Length
+        for row in range(8):
+            for col in range(8):
+                print(str(current_coordinates)+"Row: "+str(row)+ "  Col: " +str(col))    
+                self.board_tile_display_coordinates[row][col] = copy.deepcopy(current_coordinates)
+                current_coordinates[0] += column_length
+                print(self.board_tile_display_coordinates)
+
+            current_coordinates = copy.deepcopy(self.board_tile_display_coordinates[0][0])
+            current_coordinates[1] += row_length
         
 
     def execute_action(self, action, board):
@@ -202,6 +204,7 @@ class controller:
         Returns:
             - None
         """
+        print("Action being executed: "+str(action))
         for i in range(8):
             for j in range(8):
                 if board[i][j] == action[0]:
@@ -227,10 +230,6 @@ class controller:
             - Adjust the sleep durations as needed based on the responsiveness of the Chess.com interface.
             - The final line moves the mouse back to a neutral position (1, 1, 1) to avoid unintended actions.
         """
-        print(self.board_tile_display_coordinates)
-        print(source_tile_indices)
-        print(target_tile_indices)
-
         x, y = self.board_tile_display_coordinates[source_tile_indices[0]][source_tile_indices[1]]
         pyautogui.moveTo(x, y, 1)
         pyautogui.mouseDown()

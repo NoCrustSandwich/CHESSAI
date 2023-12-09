@@ -1,9 +1,9 @@
 
 # Flags to run unit testing on the classes you want to
-ut_for_chessWS = True
+ut_for_chessWS = False
 ut_for_chessANN = False
 ut_for_chessRLE = False
-ut_for_chessIC = False
+ut_for_chessIC = True
 ut_for_chessAT = False
 
 
@@ -138,7 +138,7 @@ if ut_for_chessRLE:
 
 
 ###############################################################################################################################################################
-# Unit Testing: Interface Controller - Version 1.1 (21/11/2023) 
+# Unit Testing: Interface Controller - Version 1.2 (9/12/2023) 
 ###############################################################################################################################################################
 
 def ut_chessIC():
@@ -157,6 +157,9 @@ def ut_chessIC():
     print("------------------------------------------------------------------------------------------------------------------------------")
     print("\tINTERFACE CONTROLLER UNIT TESTING")
     print("------------------------------------------------------------------------------------------------------------------------------\n")
+
+    controller.calibrate_board_tile_display_coordinates()
+    print("INTERFACE CONTROLLER UNIT TESTING - Calibrated display coordinates: "+ str(controller.board_tile_display_coordinates) )
 
     print("------------------------------------------------------------------------------------------------------------------------------")
 
