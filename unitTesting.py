@@ -116,7 +116,7 @@ def ut_chessRLE():
     import chessRLE
     adaptive_agent = chessRLE.RLE()
     adaptive_agent.reset_game_state()
-    board = [["or2","on2","ob2","oq","ok","ob1","on1","or1"],
+    board = [   ["or2","on2","ob2","oq","ok","ob1","on1","or1"],
                 ["op8","op7","op6","op5","op4","op3","op2","op1"],
                 ["_","_","_","_","_","_","_","_"],
                 ["_","_","_","_","_","_","_","_"],
@@ -153,6 +153,14 @@ def ut_chessIC():
     """
     import chessIC
     controller = chessIC.controller()
+    board = [   ["or2","on2","ob2","oq","ok","ob1","on1","or1"],
+                ["op8","op7","op6","op5","op4","op3","op2","op1"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["_","_","_","_","_","_","_","_"],
+                ["p1","p2","p3","p4","p5","p6","p7","p8"],
+                ["r1","n1","b1","q","k","b2","n2","r2"]]
 
     print("------------------------------------------------------------------------------------------------------------------------------")
     print("\tINTERFACE CONTROLLER UNIT TESTING")
@@ -160,6 +168,8 @@ def ut_chessIC():
 
     controller.calibrate_board_tile_display_coordinates()
     print("INTERFACE CONTROLLER UNIT TESTING - Calibrated display coordinates: "+ str(controller.board_tile_display_coordinates) )
+
+    controller.execute_action( ("p4", (-2,0)), board)
 
     print("------------------------------------------------------------------------------------------------------------------------------")
 
@@ -244,6 +254,7 @@ def ut_chessAT():
     san_move = "e4#"
     lan_move = "e2e4"
     perspective = "w"
+
 
     if trainer.san_to_action( board, san_move, lan_move, perspective) == ("p5",(-2,0)):
         print("chessAT Unit Test 2.1: Testing SAN to Action conversion (len == 3) - Pawn Move 1 White \n\t"+GREEN+"SUCCESS"+RESET+"\n")

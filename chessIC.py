@@ -184,10 +184,8 @@ class controller:
 
         for row in range(8):
             for col in range(8):
-                print(str(current_coordinates)+"Row: "+str(row)+ "  Col: " +str(col))    
                 self.board_tile_display_coordinates[row][col] = copy.deepcopy(current_coordinates)
                 current_coordinates[0] += column_length
-                print(self.board_tile_display_coordinates)
 
             current_coordinates = copy.deepcopy(self.board_tile_display_coordinates[0][0])
             current_coordinates[1] += row_length
@@ -212,6 +210,8 @@ class controller:
 
         target_tile = [source_tile[0]+action[1][0], source_tile[1]+action[1][1]]
 
+        print("Source Tile: "+str(source_tile))
+        print("Target Tile: "+str(target_tile))
         if len(action) == 3:
             self.move_piece_on_board(source_tile, target_tile, action[2])
         else:
@@ -231,6 +231,8 @@ class controller:
             - The final line moves the mouse back to a neutral position (1, 1, 1) to avoid unintended actions.
         """
         x, y = self.board_tile_display_coordinates[source_tile_indices[0]][source_tile_indices[1]]
+        print("X: "+ str(x))
+        print("Y: "+ str(y))
         pyautogui.moveTo(x, y, 1)
         pyautogui.mouseDown()
         time.sleep(0.5)
