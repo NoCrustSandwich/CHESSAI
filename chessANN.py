@@ -5,7 +5,7 @@ from keras.layers import Input, Flatten, Dense
 
 
 ###############################################################################################################################################################
-# Artificial Neural Network - Version 3.1 (24/11/2023)
+# Artificial Neural Network - Version 4.1 (18/12/2023)
 ###############################################################################################################################################################
 
 class neuralNetwork:
@@ -16,7 +16,7 @@ class neuralNetwork:
         - model (keras.models.Model): The neural network model.
 
     Methods:
-        - __init__(self, model_name: str): Initializes an instance of the NeuralNetwork class, and checks if the model folder and default model exists on device and if not creates them.
+        - __init__(self): Initializes an instance of the NeuralNetwork class, , and loads ANNCA's neural network.
         - create_new_model(self, model_name: str): Creates a new instance of the neural network model and saves it.
         - load_model(self, filename: str) -> keras.models.Model: Loads the neural network model from a JSON file.
         - save_model(self, model_name: str): Saves the neural network model as a JSON file.
@@ -29,25 +29,11 @@ class neuralNetwork:
         - chessANN.load_model("ANNCA")
     """
 
-    def __init__(self, model_directory='Documents/ANNCA/ANNCA_Model', default_model = "ANNCA"):
+    def __init__(self):
         """
-        Initializes an instance of the NeuralNetwork class, and checks if the model folder and default model exists on device and if not creates them.
+        Initializes an instance of the NeuralNetwork class, and loads ANNCA's neural network.
         """
-        home_directory = os.path.expanduser("~")
-        self.model_directory = os.path.join(home_directory, model_directory)
-
-        if not os.path.exists(self.model_directory):
-            os.makedirs(self.model_directory)
-
-        filename = os.path.join(self.model_directory, default_model)
-        json_filepath = filename + '.json'
-        if os.path.exists(json_filepath):   # Checks if the default ANNCA model JSON file exist and creates it if it doesn't
-            print(f"Model " + default_model + " JSON Already Exists.")
-        else:
-            self.create_new_model(default_model)
-            print(f"Model " + default_model + " JSON Created.")
-        
-        self.model = self.load_model(default_model)
+        self.model = self.load_model("ANNCA")
 
         
     def create_new_model(self, model_name: str):
@@ -66,7 +52,6 @@ class neuralNetwork:
         x = Dense(10256, activation='relu')(x)
         x = Dense(5128, activation='relu')(x)
         x = Dense(2564, activation='relu')(x)
-        x = Dense(1282, activation='relu')(x)
 
         q_values = Dense(1282, name='q_values', activation='linear')(x)
         self.model = Model(inputs=input_layer, outputs=q_values)
@@ -94,15 +79,14 @@ class neuralNetwork:
             - loaded_model = chessANN.load_model("pretrained_model")
         """
 
-        model_path = os.path.join(self.model_directory, filename)
-        json_filename = model_path if filename.endswith('.json') else model_path + '.json'
-        h5_filename = model_path if filename.endswith('.h5') else model_path + '.h5'
-
-        json_filename = os.path.expanduser(json_filename)  # Expanding ~ to user's home directory
-        h5_filename = os.path.expanduser(h5_filename)
-
-        if not os.path.exists(json_filename) or not os.path.exists(h5_filename):
-            raise FileNotFoundError(f"Model files not found for {filename}")
+        if filename.endswith('.json'):
+            json_filename = filename
+            h5_filename = filename[:-5] + '.h5'
+        else:
+            json_filename = 'models/' + filename + '.json'
+            h5_filename = 'models/' + filename + '.h5'
+        json_filename = json_filename.replace('\\', '/')
+        h5_filename = h5_filename.replace('\\', '/')
 
         with open(json_filename, 'r') as json_file:
             model_json = json_file.read()
@@ -125,8 +109,8 @@ class neuralNetwork:
         Usage:
             - chessANN.save_model("saved_model_name")
         """
-        filename = os.path.join(self.model_directory, model_name)
-        
+        filename = 'models/' + model_name
+
         self.model.save_weights(filename + '.h5')
         model_json = self.model.to_json()
         with open(filename + '.json', 'w') as json_file:
@@ -143,9 +127,7 @@ class neuralNetwork:
         Usage:
             - chessANN.delete_model("saved_model_name")
         """
-        home_directory = os.path.expanduser("~")
-        full_model_directory = os.path.join(home_directory, self.model_directory)
-        filename = os.path.join(full_model_directory, model_name)
+        filename = 'models/' + model_name
 
         json_filepath = filename + '.json'
         if os.path.exists(json_filepath):   # Checks if the model JSON file exists before attempting to delete

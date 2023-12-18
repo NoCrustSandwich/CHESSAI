@@ -6,7 +6,7 @@ import numpy as np
 
 
 ###############################################################################################################################################################
-# Agent Trainer - Version 3.2 (5/12/2023)
+# Agent Trainer - Version 3.3 (18/12/2023)
 ###############################################################################################################################################################
 
 class trainer:
@@ -15,8 +15,7 @@ class trainer:
     or by simulating chess games against itself.
 
     Methods:
-        - __init__(self, training_data_directory: str): Initializes an instance of the trainer class and checks if the training data folder exists
-                                                        on the device. If not, it creates the folder.
+        - __init__(self): Initializes an instance of the trainer class.
         - active_train(self, number_of_games: int): Trains the agent by playing against itself, considering the top 10 moves at each step.
         - san_to_action(self, board, san_move, lan_move, perspective): Translates Standard Algebraic Notation to an action format that can be fed 
                                                                        into the ANN as an expected output.
@@ -29,22 +28,12 @@ class trainer:
         - chessAT.active_train(10)
     """
 
-    def __init__(self, training_data_directory='Documents/ANNCA/training_data'):
+    def __init__(self):
         """
-        Initializes an instance of the trainer class and checks if the training data folder exists on the device.
-        If not, it creates the folder.
-
-        Parameters:
-            - training_data_directory (str): The directory path where training data is stored.
+        Initializes an instance of the trainer class.
         """
         self.RLE = chessRLE.RLE()
-        self.training_data_directory = training_data_directory
-
-        home_directory = os.path.expanduser("~")
-        full_model_directory = os.path.join(home_directory, self.training_data_directory)
-        if not os.path.exists(full_model_directory):
-            os.makedirs(full_model_directory)
-
+        
     
     def active_train(self, number_of_games: int): # Trains Agent by Playing Against Itself
         """
@@ -193,8 +182,7 @@ class trainer:
         Returns:
             - None
         """
-        home_directory = os.path.expanduser("~")
-        full_model_directory = os.path.join(home_directory, self.training_data_directory)
+        full_model_directory = "training_data"
 
         for filename in os.listdir(full_model_directory):
 
