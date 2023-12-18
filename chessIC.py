@@ -4,7 +4,7 @@ import pyautogui
 from typing import List
 
 ###############################################################################################################################################################
-# Chess.com Interface Controller - Version 1.4 (9/12/2023)
+# Chess.com Interface Controller - Version 1.5 (18/12/2023)
 ###############################################################################################################################################################
 
 class controller:
@@ -187,7 +187,7 @@ class controller:
                 self.board_tile_display_coordinates[row][col] = copy.deepcopy(current_coordinates)
                 current_coordinates[0] += column_length
 
-            current_coordinates = copy.deepcopy(self.board_tile_display_coordinates[0][0])
+            current_coordinates = copy.deepcopy(self.board_tile_display_coordinates[row][0])
             current_coordinates[1] += row_length
         
 
@@ -233,6 +233,7 @@ class controller:
         x, y = self.board_tile_display_coordinates[source_tile_indices[0]][source_tile_indices[1]]
         print("X: "+ str(x))
         print("Y: "+ str(y))
+        print("Source Tile: "+ str(source_tile_indices))
         pyautogui.moveTo(x, y, 1)
         pyautogui.mouseDown()
         time.sleep(0.5)
@@ -240,6 +241,9 @@ class controller:
         time.sleep(1)
 
         x, y = self.board_tile_display_coordinates[target_tile_indices[0]][target_tile_indices[1]]
+        print("X: "+ str(x))
+        print("Y: "+ str(y))
+        print("Target Tile: "+ str(target_tile_indices))
         pyautogui.moveTo(x, y, 1)
         pyautogui.mouseDown()
         time.sleep(0.5)
