@@ -170,6 +170,7 @@ def ut_chessIC():
     print("INTERFACE CONTROLLER UNIT TESTING - Calibrated display coordinates: "+ str(controller.board_tile_display_coordinates) )
 
     controller.execute_action( ("p4", (-2,0)), board)
+    controller.execute_action( ("p8", (-2,0)), board)
 
     print("------------------------------------------------------------------------------------------------------------------------------")
 

@@ -95,6 +95,8 @@ def on_button_click_play():
         else:
             print("Waiting for opposing player's Move...")
             time.sleep(5)
+        
+        time.sleep(5)
 
 
 def on_button_click_data_train():
