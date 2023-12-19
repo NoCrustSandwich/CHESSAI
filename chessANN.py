@@ -33,6 +33,7 @@ class neuralNetwork:
         """
         Initializes an instance of the NeuralNetwork class, and loads ANNCA's neural network.
         """
+
         self.model = self.load_model("ANNCA")
 
         
