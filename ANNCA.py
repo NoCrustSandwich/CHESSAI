@@ -5,6 +5,7 @@ import chessWS
 import chessRLE
 import numpy as np
 import tkinter as tk
+from PIL import Image, ImageTk
 
 
 ###############################################################################################################################################################
@@ -166,6 +167,12 @@ root.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
 
 icon_path = "media/icon.ico"                                                                
 root.iconbitmap(icon_path)
+
+icon_path = "media/icon.png"   
+icon_image = Image.open(icon_path)
+photo_image = ImageTk.PhotoImage(icon_image)
+root.tk.call('wm', 'iconphoto', root._w, photo_image)
+
 
 button_play = tk.Button(root, text="Play", command=on_button_click_play, font=("Helvetica", 12), bg="#f0f0f0", fg="black")                                                  # Creates and places buttons in four quadrants
 button_play.grid(row=0, column=0, columnspan=2, sticky="nsew")
