@@ -9,7 +9,7 @@ from PIL import Image, ImageTk
 
 
 ###############################################################################################################################################################
-# Adaptive Neural Network Chess Agent (ANNCA) - Version 3.4 (9/12/2023)
+# Adaptive Neural Network Chess Agent (ANNCA) - Version 3.5 (21/12/2023)
 ###############################################################################################################################################################
 
 def on_button_click_play():
@@ -96,6 +96,17 @@ def on_button_click_play():
             print("Waiting for opposing player's Move...")
             time.sleep(5)
         
+        time.sleep(5)
+
+def on_button_click_IDLE():
+    """
+    ANNCA enters the IDLE state, where it waits for instructions.
+    """
+    text_box.insert(tk.END, "Welcome! Please select an option above...")
+    bold_and_center_text(text_box)
+    text_box.configure(state=tk.DISABLED)
+
+    while True:
         time.sleep(5)
 
 
@@ -185,13 +196,16 @@ button_data_train.grid(row=1, column=0, sticky="nsew")
 button_active_train = tk.Button(root, text="Active Train", command=on_button_click_active_train, font=("Helvetica", 12), bg="#f0f0f0", fg="black")
 button_active_train.grid(row=1, column=1, sticky="nsew")
 
+button_active_train = tk.Button(root, text="IDLE", command=on_button_click_IDLE, font=("Helvetica", 12), bg="#f0f0f0", fg="black")
+button_active_train.grid(row=2, columnspan=2, sticky="nsew")
+
 root.grid_rowconfigure(0, weight=1)
 root.grid_rowconfigure(1, weight=1)
 root.grid_columnconfigure(0, weight=1)
 root.grid_columnconfigure(1, weight=1)
 
 text_box = tk.Text(root, height=6, wrap=tk.WORD, state=tk.NORMAL)
-text_box.grid(row=2, column=0, columnspan=2, sticky="nsew")
+text_box.grid(row=3, column=0, columnspan=2, sticky="nsew")
 
 text_box.insert(tk.END, "Welcome! Please select an option above...")
 bold_and_center_text(text_box)
